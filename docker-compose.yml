@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: production
+      MAX_UPLOAD_SIZE: "26214400"
+      FILE_RETENTION_MINUTES: "60"
+      METADATA_PROVIDER: crossref
+      CROSSREF_MAILTO: ""
+    restart: unless-stopped
+    # Documents are temporary by design; no volume needed. Add one only if
+    # you want retention to survive container restarts:
+    # volumes:
+    #   - apa7-storage:/tmp/apa7-auditor-storage
+
+# volumes:
+#   apa7-storage:

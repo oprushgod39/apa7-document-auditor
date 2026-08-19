@@ -1,0 +1,18 @@
+{
+  "name": "apa7-document-auditor",
+  "private": true,
+  "version": "1.0.0",
+  "description": "APA 7 Document Formatter & Auditor — upload a .docx, format and verify it against APA 7th Edition requirements.",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=server",
+    "dev:web": "npm run dev --workspace=web",
+    "build": "npm run build --workspace=server && npm run build --workspace=web",
+    "start": "npm run start --workspace=server",
+    "test": "npm run test --workspace=server",
+    "typecheck": "npm run typecheck --workspace=server && npm run typecheck --workspace=web"
+  }
+}
