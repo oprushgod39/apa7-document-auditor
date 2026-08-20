@@ -6,7 +6,8 @@
   "functions": {
     "api/index.ts": {
       "maxDuration": 120,
-      "memory": 2048
+      "memory": 2048,
+      "includeFiles": "node_modules/@sparticuz/chromium/bin/**"
     }
   },
   "rewrites": [
