@@ -62,10 +62,28 @@ interface LaunchPlan {
   args: string[];
 }
 
+/**
+ * Version-pinned remote Chromium pack for @sparticuz/chromium-min.
+ *
+ * `@sparticuz/chromium` (the full package) bundles its brotli-compressed
+ * Chromium + shared-library archives under node_modules/@sparticuz/chromium/bin
+ * and reads them via fs at runtime rather than a static import. Vercel's
+ * build-time file tracer doesn't follow that dynamic fs read reliably, even
+ * with an explicit `includeFiles` glob in vercel.json — the deployed
+ * function still launched Chromium without its bundled libnss3.so and
+ * friends. `chromium-min` sidesteps Vercel's bundler entirely: it fetches
+ * this prebuilt pack over HTTPS on cold start and extracts it to /tmp
+ * itself, independent of what Vercel decided to include in the function.
+ * Keep this URL's version suffix in lockstep with the installed
+ * @sparticuz/chromium-min version.
+ */
+const CHROMIUM_PACK_URL =
+  "https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar";
+
 async function resolveLaunchPlan(): Promise<LaunchPlan> {
   if (isServerlessRuntime()) {
-    const chromium = (await import("@sparticuz/chromium")).default;
-    const executablePath = await chromium.executablePath();
+    const chromium = (await import("@sparticuz/chromium-min")).default;
+    const executablePath = await chromium.executablePath(CHROMIUM_PACK_URL);
     return { executablePath, args: chromium.args };
   }
   const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || findLocalExecutable();
