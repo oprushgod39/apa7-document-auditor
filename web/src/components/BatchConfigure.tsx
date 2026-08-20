@@ -30,16 +30,31 @@ export function BatchConfigureScreen(props: {
   const [preserveWording] = useState(true);
   const [fixCitationMechanics, setFixCitationMechanics] = useState(true);
   const [verifyMetadata, setVerifyMetadata] = useState(true);
+  const [showOptional, setShowOptional] = useState(false);
+  const [meta, setMeta] = useState<Record<string, string>>({
+    institution: "University",
+    courseNumber: "",
+    courseName: "subject code and name",
+    instructor: "Professor _____",
+    dueDate: "Due date",
+    runningHead: "",
+  });
   const [instructorRequirements, setInstructorRequirements] = useState("");
 
+  const setM = (k: string, v: string) => setMeta((m) => ({ ...m, [k]: v }));
+
   const start = () => {
+    const metadata: Record<string, string> = {};
+    for (const [k, v] of Object.entries(meta)) {
+      if (v.trim()) metadata[k] = v.trim();
+    }
     props.onStart({
       paperType,
       mode,
       preserveWording,
       fixCitationMechanics,
       verifyMetadata,
-      metadata: {},
+      metadata,
       instructorRequirements,
     });
   };
@@ -52,8 +67,10 @@ export function BatchConfigureScreen(props: {
           <h1>Apply one set of settings to all {props.files.length} documents</h1>
         </div>
         <p>
-          Each file keeps its own detected title, author, and structure — only these
-          shared settings apply across the batch.
+          Each file keeps its own detected title, author, and structure. A title
+          page is only ever created from a title actually detected in that
+          document — nothing is invented. Shared assignment details below (course,
+          instructor, due date) apply to every file in the batch.
         </p>
       </div>
 
@@ -160,6 +177,63 @@ export function BatchConfigureScreen(props: {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="card">
+        <h2>
+          <button
+            className="btn small"
+            aria-expanded={showOptional}
+            onClick={() => setShowOptional((s) => !s)}
+          >
+            {showOptional ? "Hide" : "Show"} optional settings
+          </button>{" "}
+          Shared title-page details
+        </h2>
+        {showOptional && (
+          <>
+            <p className="section-note">
+              Applied to every document's title page (when one is created). Paper
+              title and author always come from each document itself — never from
+              here — so a file with no detectable title simply won't get an
+              auto-generated title page; it's flagged in that file's row so you can
+              format it individually if needed.
+            </p>
+            <div className="grid-2" style={{ marginTop: "0.8rem" }}>
+              <div className="field">
+                <label htmlFor="bm-inst">Institution</label>
+                <input id="bm-inst" value={meta.institution} onChange={(e) => setM("institution", e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="bm-cnum">Course number</label>
+                <input id="bm-cnum" value={meta.courseNumber} onChange={(e) => setM("courseNumber", e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="bm-cname">Course name</label>
+                <input id="bm-cname" value={meta.courseName} onChange={(e) => setM("courseName", e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="bm-instr">Instructor</label>
+                <input id="bm-instr" value={meta.instructor} onChange={(e) => setM("instructor", e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="bm-date">Due date</label>
+                <input id="bm-date" value={meta.dueDate} onChange={(e) => setM("dueDate", e.target.value)} />
+              </div>
+              {paperType === "professional" && (
+                <div className="field">
+                  <label htmlFor="bm-rh">Running head (max 50 characters)</label>
+                  <input
+                    id="bm-rh"
+                    maxLength={50}
+                    value={meta.runningHead}
+                    onChange={(e) => setM("runningHead", e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="card">

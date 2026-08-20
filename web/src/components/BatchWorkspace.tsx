@@ -35,6 +35,10 @@ interface BatchRow {
   sessionId?: string;
   stageLabel?: string;
   error?: string;
+  /** Set once uploaded: true when this file has neither an existing title
+   * page nor a detectable title, so no title page will be auto-created for
+   * it (the app never invents a title — see BatchConfigureScreen's note). */
+  noTitleDetected?: boolean;
 }
 
 type Step = "select" | "configure" | "run";
@@ -96,9 +100,27 @@ export function BatchWorkspace(props: { onSwitchToSingle: () => void }) {
       updateRow(row.id, { status: "uploading" });
       const session = await callApi(() => uploadDocument(row.file), cancelled);
       if (cancelled()) return;
-      updateRow(row.id, { sessionId: session.id, status: "processing", stageLabel: "Starting…" });
 
-      await callApi(() => startProcessing(session.id, activeSettings), cancelled);
+      // Title and author always come from this specific document — never from
+      // the batch-shared settings — matching the single-file flow and the
+      // "never invent" title-page rule. If this file has no title page and no
+      // detectable title, no title page will be auto-created for it; flag
+      // that up front so it's visible even before processing finishes.
+      const detected = session.detected.metadata;
+      const noTitleDetected = !session.detected.hasTitlePage && !detected.title;
+      const perFileMetadata: Record<string, string> = { ...activeSettings.metadata };
+      if (detected.title) perFileMetadata.title = detected.title;
+      if (detected.author) perFileMetadata.author = detected.author;
+      const perFileSettings: ProcessSettings = { ...activeSettings, metadata: perFileMetadata };
+
+      updateRow(row.id, {
+        sessionId: session.id,
+        status: "processing",
+        stageLabel: "Starting…",
+        noTitleDetected,
+      });
+
+      await callApi(() => startProcessing(session.id, perFileSettings), cancelled);
       if (cancelled()) return;
 
       for (;;) {
@@ -251,6 +273,12 @@ function BatchTableRow(props: { row: BatchRow; canDownloadDocx: boolean }) {
           </span>
         )}
         {row.status === "error" && row.error && <div className="batch-row-error">{row.error}</div>}
+        {row.noTitleDetected && row.status !== "error" && (
+          <div className="batch-row-warning">
+            No title detected — title page not created. Format this file
+            individually to type in a title.
+          </div>
+        )}
       </td>
       <td>
         {row.status === "ready" && row.sessionId && (

@@ -128,5 +128,6 @@ main{min-height:520px}.landing{display:grid;grid-template-columns:1.06fr .82fr;g
 .batch-status-live{display:inline-flex;align-items:center;gap:.45rem;color:var(--ink-soft);font-size:.68rem}
 .batch-status-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none;box-shadow:0 0 0 4px rgba(22,127,117,.1);animation:pulse 1s infinite alternate}
 .batch-row-error{margin-top:.3rem;color:var(--err);font-size:.65rem;max-width:320px}
+.batch-row-warning{margin-top:.3rem;color:var(--warn);font-size:.65rem;max-width:320px}
 .batch-row-actions{display:flex;gap:.4rem;flex-wrap:wrap}
 @media(max-width:640px){.batch-upload-page,.batch-run-page{padding:.6rem .2rem 0}.batch-summary{gap:.8rem 1.1rem}}
