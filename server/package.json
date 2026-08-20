@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@vercel/blob": "^2.8.0",
+    "@vercel/functions": "^1.5.0",
     "@vercel/kv": "^3.0.0",
     "@xmldom/xmldom": "^0.9.8",
     "express": "^4.21.2",

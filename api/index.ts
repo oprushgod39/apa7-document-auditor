@@ -15,14 +15,11 @@ const app = createApp();
  * own router (mounted at `/api` in `createApp`) does the rest of the
  * routing internally.
  *
- * Note: this wraps a single long-running pipeline (`processSession`) that
- * the API kicks off and returns 202 from immediately, then polls via
- * `/status`. On Vercel, a serverless function's execution — including any
- * detached async work started during the request — ends when the response
- * is sent (or at `maxDuration`), so long documents must finish processing
- * before the handler returns for this fire-and-forget pattern to complete
- * reliably. This entrypoint does not change that behavior; it only adapts
- * the existing Express app to run as a function.
+ * Note: the API kicks off the processing pipeline (`processSession`) and
+ * returns 202 immediately, then the client polls `/status`. That background
+ * work is wrapped in `waitUntil` (see server/src/run_background.ts) so this
+ * function stays alive until the pipeline settles, bounded by the
+ * `maxDuration` set for this function in vercel.json.
  */
 export default function handler(req: IncomingMessage, res: ServerResponse): void {
   app(req as never, res as never);

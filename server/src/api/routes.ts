@@ -18,6 +18,7 @@ import {
   type Session,
 } from "../store/sessions.js";
 import { processSession, applyResolution } from "../pipeline.js";
+import { runInBackground } from "../run_background.js";
 import { renderReportHtml } from "../audit/report_html.js";
 import { log } from "../logging.js";
 import { mergeDocuments } from "../merge/merge.js";
@@ -246,7 +247,7 @@ export function apiRouter(): Router {
       };
       await saveSession(session);
       // Fire and monitor via /status. Errors are captured on the session.
-      void processSession(session).catch(() => {});
+      runInBackground(processSession(session));
       res.status(202).json(sessionSummary(session));
     })
   );
@@ -329,7 +330,7 @@ export function apiRouter(): Router {
       if (session.status === "processing") {
         throw Errors.notReady("The document is already being processed.");
       }
-      void processSession(session).catch(() => {});
+      runInBackground(processSession(session));
       res.status(202).json(sessionSummary(session));
     })
   );
