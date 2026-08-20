@@ -1,9 +1,11 @@
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { uploadDocument, type UploadResponse } from "../lib/api";
 
 export function UploadScreen(props: {
   onUploaded: (session: UploadResponse) => void;
   onError: (message: string) => void;
+  batchMode?: boolean;
+  onBatchModeChange?: (batch: boolean) => void;
 }) {
   const [drag, setDrag] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -27,7 +29,28 @@ export function UploadScreen(props: {
   };
 
   return (
-    <section className="landing">
+    <Fragment>
+      {props.onBatchModeChange && (
+        <div className="formatter-mode-toggle" role="tablist" aria-label="Choose how many documents to process">
+          <button
+            role="tab"
+            aria-selected={!props.batchMode}
+            className={!props.batchMode ? "active" : ""}
+            onClick={() => props.onBatchModeChange?.(false)}
+          >
+            Single document
+          </button>
+          <button
+            role="tab"
+            aria-selected={!!props.batchMode}
+            className={props.batchMode ? "active" : ""}
+            onClick={() => props.onBatchModeChange?.(true)}
+          >
+            Multiple documents
+          </button>
+        </div>
+      )}
+      <section className="landing">
       <div className="hero-copy">
         <span className="eyebrow"><span aria-hidden="true">✦</span> Built for serious academic work</span>
         <h1>Turn a rough Word paper into a <em>submission-ready</em> APA 7 document.</h1>
@@ -102,6 +125,7 @@ export function UploadScreen(props: {
         <div><span>02</span><p><strong>Verify precisely</strong>Citations and references checked with a transparent report.</p></div>
         <div><span>03</span><p><strong>Download confidently</strong>A corrected DOCX with every applied change documented.</p></div>
       </div>
-    </section>
+      </section>
+    </Fragment>
   );
 }
