@@ -1,126 +1,249 @@
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import puppeteer, { type Browser } from "puppeteer-core";
-import { AppError } from "../errors.js";
+import PDFDocument from "pdfkit";
+import type { DocxPackage } from "../docx/package.js";
+import type { ParagraphModel, TableModel } from "../docx/model.js";
+import { childrenW, paragraphText } from "../docx/xml.js";
+import { extractRunImages } from "./images.js";
+
+const PAGE_MARGIN = 72; // 1 inch, matches the previous CSS @page margin
+const LETTER_WIDTH = 612; // 8.5in at 72pt/in — pdfkit's "LETTER" page size
+const BODY_FONT_SIZE = 12;
+const TABLE_FONT_SIZE = 10.5;
+const TABLE_CELL_PADDING = 4;
+const TABLE_MIN_ROW_HEIGHT = 18;
+
+function fontFor(bold?: boolean, italic?: boolean): string {
+  if (bold && italic) return "Times-BoldItalic";
+  if (bold) return "Times-Bold";
+  if (italic) return "Times-Italic";
+  return "Times-Roman";
+}
+
+function mapAlign(alignment?: string): "left" | "center" | "right" | "justify" {
+  switch (alignment) {
+    case "center":
+      return "center";
+    case "right":
+      return "right";
+    case "both":
+      return "justify";
+    default:
+      return "left";
+  }
+}
 
 /**
- * True when running inside a serverless function (Vercel or plain AWS
- * Lambda, which Vercel's Node runtime is built on) rather than a developer's
- * own machine. Vercel sets VERCEL=1 for both build and runtime; the Lambda
- * env vars are a fallback for other serverless hosts on the same runtime.
+ * Draws the merged submission PDF directly with pdfkit — pure JavaScript,
+ * no native binary, no headless browser. Every page-break and layout
+ * decision (paragraph flow, table row pagination, image fit) is computed
+ * explicitly, since pdfkit has no built-in HTML/CSS layout engine.
  */
-function isServerlessRuntime(): boolean {
-  return Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
-}
+export class MergePdfRenderer {
+  private readonly doc: PDFKit.PDFDocument;
+  private readonly chunks: Buffer[] = [];
+  private readonly done: Promise<Buffer>;
+  private readonly contentWidth: number;
 
-/** Common install locations for a Chromium-family browser, by platform. */
-function candidateLocalExecutables(): string[] {
-  const home = os.homedir();
-  if (process.platform === "win32") {
-    const programFiles = process.env["PROGRAMFILES"] ?? "C:\\Program Files";
-    const programFilesX86 = process.env["PROGRAMFILES(X86)"] ?? "C:\\Program Files (x86)";
-    const localAppData = process.env["LOCALAPPDATA"] ?? path.join(home, "AppData", "Local");
-    return [
-      path.join(programFiles, "Google", "Chrome", "Application", "chrome.exe"),
-      path.join(programFilesX86, "Google", "Chrome", "Application", "chrome.exe"),
-      path.join(localAppData, "Google", "Chrome", "Application", "chrome.exe"),
-      path.join(programFilesX86, "Microsoft", "Edge", "Application", "msedge.exe"),
-      path.join(programFiles, "Microsoft", "Edge", "Application", "msedge.exe"),
-    ];
+  constructor() {
+    this.doc = new PDFDocument({
+      size: "LETTER",
+      margins: { top: PAGE_MARGIN, bottom: PAGE_MARGIN, left: PAGE_MARGIN, right: PAGE_MARGIN },
+      autoFirstPage: false,
+      bufferPages: true,
+    });
+    // this.doc.page doesn't exist until the first addPage() call
+    // (autoFirstPage is false), so compute from the fixed page size instead.
+    this.contentWidth = LETTER_WIDTH - PAGE_MARGIN * 2;
+    this.doc.on("data", (chunk: Buffer) => this.chunks.push(chunk));
+    this.done = new Promise<Buffer>((resolve, reject) => {
+      this.doc.on("end", () => resolve(Buffer.concat(this.chunks)));
+      this.doc.on("error", reject);
+    });
   }
-  if (process.platform === "darwin") {
-    return [
-      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-      "/Applications/Chromium.app/Contents/MacOS/Chromium",
-      "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-    ];
-  }
-  return [
-    "/usr/bin/google-chrome-stable",
-    "/usr/bin/google-chrome",
-    "/usr/bin/chromium-browser",
-    "/usr/bin/chromium",
-    "/usr/bin/microsoft-edge",
-    "/snap/bin/chromium",
-  ];
-}
 
-function findLocalExecutable(): string | null {
-  for (const candidate of candidateLocalExecutables()) {
-    try {
-      if (fs.existsSync(candidate)) return candidate;
-    } catch {
-      /* ignore */
+  /** Starts a new page for the next source document (or the appendix). */
+  startSection(): void {
+    this.doc.addPage();
+    this.doc.font("Times-Roman").fontSize(BODY_FONT_SIZE);
+  }
+
+  drawHeading(text: string): void {
+    this.doc.x = this.doc.page.margins.left;
+    this.doc.font("Times-Bold").fontSize(14).text(text, { align: "center" });
+    this.doc.moveDown(1);
+    this.doc.font("Times-Roman").fontSize(BODY_FONT_SIZE);
+    this.doc.x = this.doc.page.margins.left;
+  }
+
+  async drawParagraph(pkg: DocxPackage, paragraph: ParagraphModel): Promise<void> {
+    const doc = this.doc;
+    doc.x = doc.page.margins.left;
+
+    if (paragraph.isEmpty && !paragraph.hasDrawing) {
+      doc.font("Times-Roman").fontSize(BODY_FONT_SIZE).moveDown(0.6);
+      return;
     }
-  }
-  return null;
-}
 
-interface LaunchPlan {
-  executablePath: string;
-  args: string[];
-}
+    const runsWithText = paragraph.runs.filter((r) => r.text.length > 0);
+    const renderRuns =
+      runsWithText.length > 0
+        ? runsWithText.map((r) => ({ text: r.text, bold: r.effective.bold, italic: r.effective.italic }))
+        : paragraph.text.trim().length > 0
+          ? [{ text: paragraph.text, bold: paragraph.runProps.bold, italic: paragraph.runProps.italic }]
+          : [];
 
-/**
- * Version-pinned remote Chromium pack for @sparticuz/chromium-min.
- *
- * `@sparticuz/chromium` (the full package) bundles its brotli-compressed
- * Chromium + shared-library archives under node_modules/@sparticuz/chromium/bin
- * and reads them via fs at runtime rather than a static import. Vercel's
- * build-time file tracer doesn't follow that dynamic fs read reliably, even
- * with an explicit `includeFiles` glob in vercel.json — the deployed
- * function still launched Chromium without its bundled libnss3.so and
- * friends. `chromium-min` sidesteps Vercel's bundler entirely: it fetches
- * this prebuilt pack over HTTPS on cold start and extracts it to /tmp
- * itself, independent of what Vercel decided to include in the function.
- * Keep this URL's version suffix in lockstep with the installed
- * @sparticuz/chromium-min version.
- */
-const CHROMIUM_PACK_URL =
-  "https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar";
+    if (renderRuns.length > 0) {
+      const align = mapAlign(paragraph.props.alignment);
+      doc.fontSize(BODY_FONT_SIZE);
+      renderRuns.forEach((run, idx) => {
+        doc.font(fontFor(run.bold, run.italic));
+        doc.text(run.text, { continued: idx < renderRuns.length - 1, align });
+      });
+    }
 
-async function resolveLaunchPlan(): Promise<LaunchPlan> {
-  if (isServerlessRuntime()) {
-    const chromium = (await import("@sparticuz/chromium-min")).default;
-    const executablePath = await chromium.executablePath(CHROMIUM_PACK_URL);
-    return { executablePath, args: chromium.args };
-  }
-  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || findLocalExecutable();
-  if (!executablePath) {
-    throw new AppError(
-      "PROCESSING_FAILED",
-      "No local Chrome or Edge installation was found to render the merged PDF. Install Google Chrome, or set PUPPETEER_EXECUTABLE_PATH to a Chromium-based browser's executable.",
-      500
-    );
-  }
-  return { executablePath, args: ["--no-sandbox", "--disable-setuid-sandbox"] };
-}
+    if (paragraph.hasDrawing) {
+      for (const run of paragraph.runs) {
+        if (!run.hasDrawing) continue;
+        const images = await extractRunImages(pkg, run.el);
+        for (const image of images) this.drawImage(image);
+      }
+    }
 
-/** Renders a self-contained HTML document (no external resources) to PDF. */
-export async function renderHtmlToPdf(html: string): Promise<Buffer> {
-  const plan = await resolveLaunchPlan();
-  let browser: Browser;
-  try {
-    browser = await puppeteer.launch({
-      executablePath: plan.executablePath,
-      args: plan.args,
-      headless: true,
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new AppError("PROCESSING_FAILED", `The PDF renderer could not start (${message}).`, 500);
+    doc.font("Times-Roman").fontSize(BODY_FONT_SIZE).moveDown(0.6);
+    doc.x = doc.page.margins.left;
   }
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-    const pdf = await page.pdf({
-      format: "letter",
-      printBackground: true,
-      margin: { top: "1in", bottom: "1in", left: "1in", right: "1in" },
-    });
-    return Buffer.from(pdf);
-  } finally {
-    await browser.close().catch(() => {});
+
+  drawAppendixParagraph(text: string, bold: boolean): void {
+    const doc = this.doc;
+    doc.x = doc.page.margins.left;
+    if (text.trim().length === 0) {
+      doc.font("Times-Roman").fontSize(BODY_FONT_SIZE).moveDown(0.6);
+      return;
+    }
+    doc
+      .font(fontFor(bold, false))
+      .fontSize(BODY_FONT_SIZE)
+      .text(text, { align: "left" });
+    doc.font("Times-Roman").fontSize(BODY_FONT_SIZE).moveDown(0.6);
+    doc.x = doc.page.margins.left;
+  }
+
+  /**
+   * Draws an image scaled to the content width (preserving aspect ratio).
+   * If it won't reasonably fit in the remaining space on the current page,
+   * a new page is started first rather than letting it clip or overlap
+   * following content.
+   */
+  private drawImage(buffer: Buffer): void {
+    const doc = this.doc;
+    let image: { width: number; height: number };
+    try {
+      // openImage() is a pdfkit runtime API not covered by @types/pdfkit.
+      image = (doc as unknown as { openImage(src: Buffer): { width: number; height: number } }).openImage(
+        buffer
+      );
+    } catch {
+      return; // unsupported/corrupt image data — skip rather than crash
+    }
+    if (!image.width || !image.height) return;
+
+    const aspect = image.width / image.height;
+    const top = doc.page.margins.top;
+    const bottomLimit = doc.page.height - doc.page.margins.bottom;
+    const fullPageHeight = bottomLimit - top;
+
+    let width = this.contentWidth;
+    let height = width / aspect;
+
+    let remaining = bottomLimit - doc.y;
+    if (height > remaining && doc.y > top) {
+      doc.addPage();
+      doc.font("Times-Roman").fontSize(BODY_FONT_SIZE);
+      remaining = fullPageHeight;
+    }
+    if (height > remaining) {
+      height = remaining;
+      width = height * aspect;
+      if (width > this.contentWidth) {
+        width = this.contentWidth;
+        height = width / aspect;
+      }
+    }
+
+    const x = doc.page.margins.left + (this.contentWidth - width) / 2;
+    const y = doc.y;
+    doc.image(buffer, x, y, { width, height });
+    doc.y = y + height + 8;
+    doc.x = doc.page.margins.left;
+  }
+
+  /**
+   * Minimal table layout: equal-width columns spanning the content width,
+   * text-wrapped within cells, thin vector borders, automatic row height
+   * from wrapped text height, and page-break-aware row rendering (a row
+   * that would run past the bottom margin starts a fresh page before it is
+   * drawn, so it never straddles a page break).
+   */
+  drawTable(table: TableModel): void {
+    const doc = this.doc;
+    const rows = childrenW(table.el, "tr");
+    if (rows.length === 0) return;
+    const cols = Math.max(1, table.cols);
+    const left = doc.page.margins.left;
+    const colWidth = this.contentWidth / cols;
+
+    doc.font("Times-Roman").fontSize(TABLE_FONT_SIZE);
+    doc.moveDown(0.3);
+
+    for (const tr of rows) {
+      const cells = childrenW(tr, "tc");
+      const texts: string[] = [];
+      for (let c = 0; c < cols; c++) {
+        const tc = cells[c];
+        let text = "";
+        if (tc) {
+          for (const p of childrenW(tc, "p")) {
+            const t = paragraphText(p).trim();
+            if (t) text += (text ? "\n" : "") + t;
+          }
+        }
+        texts.push(text);
+      }
+
+      let rowHeight = TABLE_MIN_ROW_HEIGHT;
+      for (const text of texts) {
+        const h =
+          doc.heightOfString(text || " ", { width: colWidth - TABLE_CELL_PADDING * 2 }) +
+          TABLE_CELL_PADDING * 2;
+        if (h > rowHeight) rowHeight = h;
+      }
+
+      const bottomLimit = doc.page.height - doc.page.margins.bottom;
+      if (doc.y + rowHeight > bottomLimit) {
+        doc.addPage();
+        doc.font("Times-Roman").fontSize(TABLE_FONT_SIZE);
+      }
+
+      const top = doc.y;
+      doc.lineWidth(0.5).strokeColor("#444444");
+      for (let c = 0; c < cols; c++) {
+        const x = left + c * colWidth;
+        doc.rect(x, top, colWidth, rowHeight).stroke();
+        doc
+          .fillColor("#000000")
+          .text(texts[c] ?? "", x + TABLE_CELL_PADDING, top + TABLE_CELL_PADDING, {
+            width: colWidth - TABLE_CELL_PADDING * 2,
+          });
+      }
+      doc.x = left;
+      doc.y = top + rowHeight;
+    }
+
+    doc.font("Times-Roman").fontSize(BODY_FONT_SIZE).moveDown(0.5);
+    doc.x = left;
+  }
+
+  async finish(): Promise<Buffer> {
+    this.doc.end();
+    return this.done;
   }
 }

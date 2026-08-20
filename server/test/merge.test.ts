@@ -1,18 +1,16 @@
 import { describe, expect, it } from "vitest";
-// Import the library module directly (not the package's `index.js`), which
-// contains a `!module.parent` debug branch that misfires under ESM/vitest.
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import { mergeDocuments } from "../src/merge/merge.js";
 import { buildDocx } from "./util/docx_builder.js";
+import { extractPdfText } from "./util/pdf_text.js";
 
 const PDF_MAGIC = "%PDF-";
 
 describe("mergeDocuments", () => {
-  it("merges two documents (with a table and image) plus an appendix into a single well-formed PDF", async () => {
+  it("merges two documents (with a table) plus an appendix into a single well-formed PDF", async () => {
     const docA = await buildDocx({
       paragraphs: [
         { text: "Alpha document body paragraph one.", spacing: { after: 160 } },
-        { text: "Alpha document body paragraph two, with more content.", image: true },
+        { text: "Alpha document body paragraph two, with more content." },
         { text: "References", align: "left" },
         { text: "Smith, J. (2024). A paper that must not appear in the merge." },
       ],
@@ -45,27 +43,27 @@ describe("mergeDocuments", () => {
     expect(output.length).toBeGreaterThan(docA.length);
     expect(output.length).toBeGreaterThan(docB.length);
 
-    const parsed = await pdfParse(output);
-    const text = parsed.text.replace(/\s+/g, " ");
+    const { text, numPages } = await extractPdfText(output);
+    const flat = text.replace(/\s+/g, " ");
 
     // Both user-supplied headings appear.
-    expect(text).toContain("Alpha Submission");
-    expect(text).toContain("Bravo Submission");
+    expect(flat).toContain("Alpha Submission");
+    expect(flat).toContain("Bravo Submission");
 
     // Body content from both documents survived the conversion.
-    expect(text).toContain("Alpha document body paragraph one");
-    expect(text).toContain("Bravo document body paragraph one");
+    expect(flat).toContain("Alpha document body paragraph one");
+    expect(flat).toContain("Bravo document body paragraph one");
 
     // Table content from the first document survived.
-    expect(text).toContain("AlphaCell");
+    expect(flat).toContain("AlphaCell");
 
     // References/Bibliography sections were stripped from both documents.
-    expect(text).not.toContain("must not appear in the merge");
-    expect(text).not.toContain("excluded from the merge");
+    expect(flat).not.toContain("must not appear in the merge");
+    expect(flat).not.toContain("excluded from the merge");
 
     // The appendix was appended (its source text starts with "IGNORE" per
     // server/assets/ignore_appendix.txt) and produced at least one page.
-    expect(parsed.numpages).toBeGreaterThanOrEqual(1);
+    expect(numPages).toBeGreaterThanOrEqual(1);
   }, 60_000);
 
   it("stops each source document exactly at its References/Bibliography/Works Cited heading", async () => {
@@ -81,11 +79,39 @@ describe("mergeDocuments", () => {
       [{ name: "Solo Document", originalName: "solo.docx", buffer: doc }],
       0
     );
-    const parsed = await pdfParse(output);
-    const text = parsed.text.replace(/\s+/g, " ");
+    const { text } = await extractPdfText(output);
+    const flat = text.replace(/\s+/g, " ");
 
-    expect(text).toContain("Kept paragraph before the reference heading");
-    expect(text).not.toContain("This citation text is dropped");
-    expect(text).not.toContain("Works Cited");
+    expect(flat).toContain("Kept paragraph before the reference heading");
+    expect(flat).not.toContain("This citation text is dropped");
+    expect(flat).not.toContain("Works Cited");
+  }, 60_000);
+
+  it("does not crash when a source document contains an embedded image, and renders the surrounding content", async () => {
+    const doc = await buildDocx({
+      paragraphs: [
+        { text: "Paragraph before the image." },
+        { text: "Paragraph with an inline image.", image: true },
+        { text: "Paragraph after the image." },
+      ],
+    });
+
+    const output = await mergeDocuments(
+      [{ name: "Document With Image", originalName: "with_image.docx", buffer: doc }],
+      0
+    );
+
+    // Still a well-formed PDF — the pipeline didn't crash on the image.
+    expect(output.subarray(0, PDF_MAGIC.length).toString("latin1")).toBe(PDF_MAGIC);
+
+    const { text } = await extractPdfText(output);
+    const flat = text.replace(/\s+/g, " ");
+
+    // Text content around the image (which itself isn't text-extractable)
+    // survived intact.
+    expect(flat).toContain("Document With Image");
+    expect(flat).toContain("Paragraph before the image");
+    expect(flat).toContain("Paragraph with an inline image");
+    expect(flat).toContain("Paragraph after the image");
   }, 60_000);
 });
