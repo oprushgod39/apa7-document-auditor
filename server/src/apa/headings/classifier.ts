@@ -77,6 +77,41 @@ export function classifyHeadings(
   return out;
 }
 
+/**
+ * A source document may style its only tier of section headings as Word
+ * "Heading 2" (or deeper) without ever using "Heading 1" — e.g. an author
+ * who never opened the Styles pane past the second entry. Taken literally,
+ * that produces left-aligned Level 2 headings throughout with no Level 1
+ * anywhere, which is not what APA 7 hierarchy means: a document's *only*
+ * tier of section headings is its top tier and belongs at centered Level 1,
+ * regardless of which named Word style the author happened to pick.
+ *
+ * This only touches headings whose level came from a raw Word style
+ * (`fromStyle`) with no author marker — an explicit `[H2]` or
+ * `Subheading 1:` marker is deliberate intent and is never renumbered.
+ * Heuristic (unstyled) headings already default to Level 1 by product
+ * policy, so they're excluded from the "lowest level present" calculation.
+ *
+ * Must be called on the *final* heading list — after any caller-side
+ * filtering (e.g. dropping a repeated document-title paragraph that
+ * classified as a heading) — not inside `classifyHeadings` itself, since a
+ * pseudo-heading like that repeated title can masquerade as a genuine
+ * Level 1 and wrongly suppress normalization of the real section headings.
+ */
+export function normalizeStyleLevels(headings: ClassifiedHeading[]): void {
+  const styleLevels = headings.filter((h) => h.fromStyle && !h.marker).map((h) => h.level);
+  if (styleLevels.length === 0) return;
+  const minLevel = Math.min(...styleLevels);
+  if (minLevel <= 1) return;
+  const offset = minLevel - 1;
+  for (const h of headings) {
+    if (!h.fromStyle || h.marker) continue;
+    const original = h.level;
+    h.level = Math.max(1, h.level - offset);
+    h.signals.push(`normalized: no Level 1 heading in source, so Word style level ${original} → APA Level ${h.level}`);
+  }
+}
+
 export function classifyParagraph(
   p: ParagraphModel,
   paras: ParagraphModel[],

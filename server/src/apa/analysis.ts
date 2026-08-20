@@ -7,6 +7,7 @@ import {
 } from "./references/matcher.js";
 import {
   classifyHeadings,
+  normalizeStyleLevels,
   type ClassifiedHeading,
 } from "./headings/classifier.js";
 import type { TitlePageMetadata } from "./types.js";
@@ -207,6 +208,7 @@ export function analyzeDocument(model: DocumentModel): DocumentAnalysis {
       heading.text.trim() === detectedMetadata.title.trim();
     return !isBodyTitle;
   });
+  normalizeStyleLevels(headings);
 
   // --- Citations (body only, excluding reference list) -----------------
   const citations: ParsedCitation[] = [];
