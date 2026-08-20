@@ -1,13 +1,7 @@
-import { execFile } from "node:child_process";
-import fs from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import { promisify } from "node:util";
-import { fileURLToPath } from "node:url";
 import { AppError } from "../errors.js";
-import { buildAppendixParagraphs } from "./word_count.js";
-
-const execFileAsync = promisify(execFile);
+import { docxToTrimmedHtml } from "./html_convert.js";
+import { renderHtmlToPdf } from "./pdf_render.js";
+import { buildAppendixParagraphs, type AppendixParagraph } from "./word_count.js";
 
 export interface MergeInput {
   name: string;
@@ -15,55 +9,100 @@ export interface MergeInput {
   buffer: Buffer;
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function renderSection(heading: string, bodyHtml: string, isFirst: boolean): string {
+  const pageBreak = isFirst ? "" : ' style="page-break-before: always;"';
+  return `<section class="merge-doc"${pageBreak}><p class="merge-heading">${escapeHtml(heading)}</p>${bodyHtml}</section>`;
+}
+
+function renderAppendix(paragraphs: AppendixParagraph[]): string {
+  if (paragraphs.length === 0) return "";
+  const body = paragraphs
+    .map((p) => (p.bold ? `<p><strong>${escapeHtml(p.text)}</strong></p>` : `<p>${escapeHtml(p.text)}</p>`))
+    .join("");
+  return `<section class="merge-doc" style="page-break-before: always;"><p class="merge-heading">Appendix</p>${body}</section>`;
+}
+
+function wrapDocument(sectionsHtml: string): string {
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { margin: 1in; }
+  body {
+    font-family: "Times New Roman", Georgia, serif;
+    font-size: 12pt;
+    line-height: 1.6;
+    color: #000;
+  }
+  p { margin: 0 0 8pt 0; }
+  table { border-collapse: collapse; margin: 8pt 0; }
+  td, th { border: 1px solid #444; padding: 4pt 6pt; }
+  img { max-width: 100%; }
+  .merge-heading {
+    text-align: center;
+    font-weight: bold;
+    font-size: 14pt;
+    margin-bottom: 12pt;
+  }
+  .merge-doc:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+${sectionsHtml}
+</body>
+</html>`;
+}
+
+/**
+ * Merges 2-30 source .docx files (in the given order, each preceded by a
+ * centered user-supplied heading) into a single PDF. Each source document
+ * has its References/Bibliography/Works Cited section (and everything after
+ * it) stripped before being included, mirroring countDocumentWords' cutoff
+ * detection exactly (see html_convert.ts). Formatting, tables, and images
+ * are preserved as faithfully as HTML/PDF rendering allows; a controlled
+ * appendix is appended last.
+ *
+ * Runs entirely in Node — no Microsoft Word, PowerShell, or Windows
+ * dependency — so it works both locally and on Vercel's Linux serverless
+ * runtime.
+ */
 export async function mergeDocuments(inputs: MergeInput[], appendixWords: number): Promise<Buffer> {
-  if (process.platform === "win32") {
-    const { stdout } = await execFileAsync(
-      "tasklist.exe",
-      ["/FI", "IMAGENAME eq WINWORD.EXE", "/NH"],
-      { windowsHide: true }
-    );
-    if (/\bWINWORD\.EXE\b/i.test(stdout)) {
+  const sectionsHtml: string[] = [];
+  for (let index = 0; index < inputs.length; index++) {
+    const input = inputs[index]!;
+    let trimmedHtml: string;
+    try {
+      trimmedHtml = await docxToTrimmedHtml(input.buffer);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       throw new AppError(
         "PROCESSING_FAILED",
-        "Save and close Microsoft Word before merging so your open documents stay untouched, then try again.",
-        409
+        `"${input.originalName}" could not be converted for merging (${message}).`,
+        422
       );
     }
+    sectionsHtml.push(renderSection(input.name, trimmedHtml, index === 0));
   }
-  const here = path.dirname(fileURLToPath(import.meta.url));
-  const serverRoot = path.resolve(here, "../..");
-  const scriptPath = path.join(serverRoot, "scripts", "merge_documents.ps1");
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "apa7-merge-"));
-  const outputPath = path.join(tempDir, "merged.docx");
-  const manifestPath = path.join(tempDir, "manifest.json");
+
+  const appendixParagraphs = await buildAppendixParagraphs(appendixWords);
+  sectionsHtml.push(renderAppendix(appendixParagraphs));
+
+  const fullHtml = wrapDocument(sectionsHtml.join(""));
 
   try {
-    const documents = [];
-    for (let index = 0; index < inputs.length; index++) {
-      const item = inputs[index]!;
-      const sourcePath = path.join(tempDir, `source-${String(index + 1).padStart(2, "0")}.docx`);
-      await fs.writeFile(sourcePath, item.buffer);
-      documents.push({ path: sourcePath, name: item.name });
-    }
-    await fs.writeFile(
-      manifestPath,
-      JSON.stringify({ documents, appendixWords, appendixParagraphs: await buildAppendixParagraphs(appendixWords), outputPath }),
-      "utf8"
-    );
-
-    await execFileAsync(
-      "powershell.exe",
-      ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", scriptPath, "-ManifestPath", manifestPath],
-      { timeout: 180_000, windowsHide: true, maxBuffer: 2 * 1024 * 1024 }
-    );
-    return await fs.readFile(outputPath);
+    return await renderHtmlToPdf(fullHtml);
   } catch (error) {
+    if (error instanceof AppError) throw error;
     const message = error instanceof Error ? error.message : String(error);
-    if (/ActiveX|COM|Word\.Application|class not registered/i.test(message)) {
-      throw new AppError("PROCESSING_FAILED", "Microsoft Word is required on this computer to preserve every table, image, and style during merging.", 503);
-    }
-    throw new AppError("PROCESSING_FAILED", "The documents could not be merged. Close any Word dialogs and try again.", 500);
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+    throw new AppError("PROCESSING_FAILED", `The documents could not be merged (${message}).`, 500);
   }
 }

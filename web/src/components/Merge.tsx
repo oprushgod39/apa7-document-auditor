@@ -86,7 +86,7 @@ export function MergeScreen() {
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = "Merged_Submissions.docx";
+      anchor.download = "Merged_Submissions.pdf";
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
@@ -160,8 +160,8 @@ export function MergeScreen() {
             </div>
             <div className="merge-total"><span>Total upload</span><strong>{(totalSize / 1024 / 1024).toFixed(2)} MB</strong></div>
             {error && <p className="merge-error" role="alert">{error}</p>}
-            <button className="btn primary merge-action" disabled={busy || counting || items.length < 2} onClick={runMerge}>{busy ? "Building your document…" : "Merge & download DOCX"}</button>
-            <small className="merge-local-note">Save and close Microsoft Word first. A private Word process then performs the merge locally for maximum fidelity.</small>
+            <button className="btn primary merge-action" disabled={busy || counting || items.length < 2} onClick={runMerge}>{busy ? "Building your document…" : "Merge & download PDF"}</button>
+            <small className="merge-local-note">No Microsoft Word needed — each document is rendered directly into one merged PDF, preserving formatting, tables, and images.</small>
           </div>
         </aside>
       </div>

@@ -154,11 +154,13 @@ export function apiRouter(): Router {
         throw Errors.invalid("Appendix word count must be between 0 and 50,000 words.");
       }
       const output = await mergeDocuments(inputs, appendixWords);
-      await DocxPackage.load(output);
+      if (output.length < 5 || output.subarray(0, 5).toString("latin1") !== "%PDF-") {
+        throw Errors.internal();
+      }
       log.info("documents merged", { files: inputs.length, bytes: output.length, referencesRemoved: true, appendixWords });
       res
-        .setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-        .setHeader("Content-Disposition", 'attachment; filename="Merged_Submissions.docx"')
+        .setHeader("Content-Type", "application/pdf")
+        .setHeader("Content-Disposition", 'attachment; filename="Merged_Submissions.pdf"')
         .send(output);
     })
   );
