@@ -106,11 +106,17 @@ export function BatchWorkspace(props: { onSwitchToSingle: () => void }) {
       // "never invent" title-page rule. If this file has no title page and no
       // detectable title, no title page will be auto-created for it; flag
       // that up front so it's visible even before processing finishes.
+      //
+      // Author falls back to the same "Name" placeholder the single-file
+      // Configure screen defaults to when nothing is detected — omitting it
+      // entirely (as an earlier version of this code did) silently drops the
+      // author line from the generated title page instead of showing a
+      // placeholder for the student to fill in.
       const detected = session.detected.metadata;
       const noTitleDetected = !session.detected.hasTitlePage && !detected.title;
       const perFileMetadata: Record<string, string> = { ...activeSettings.metadata };
       if (detected.title) perFileMetadata.title = detected.title;
-      if (detected.author) perFileMetadata.author = detected.author;
+      perFileMetadata.author = detected.author || "Name";
       const perFileSettings: ProcessSettings = { ...activeSettings, metadata: perFileMetadata };
 
       updateRow(row.id, {
