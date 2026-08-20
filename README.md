@@ -57,7 +57,8 @@ apa7-document-auditor/
 │   │   │   └── headings/      Multi-signal heading classifier (scored)
 │   │   ├── verify/            Metadata provider abstraction + Crossref impl
 │   │   ├── audit/             Independent auditor + HTML report renderer
-│   │   ├── store/             Session store, temp files, retention sweeper
+│   │   ├── store/             Session store: in-memory Map + local temp files
+│   │   │                      (default), or Vercel KV + Blob when configured
 │   │   ├── pipeline.ts        analyze → format → guard → verify → audit
 │   │   └── api/routes.ts      REST API (zod-validated)
 │   └── test/                  vitest: unit, golden-document, round-trip,
@@ -140,6 +141,32 @@ docker compose up --build
 
 Open http://localhost:8000.
 
+### Deployment (Vercel)
+
+The app also deploys as Vercel serverless functions, with no code changes
+from the local setup above:
+
+- `api/index.ts` adapts the same Express app (`server/src/app.ts`) to
+  Vercel's Node function convention.
+- `vercel.json` builds `web/` as a static SPA (`npm run build` at the repo
+  root) and rewrites `/api/*` to the function, everything else to
+  `index.html`.
+- `server/src/store/sessions.ts` auto-detects Vercel KV / Blob env vars at
+  runtime (see below) and persists session metadata / document binaries
+  there instead of the in-memory Map + local temp files used locally —
+  necessary because serverless functions are stateless across invocations
+  and only have ephemeral `/tmp`. With neither attached, the deployed
+  function still runs using the in-memory/local fallback, but state will
+  not survive between separate invocations (e.g. a cold start between
+  upload and status-poll requests) — attach at least KV for a working
+  deployment.
+- File uploads already use multer's in-memory storage, so no change was
+  needed for serverless request handling.
+
+To enable it: import the repo into a Vercel project, then in the project's
+**Storage** tab create and connect a **KV** database and a **Blob** store
+(this auto-populates the env vars below) and redeploy.
+
 ---
 
 ## Environment variables
@@ -156,6 +183,8 @@ See [.env.example](.env.example). Highlights:
 | `CROSSREF_MAILTO` | — | Contact email for Crossref polite pool |
 | `CROSSREF_MAX_REQUESTS_PER_RUN` | `25` | Per-run request budget |
 | `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW_MS` | 60 / 60s | API rate limit |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` (or `KV_URL`) | — | Vercel KV — session metadata backend (Vercel-provisioned) |
+| `BLOB_READ_WRITE_TOKEN` | — | Vercel Blob — document binary backend (Vercel-provisioned) |
 
 No secrets are required; never commit a `.env`.
 

@@ -2,7 +2,6 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 import multer from "multer";
 import { z } from "zod";
 import path from "node:path";
-import fs from "node:fs/promises";
 import { config } from "../config.js";
 import { AppError, Errors } from "../errors.js";
 import { DocxPackage } from "../docx/package.js";
@@ -12,11 +11,14 @@ import { parseInstructorRequirements, defaultSettings } from "../apa/requirement
 import {
   createSession,
   getSession,
+  saveSession,
   deleteSession,
   readOriginal,
+  readOutput,
   type Session,
 } from "../store/sessions.js";
 import { processSession, applyResolution } from "../pipeline.js";
+import { runInBackground } from "../run_background.js";
 import { renderReportHtml } from "../audit/report_html.js";
 import { log } from "../logging.js";
 import { mergeDocuments } from "../merge/merge.js";
@@ -193,6 +195,7 @@ export function apiRouter(): Router {
 
       const session = await createSession(name, file.buffer, defaultSettings());
       session.cachedAnalysis = analysis;
+      await saveSession(session);
 
       log.info("document uploaded", {
         sessionId: session.id,
@@ -224,7 +227,7 @@ export function apiRouter(): Router {
   router.post(
     "/documents/:id/process",
     asyncHandler(async (req, res) => {
-      const session = getSession(req.params.id!);
+      const session = await getSession(req.params.id!);
       if (session.status === "processing") {
         throw Errors.notReady("The document is already being processed.");
       }
@@ -242,8 +245,9 @@ export function apiRouter(): Router {
         metadata: s.metadata,
         instructor: parseInstructorRequirements(s.instructorRequirements),
       };
+      await saveSession(session);
       // Fire and monitor via /status. Errors are captured on the session.
-      void processSession(session).catch(() => {});
+      runInBackground(processSession(session));
       res.status(202).json(sessionSummary(session));
     })
   );
@@ -252,7 +256,7 @@ export function apiRouter(): Router {
   router.get(
     "/documents/:id/status",
     asyncHandler(async (req, res) => {
-      const session = getSession(req.params.id!);
+      const session = await getSession(req.params.id!);
       res.json(sessionSummary(session));
     })
   );
@@ -261,7 +265,7 @@ export function apiRouter(): Router {
   router.get(
     "/documents/:id/report",
     asyncHandler(async (req, res) => {
-      const session = getSession(req.params.id!);
+      const session = await getSession(req.params.id!);
       if (session.status !== "ready" || !session.report) {
         throw Errors.notReady("The report is not ready yet.");
       }
@@ -278,7 +282,7 @@ export function apiRouter(): Router {
   router.get(
     "/documents/:id/report.html",
     asyncHandler(async (req, res) => {
-      const session = getSession(req.params.id!);
+      const session = await getSession(req.params.id!);
       if (!session.report) throw Errors.notReady("The report is not ready yet.");
       const html = renderReportHtml(session.report, session.originalName);
       res
@@ -295,11 +299,12 @@ export function apiRouter(): Router {
   router.post(
     "/documents/:id/resolve",
     asyncHandler(async (req, res) => {
-      const session = getSession(req.params.id!);
+      const session = await getSession(req.params.id!);
       if (!session.report) throw Errors.notReady("Process the document first.");
       const parsed = ResolveSchema.safeParse(req.body ?? {});
       if (!parsed.success) throw Errors.invalid("Invalid resolution payload.");
       applyResolution(session, parsed.data.issueKey, parsed.data.optionId, parsed.data.note);
+      await saveSession(session);
       res.json({ report: session.report });
     })
   );
@@ -308,10 +313,11 @@ export function apiRouter(): Router {
   router.post(
     "/documents/:id/rules",
     asyncHandler(async (req, res) => {
-      const session = getSession(req.params.id!);
+      const session = await getSession(req.params.id!);
       const parsed = RulesSchema.safeParse(req.body ?? {});
       if (!parsed.success) throw Errors.invalid("Invalid rules payload.");
       session.disabledRules = new Set(parsed.data.disabledRules);
+      await saveSession(session);
       res.json({ disabledRules: [...session.disabledRules] });
     })
   );
@@ -320,11 +326,11 @@ export function apiRouter(): Router {
   router.post(
     "/documents/:id/generate",
     asyncHandler(async (req, res) => {
-      const session = getSession(req.params.id!);
+      const session = await getSession(req.params.id!);
       if (session.status === "processing") {
         throw Errors.notReady("The document is already being processed.");
       }
-      void processSession(session).catch(() => {});
+      runInBackground(processSession(session));
       res.status(202).json(sessionSummary(session));
     })
   );
@@ -333,11 +339,11 @@ export function apiRouter(): Router {
   router.get(
     "/documents/:id/download",
     asyncHandler(async (req, res) => {
-      const session = getSession(req.params.id!);
+      const session = await getSession(req.params.id!);
       if (session.status !== "ready" || !session.outputPath) {
         throw Errors.notReady("The corrected document is not ready yet.");
       }
-      const buffer = await fs.readFile(session.outputPath);
+      const buffer = await readOutput(session);
       const suffix =
         session.settings.mode === "format_verify" ? "APA7_verified" : "APA7_formatted";
       res
@@ -357,7 +363,7 @@ export function apiRouter(): Router {
   router.get(
     "/documents/:id/original",
     asyncHandler(async (req, res) => {
-      const session = getSession(req.params.id!);
+      const session = await getSession(req.params.id!);
       const buffer = await readOriginal(session);
       res
         .setHeader(

@@ -20,6 +20,7 @@ import type { VerificationResult } from "./verify/provider.js";
 import {
   readOriginal,
   writeOutput,
+  saveSession,
   STAGE_LABELS,
   type Session,
   type ProcessingStageKey,
@@ -31,10 +32,15 @@ const ruleCategoryById = new Map<string, RuleCategory>(
   allRules().map((r) => [r.id, r.category])
 );
 
-function stage(session: Session, key: ProcessingStageKey, status: "running" | "done" | "skipped" | "failed"): void {
+async function stage(
+  session: Session,
+  key: ProcessingStageKey,
+  status: "running" | "done" | "skipped" | "failed"
+): Promise<void> {
   const existing = session.stages.find((s) => s.key === key);
   if (existing) existing.status = status;
   else session.stages.push({ key, label: STAGE_LABELS[key], status });
+  await saveSession(session);
 }
 
 /** Collapse text to an alphanumeric stream for content comparison. */
@@ -141,30 +147,32 @@ export async function processSession(session: Session): Promise<void> {
   session.status = "processing";
   session.stages = [];
   session.errorMessage = null;
+  await saveSession(session);
   try {
     const mode = session.settings.mode;
 
     // 1. Read + parse the original (a fresh in-memory copy every run).
-    stage(session, "read", "running");
+    await stage(session, "read", "running");
     const originalBuffer = await readOriginal(session);
     const pkg = await DocxPackage.load(originalBuffer);
     const model = await buildDocumentModel(pkg);
-    stage(session, "read", "done");
+    await stage(session, "read", "done");
 
-    stage(session, "structure", "running");
+    await stage(session, "structure", "running");
     const beforeFp = contentFingerprint(model);
     const analysis = analyzeDocument(model);
     session.cachedAnalysis = analysis;
-    stage(session, "structure", "done");
-    stage(session, "headings", "done");
-    stage(session, "page_format", "done");
-    stage(session, "citations", "done");
-    stage(session, "references", "done");
+    await saveSession(session);
+    await stage(session, "structure", "done");
+    await stage(session, "headings", "done");
+    await stage(session, "page_format", "done");
+    await stage(session, "citations", "done");
+    await stage(session, "references", "done");
 
     const fix = mode !== "check";
 
     // 2. Format (or check-only) run.
-    stage(session, "apply", fix ? "running" : "skipped");
+    await stage(session, "apply", fix ? "running" : "skipped");
     const formatRun = await runEngine(model, session.settings, {
       fix,
       analysis,
@@ -204,10 +212,10 @@ export async function processSession(session: Session): Promise<void> {
         });
       }
     }
-    if (fix) stage(session, "apply", "done");
+    if (fix) await stage(session, "apply", "done");
 
     // 4. Save modified package and verify integrity.
-    stage(session, "prepare_output", "running");
+    await stage(session, "prepare_output", "running");
     let outputBuffer: Buffer;
     if (fix) {
       outputBuffer = await pkg.save();
@@ -222,7 +230,7 @@ export async function processSession(session: Session): Promise<void> {
     if (fix) {
       assertContentPreserved(beforeFp, contentFingerprint(outModel), changes);
     }
-    stage(session, "prepare_output", "done");
+    await stage(session, "prepare_output", "done");
 
     // 6. External metadata verification (graceful degradation).
     let verification: VerificationResult[] | null = null;
@@ -232,20 +240,20 @@ export async function processSession(session: Session): Promise<void> {
       session.settings.verifyMetadata &&
       outAnalysis.references.length > 0
     ) {
-      stage(session, "verify_metadata", "running");
+      await stage(session, "verify_metadata", "running");
       const provider = getProvider();
       if (provider instanceof CrossrefProvider) provider.resetBudget();
       verification = [];
       for (const ref of outAnalysis.references) {
         verification.push(await provider.verify(ref));
       }
-      stage(session, "verify_metadata", "done");
+      await stage(session, "verify_metadata", "done");
     } else {
-      stage(session, "verify_metadata", "skipped");
+      await stage(session, "verify_metadata", "skipped");
     }
 
     // 7. Independent audit of the OUTPUT document (check-only, no fixes).
-    stage(session, "audit", "running");
+    await stage(session, "audit", "running");
     const auditRun = await runEngine(outModel, session.settings, {
       fix: false,
       auditOnly: true,
@@ -299,13 +307,14 @@ export async function processSession(session: Session): Promise<void> {
       session.resolutions,
       new Map([...ruleCategoryById, ["APA-REFERENCE-VERIFY", "references" as RuleCategory]])
     );
-    stage(session, "audit", "done");
+    await stage(session, "audit", "done");
 
     if (fix) await writeOutput(session, outputBuffer);
     session.report = report;
     session.changes = changes;
     session.verification = verification;
     session.status = "ready";
+    await saveSession(session);
     log.info("processing complete", {
       sessionId: session.id,
       mode,
@@ -321,6 +330,7 @@ export async function processSession(session: Session): Promise<void> {
     for (const s of session.stages) {
       if (s.status === "running") s.status = "failed";
     }
+    await saveSession(session);
     log.error("processing failed", {
       sessionId: session.id,
       code: err instanceof AppError ? err.code : "INTERNAL",
