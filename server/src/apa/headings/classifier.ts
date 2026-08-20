@@ -20,7 +20,7 @@ export interface ClassifiedHeading {
   marker?: {
     raw: string;
     cleanText: string;
-    kind: "apa_level" | "subheading" | "generic_subheading";
+    kind: "apa_level" | "subheading" | "generic_subheading" | "rephrased_heading";
     ordinal?: number;
   };
 }
@@ -32,6 +32,34 @@ const STYLE_LEVEL: Record<string, number> = {
   heading4: 4, "heading 4": 4,
   heading5: 5, "heading 5": 5,
 };
+
+const REPHRASE_STOP_WORDS = new Set([
+  "a", "an", "the", "and", "but", "or", "nor", "so", "yet", "for", "of",
+  "to", "in", "on", "at", "by", "with", "as", "than", "that", "this",
+  "it", "its", "is", "are", "was", "were",
+]);
+
+/**
+ * Deterministically shortens a period-terminated, heading-like sentence into
+ * a short heading phrase — no AI/LLM anywhere in this app by design, so this
+ * is purely mechanical: drop the trailing period, and if the sentence is
+ * still longer than 8 words, cut it down, preferring to land on a word that
+ * isn't a stray article/preposition/pronoun so the result doesn't trail off
+ * mid-clause (e.g. prefer "...Is More Complex" over "...Is More Complex Than").
+ */
+export function rephraseHeadingText(text: string): string {
+  const stripped = text.replace(/\.+$/, "").trim();
+  const words = stripped.split(/\s+/);
+  if (words.length <= 8) return stripped;
+  let cut = 8;
+  for (let i = 8; i >= 5; i--) {
+    if (!REPHRASE_STOP_WORDS.has(words[i - 1]!.toLowerCase())) {
+      cut = i;
+      break;
+    }
+  }
+  return words.slice(0, cut).join(" ");
+}
 
 function isTitleCaseish(text: string): boolean {
   const words = text.split(/\s+/).filter((w) => w.length > 3);
@@ -225,7 +253,33 @@ export function classifyParagraph(
   // candidate is only considered when it doesn't end in a literal full stop
   // — i.e. it may still be an unformatted heading with no terminal
   // punctuation at all, or one ending in "?"/"!".
-  if (!bold && !centered && !sectionWord && endsWithFullStop) return null;
+  if (!bold && !centered && !sectionWord && endsWithFullStop) {
+    // A period-terminated line with no direct formatting signal at all is
+    // the highest-risk case for a false positive, so it isn't scored the
+    // normal way (bold/centered/sectionWord contribute the bulk of every
+    // other path's score, and none apply here). Instead it's judged on a
+    // narrower, stricter set of structural signals — short, title-cased,
+    // and immediately followed by a real paragraph — and when it qualifies,
+    // it's rephrased into a short heading rather than kept as a full
+    // sentence, since a bold centered sentence-with-a-period reads oddly as
+    // a heading even when the underlying line clearly was intended as one.
+    const next = paras.slice(i + 1).find((q) => !q.isEmpty);
+    const followedByBody = next != null && next.text.trim().split(/\s+/).length > 20;
+    if (words <= 12 && isTitleCaseish(text) && followedByBody) {
+      const cleanText = rephraseHeadingText(text);
+      return {
+        paragraphIndex: p.index,
+        text: cleanText,
+        level: 1,
+        confidence: "high",
+        score: 80,
+        signals: ["short", "title case", "followed by body paragraph", `rephrased — source ended in a period: "${text}"`],
+        fromStyle: false,
+        marker: { raw: text, cleanText, kind: "rephrased_heading" },
+      };
+    }
+    return null;
+  }
   if (endsWithFullStop && !bold) return null;
 
   let score = 0;
