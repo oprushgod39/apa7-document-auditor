@@ -1,6 +1,6 @@
 import type { SessionInfo, UploadResponse } from "../lib/api";
 
-const ALL_STAGES: [string, string][] = [
+export const ALL_STAGES: [string, string][] = [
   ["read", "Reading Word document"],
   ["structure", "Analyzing document structure"],
   ["headings", "Detecting headings"],

@@ -18,6 +18,9 @@ const SimilarityScreen = lazy(() =>
 const MergeScreen = lazy(() =>
   import("./components/Merge").then((module) => ({ default: module.MergeScreen }))
 );
+const BatchWorkspace = lazy(() =>
+  import("./components/BatchWorkspace").then((module) => ({ default: module.BatchWorkspace }))
+);
 
 const PRODUCT_NAME = "APA 7 Document Auditor"; // configurable product name
 
@@ -29,6 +32,7 @@ type Screen =
 
 export function App() {
   const [tool, setTool] = useState<"formatter" | "similarity" | "merger">("formatter");
+  const [formatterMode, setFormatterMode] = useState<"single" | "batch">("single");
   const [screen, setScreen] = useState<Screen>({ kind: "upload" });
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
@@ -133,7 +137,7 @@ export function App() {
           </div>
         </header>
 
-        {tool === "formatter" ? <nav className="journey" aria-label="Document workflow">
+        {tool === "formatter" && formatterMode === "single" ? <nav className="journey" aria-label="Document workflow">
           {["Upload", "Customize", "Review & download"].map((label, index) => {
             const n = index + 1;
             return (
@@ -143,7 +147,7 @@ export function App() {
               </div>
             );
           })}
-        </nav> : tool === "similarity" ? <div className="similarity-journey"><span>⇄</span><strong>Document-to-document comparison</strong><small>Every unique pair · local browser analysis · exportable report</small></div> : <div className="similarity-journey merge-journey"><span>↧</span><strong>Multi-document submission builder</strong><small>Original formatting preserved · reference lists removed · adjustable appendix budget</small></div>}
+        </nav> : tool === "formatter" ? <div className="similarity-journey batch-journey"><span>▤</span><strong>Batch APA formatting</strong><small>Same settings for every file · independent progress and downloads</small></div> : tool === "similarity" ? <div className="similarity-journey"><span>⇄</span><strong>Document-to-document comparison</strong><small>Every unique pair · local browser analysis · exportable report</small></div> : <div className="similarity-journey merge-journey"><span>↧</span><strong>Multi-document submission builder</strong><small>Original formatting preserved · reference lists removed · adjustable appendix budget</small></div>}
 
         {error && (
           <div className="error-box" role="alert">
@@ -153,9 +157,14 @@ export function App() {
         )}
 
         <main>
-          {tool === "similarity" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the comparison workspace…</p></div>}><SimilarityScreen /></Suspense> : tool === "merger" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the merge workspace…</p></div>}><MergeScreen /></Suspense> : <>
+          {tool === "similarity" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the comparison workspace…</p></div>}><SimilarityScreen /></Suspense> : tool === "merger" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the merge workspace…</p></div>}><MergeScreen /></Suspense> : tool === "formatter" && formatterMode === "batch" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the batch workspace…</p></div>}><BatchWorkspace onSwitchToSingle={() => setFormatterMode("single")} /></Suspense> : <>
           {screen.kind === "upload" && (
-            <UploadScreen onUploaded={handleUploaded} onError={setError} />
+            <UploadScreen
+              onUploaded={handleUploaded}
+              onError={setError}
+              batchMode={false}
+              onBatchModeChange={(batch) => { if (batch) setFormatterMode("batch"); }}
+            />
           )}
           {screen.kind === "configure" && (
             <ConfigureScreen
