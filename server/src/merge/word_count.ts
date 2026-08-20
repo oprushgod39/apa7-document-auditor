@@ -6,7 +6,13 @@ import { buildDocumentModel } from "../docx/model.js";
 import { descendantsW, paragraphText } from "../docx/xml.js";
 
 const WORD_PATTERN = /[\p{L}\p{N}]+(?:['’.-][\p{L}\p{N}]+)*/gu;
-const REFERENCE_HEADING = /^(references|bibliography|works\s+cited)\s*:?[\s.]*$/i;
+/**
+ * Matches a paragraph that is (and is only) a References/Bibliography/Works
+ * Cited heading. Exported so the merge pipeline can cut source documents at
+ * exactly the same point word counts are computed from — see
+ * server/src/merge/html_convert.ts.
+ */
+export const REFERENCE_HEADING = /^(references|bibliography|works\s+cited)\s*:?[\s.]*$/i;
 
 export function countWords(text: string): number {
   return text.match(WORD_PATTERN)?.length ?? 0;
