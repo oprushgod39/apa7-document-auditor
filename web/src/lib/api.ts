@@ -225,3 +225,25 @@ export function issueKeyOf(issue: Issue): string {
 
 export const downloadUrl = (id: string) => `/api/documents/${id}/download`;
 export const reportDownloadUrl = (id: string) => `/api/documents/${id}/report.html`;
+
+export async function previewMergeDocuments(files: File[]): Promise<{ contentWords: number[]; appendixSourceWords: number }> {
+  const form = new FormData();
+  for (const file of files) form.append("documents", file);
+  const res = await fetch("/api/merge-preview", { method: "POST", body: form });
+  return handle<{ contentWords: number[]; appendixSourceWords: number }>(res);
+}
+
+export async function mergeDocuments(items: { file: File; name: string }[], appendixWords: number): Promise<Blob> {
+  const form = new FormData();
+  for (const item of items) form.append("documents", item.file);
+  form.append("names", JSON.stringify(items.map((item) => item.name)));
+  form.append("appendixWords", String(appendixWords));
+  const res = await fetch("/api/merge-documents", { method: "POST", body: form });
+  if (res.ok) return res.blob();
+  let message = "The documents could not be merged.";
+  try {
+    const body = await res.json();
+    message = body?.error?.message ?? message;
+  } catch { /* non-JSON error */ }
+  throw new Error(message);
+}

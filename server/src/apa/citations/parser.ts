@@ -38,7 +38,7 @@ const LOCATOR = String.raw`(?:pp?\.\s*[\divxlc]+(?:\s*[–\-—]\s*[\divxlc]+)?(
 
 // A surname token: capitalized word possibly hyphenated/apostrophized,
 // optionally with particles (van, de, etc.)
-const SURNAME = String.raw`(?:(?:van|von|de|del|der|di|la|le|al|bin|ter)\s)?[A-ZÀ-Þ][\w'’\-À-ÿ]+`;
+const SURNAME = String.raw`(?:(?:[Vv]an|[Vv]on|[Dd]e|[Dd]el|[Dd]er|[Dd]i|[Ll]a|[Ll]e|[Aa]l|[Bb]in|[Tt]er)\s)?[A-ZÀ-Þ][\w'’\-À-ÿ]+`;
 
 /** Extract citations from a paragraph's plain text. */
 export function parseCitations(
@@ -203,6 +203,11 @@ function parseNarrative(text: string, paragraphIndex: number): ParsedCitation[] 
         });
       }
       authorsRaw = authorsRaw.slice(0, etAlMatch.index).replace(/,\s*$/, "").trim();
+      // The organization fallback can begin too early in a sentence (for
+      // example, "The framework in Del Canto et al."). Keep only the trailing
+      // surname, including a common surname particle, before "et al.".
+      const trailing = new RegExp(`(${SURNAME})$`).exec(authorsRaw);
+      if (trailing) authorsRaw = trailing[1]!;
     }
     if (/\s&\s/.test(authorsRaw)) {
       problems.push({

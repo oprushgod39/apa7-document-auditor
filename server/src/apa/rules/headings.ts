@@ -6,7 +6,19 @@ import {
   setStyleRunFormatting,
   setParagraphStyle,
   setParagraphAlignment,
+  setParagraphRunColorBlack,
+  setParagraphRunFonts,
+  setParagraphIndent,
+  setParagraphSpacing,
+  setParagraphContextualSpacing,
+  setParagraphStyleSeparator,
+  setRunBold,
+  setRunItalic,
+  setRunColorBlack,
+  setRunUnderlineNone,
 } from "../../docx/edit.js";
+import { childrenW } from "../../docx/xml.js";
+import { replaceParagraphText } from "../../docx/text.js";
 import { findHierarchySkips } from "../headings/classifier.js";
 import { result, loc, markDocDirty, markStylesDirty } from "./util.js";
 import { excerptOf } from "../types.js";
@@ -29,6 +41,75 @@ const HEADING_SPECS: Record<number, HeadingSpec> = {
   4: { styleId: "Heading4", name: "heading 4", alignment: "left", bold: true, italic: false, firstLine: 720 },
   5: { styleId: "Heading5", name: "heading 5", alignment: "left", bold: true, italic: true, firstLine: 720 },
 };
+
+const TITLE_CASE_MINOR_WORDS = new Set([
+  "a", "an", "and", "as", "at", "but", "by", "for", "in", "nor", "of",
+  "on", "or", "per", "the", "to", "up", "via", "with", "yet",
+]);
+const HEADING_ACRONYMS: Record<string, string> = {
+  ai: "AI", apa: "APA", cpi: "CPI", eu: "EU", gdp: "GDP", uk: "UK",
+  us: "US", usa: "USA",
+};
+
+/** Conservative APA-style title case for text supplied after a heading marker. */
+function toHeadingTitleCase(text: string): string {
+  const words = text.split(/(\s+)/);
+  const lexical = words.filter((word) => !/^\s+$/.test(word));
+  let position = 0;
+  return words.map((word) => {
+    if (/^\s+$/.test(word)) return word;
+    const current = position++;
+    const match = /^(\W*)([\p{L}\p{N}.''’-]+)(\W*)$/u.exec(word);
+    if (!match) return word;
+    const [, leading, core, trailing] = match;
+    // Preserve deliberate acronyms and mixed-case names such as U.S. or GenAI.
+    if (/[A-Z].*[A-Z]/.test(core!) || /[a-z][A-Z]/.test(core!)) return word;
+    const lower = core!.toLocaleLowerCase("en-US");
+    const acronym = HEADING_ACRONYMS[lower];
+    const isEdge = current === 0 || current === lexical.length - 1;
+    const converted = acronym ??
+      (!isEdge && TITLE_CASE_MINOR_WORDS.has(lower)
+        ? lower
+        : lower.replace(/^\p{L}/u, (letter) => letter.toLocaleUpperCase("en-US")));
+    return `${leading}${converted}${trailing}`;
+  }).join("");
+}
+
+function applyHeadingDirectFormatting(
+  ctx: Parameters<ApaRule["run"]>[0],
+  paragraphIndex: number,
+  level: number
+): void {
+  const p = ctx.model.paragraphs[paragraphIndex]!;
+  const spec = HEADING_SPECS[level]!;
+  const doc = ctx.model.documentXml;
+  setParagraphStyle(doc, p.el, spec.styleId);
+  setParagraphAlignment(doc, p.el, spec.alignment);
+  setParagraphIndent(doc, p.el, { firstLine: spec.firstLine, hanging: null });
+  setParagraphSpacing(doc, p.el, { before: 0, after: 0, line: 480, lineRule: "auto" });
+  setParagraphContextualSpacing(doc, p.el);
+  setParagraphRunFonts(doc, p.el, ctx.req.font, ctx.req.fontSizePt * 2);
+  for (const r of childrenW(p.el, "r")) {
+    setRunBold(doc, r, spec.bold);
+    setRunItalic(doc, r, spec.italic);
+    setRunColorBlack(doc, r);
+    setRunUnderlineNone(doc, r);
+  }
+  setParagraphRunColorBlack(doc, p.el);
+  const runIn = level >= 4;
+  setParagraphStyleSeparator(doc, p.el, runIn);
+  if (runIn) {
+    const next = ctx.model.paragraphs.find(
+      (candidate) => candidate.index > paragraphIndex && !candidate.isEmpty
+    );
+    if (next) {
+      // The style separator makes this paragraph continue after the heading.
+      // Remove its ordinary first-line indent so it does not add a second tab.
+      setParagraphIndent(doc, next.el, { firstLine: null, hanging: null, left: 0 });
+    }
+  }
+  markDocDirty(ctx);
+}
 
 export const HEADING_RESOLUTION_OPTIONS = [
   { id: "normal", label: "Normal paragraph", description: "This is body text, not a heading." },
@@ -69,6 +150,7 @@ export const headingRules: ApaRule[] = [
             halfPoints: req.fontSizePt * 2,
             bold: spec.bold,
             italic: spec.italic,
+            black: true,
           });
           setStyleParaFormatting(stylesDoc, styleEl, {
             alignment: spec.alignment,
@@ -77,6 +159,11 @@ export const headingRules: ApaRule[] = [
             before: 0,
             after: 0,
             firstLine: spec.firstLine,
+            contextualSpacing: true,
+            // Levels 4 and 5 are run-in headings. Keeping their hidden
+            // paragraph mark with the next paragraph defeats Word's style
+            // separator and leaves the body on a new physical line.
+            keepNext: level < 4,
           });
           markStylesDirty(ctx);
           fixedCount++;
@@ -92,6 +179,14 @@ export const headingRules: ApaRule[] = [
           });
         } else {
           passed++; // check-only mode: reported through audit of paragraphs
+        }
+      }
+      // Paragraph properties and direct run formatting override Word styles.
+      // Normalize both layers so a left-aligned source Heading 1 or a direct
+      // Aptos run cannot defeat the APA style definition.
+      if (fix) {
+        for (const heading of analysis.headings) {
+          applyHeadingDirectFormatting(ctx, heading.paragraphIndex, heading.level);
         }
       }
       return result("APA-HEAD-001", checked, passed, fixedCount > 0, null);
@@ -126,15 +221,36 @@ export const headingRules: ApaRule[] = [
             ensureParagraphStyle(model.stylesXml, spec.styleId, spec.name);
             markStylesDirty(ctx);
           }
-          setParagraphStyle(model.documentXml, p.el, spec.styleId);
+          const sourceHeadingText = h.marker
+            ? toHeadingTitleCase(h.marker.cleanText)
+            : h.text;
+          const finalHeadingText =
+            h.level >= 4 && !/[.!?]$/.test(sourceHeadingText)
+              ? `${sourceHeadingText}.`
+              : sourceHeadingText;
+          if (h.marker || h.level >= 4) {
+            // A hidden style-separator paragraph mark has zero rendered width.
+            // Preserve one literal space after run-in headings so Word displays
+            // "Heading. Body" instead of "Heading.Body".
+            replaceParagraphText(
+              p.el,
+              p.text.trim(),
+              h.level >= 4 ? `${finalHeadingText} ` : finalHeadingText
+            );
+          }
+          applyHeadingDirectFormatting(ctx, h.paragraphIndex, h.level);
           markDocDirty(ctx);
           fixedCount++;
           ctx.addChange({
             ruleId: "APA-HEAD-002",
             category: "headings",
             location: loc(p),
-            before: `Manually formatted heading (${h.signals.join(", ")})`,
-            after: `Level ${h.level} heading style applied`,
+            before: h.marker
+              ? p.text.trim()
+              : `Manually formatted heading (${h.signals.join(", ")})`,
+            after: h.marker
+              ? finalHeadingText
+              : `Level ${h.level} heading style applied`,
             reason: `Detected as a Level ${h.level} heading with high confidence.`,
             confidence: 0.9,
           });

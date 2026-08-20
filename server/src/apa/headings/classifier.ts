@@ -16,6 +16,13 @@ export interface ClassifiedHeading {
   score: number;
   signals: string[];
   fromStyle: boolean;
+  /** Explicit author marker such as "[H2]" or "Subheading 2:". */
+  marker?: {
+    raw: string;
+    cleanText: string;
+    kind: "apa_level" | "subheading" | "generic_subheading";
+    ordinal?: number;
+  };
 }
 
 const STYLE_LEVEL: Record<string, number> = {
@@ -42,6 +49,7 @@ export function classifyHeadings(
 ): ClassifiedHeading[] {
   const out: ClassifiedHeading[] = [];
   const paras = model.paragraphs;
+  let genericSubheadingOrdinal = 0;
 
   for (let i = 0; i < paras.length; i++) {
     const p = paras[i]!;
@@ -52,7 +60,19 @@ export function classifyHeadings(
     if (opts.referencesHeadingIndex != null && i >= opts.referencesHeadingIndex) continue;
 
     const cls = classifyParagraph(p, paras, i);
-    if (cls) out.push(cls);
+    if (!cls) continue;
+    if (cls.marker?.kind === "generic_subheading") {
+      genericSubheadingOrdinal = Math.min(4, genericSubheadingOrdinal + 1);
+      cls.marker.ordinal = genericSubheadingOrdinal;
+      cls.level = genericSubheadingOrdinal + 1;
+      cls.signals = [`generic subheading occurrence ${genericSubheadingOrdinal} → APA Level ${cls.level}`];
+    } else if (cls.marker?.kind === "subheading") {
+      genericSubheadingOrdinal = cls.marker.ordinal ?? 0;
+    } else if (cls.level === 1) {
+      // A new centered main heading starts a fresh subheading sequence.
+      genericSubheadingOrdinal = 0;
+    }
+    out.push(cls);
   }
   return out;
 }
@@ -64,6 +84,72 @@ export function classifyParagraph(
 ): ClassifiedHeading | null {
   const text = p.text.trim();
   if (text.length === 0) return null;
+  // APA table/figure labels and notes are captions, never section headings.
+  if (/^(?:table|figure)\s+\d+\.?$/i.test(text) || /^note\.\s/i.test(text)) return null;
+
+  // Explicit author instructions are deterministic and take precedence over
+  // source styles and visual heuristics. Supported examples:
+  // Direct APA-level markers: [H2], [Heading 3], Heading 1:, Level 2:.
+  const explicit = /^(\[(?:h|heading|level)\s*([1-5])\]|(?:heading|level)\s*([1-5])\s*(?::|-|–))\s*(.+)$/i.exec(text);
+  if (explicit) {
+    const level = Number(explicit[2] ?? explicit[3]);
+    const cleanText = explicit[4]!.trim();
+    if (cleanText) {
+      return {
+        paragraphIndex: p.index,
+        text: cleanText,
+        level,
+        confidence: "high",
+        score: 120,
+        signals: [`explicit Level ${level} marker`],
+        fromStyle: false,
+        marker: {
+          raw: text.slice(0, text.length - cleanText.length).trim(),
+          cleanText,
+          kind: "apa_level",
+        },
+      };
+    }
+  }
+  // Product-facing subheading numbers are relative to the centered main
+  // heading: Subheading 1 → APA Level 2, ... Subheading 4 → APA Level 5.
+  const numberedSubheading = /^(\[?sub[\s-]*heading\s*([1-4])\]?\s*(?::|-|–)?\s*)(.+)$/i.exec(text);
+  if (numberedSubheading && numberedSubheading[3]!.trim()) {
+    const ordinal = Number(numberedSubheading[2]);
+    const cleanText = numberedSubheading[3]!.trim();
+    return {
+      paragraphIndex: p.index,
+      text: cleanText,
+      level: ordinal + 1,
+      confidence: "high",
+      score: 120,
+      signals: [`explicit Subheading ${ordinal} marker → APA Level ${ordinal + 1}`],
+      fromStyle: false,
+      marker: {
+        raw: numberedSubheading[1]!.trim(),
+        cleanText,
+        kind: "subheading",
+        ordinal,
+      },
+    };
+  }
+  const genericSubheading = /^(\[?sub[\s-]*heading\]?\s*(?::|-|–)?\s*)(.+)$/i.exec(text);
+  if (genericSubheading && genericSubheading[2]!.trim()) {
+    return {
+      paragraphIndex: p.index,
+      text: genericSubheading[2]!.trim(),
+      level: 2,
+      confidence: "high",
+      score: 115,
+      signals: ["generic subheading marker"],
+      fromStyle: false,
+      marker: {
+        raw: genericSubheading[1]!.trim(),
+        cleanText: genericSubheading[2]!.trim(),
+        kind: "generic_subheading",
+      },
+    };
+  }
 
   const signals: string[] = [];
 
@@ -114,12 +200,10 @@ export function classifyParagraph(
 
   if (score < 45) return null;
 
-  // Level inference for unstyled headings.
-  let level: number;
-  if (centered) level = 1;
-  else if (bold && italic) level = 3;
-  else if (bold) level = 2;
-  else level = 1; // sectionWord uncentered, unbolded
+  // Per product policy, an unlabelled paragraph that is confidently a
+  // heading defaults to APA Level 1. Authors can force Levels 2–5 with an
+  // explicit marker, avoiding guesses based on source-document styling.
+  const level = 1;
 
   const confidence: "high" | "medium" | "low" =
     score >= 75 ? "high" : score >= 55 ? "medium" : "low";

@@ -22,8 +22,12 @@ export function ProcessingScreen(props: {
     stages.find((s) => s.key === key)?.status ?? "pending";
 
   return (
-    <div className="card" style={{ maxWidth: "32rem", margin: "2rem auto" }}>
-      <h2>Analyzing {props.session.originalName}</h2>
+    <div className="processing-wrap">
+      <div className="processing-visual" aria-hidden="true"><span>A7</span><i /><i /><i /></div>
+      <div className="card processing-card">
+      <span className="eyebrow">Precision check in progress</span>
+      <h2>Analyzing your document</h2>
+      <p className="processing-file">{props.session.originalName}</p>
       <ul className="stages" aria-live="polite">
         {ALL_STAGES.map(([key, label]) => {
           const st = stateOf(key);
@@ -41,6 +45,7 @@ export function ProcessingScreen(props: {
       <p className="section-note">
         These stages reflect actual processing — no simulated progress.
       </p>
+      </div>
     </div>
   );
 }

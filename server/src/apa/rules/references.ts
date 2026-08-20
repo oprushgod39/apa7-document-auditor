@@ -4,6 +4,8 @@ import {
   setParagraphIndent,
   setPageBreakBefore,
   setRunBold,
+  setParagraphRunColorBlack,
+  replaceParagraphRuns,
 } from "../../docx/edit.js";
 import { childrenW } from "../../docx/xml.js";
 import { replaceParagraphText } from "../../docx/text.js";
@@ -12,6 +14,63 @@ import { result, loc, markDocDirty } from "./util.js";
 import { excerptOf } from "../types.js";
 
 /** H/I/J. References section rules. */
+
+interface TextRange { start: number; end: number }
+
+/** Identify journal title and volume ranges in a conventional journal reference. */
+function journalItalicRanges(text: string): TextRange[] {
+  const year = /\((?:1[6-9]\d{2}|20\d{2})[a-z]?\)\.\s+/i.exec(text);
+  if (!year) return [];
+  const tailStart = year.index + year[0].length;
+  const volume = /,\s+(\d+)(?:\([^)]*\))?,\s+/.exec(text.slice(tailStart));
+  if (!volume) return [];
+  const comma = tailStart + volume.index;
+  let titleEnd = -1;
+  for (const match of text.slice(tailStart, comma).matchAll(/[.?!]\s+/g)) {
+    titleEnd = tailStart + match.index!;
+  }
+  if (titleEnd < tailStart) return [];
+  let journalStart = titleEnd + 2;
+  while (/\s/.test(text[journalStart] ?? "")) journalStart++;
+  let journalEnd = comma;
+  while (journalEnd > journalStart && /\s/.test(text[journalEnd - 1] ?? "")) journalEnd--;
+  const volumeDigits = volume[1]!;
+  const volumeStart = comma + volume[0].indexOf(volumeDigits);
+  return [
+    { start: journalStart, end: journalEnd },
+    { start: volumeStart, end: volumeStart + volumeDigits.length },
+  ];
+}
+
+function rangesAreItalic(
+  p: import("../../docx/model.js").ParagraphModel,
+  ranges: TextRange[]
+): boolean {
+  let offset = 0;
+  for (const run of p.runs) {
+    const start = offset;
+    const end = start + run.text.length;
+    offset = end;
+    if (ranges.some((range) => start < range.end && end > range.start) && run.effective.italic !== true) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function segmentedReference(text: string, ranges: TextRange[]) {
+  const boundaries = [...new Set([0, text.length, ...ranges.flatMap((r) => [r.start, r.end])])]
+    .sort((a, b) => a - b);
+  return boundaries.slice(0, -1).map((start, i) => {
+    const end = boundaries[i + 1]!;
+    return {
+      text: text.slice(start, end),
+      italic: ranges.some((range) => start >= range.start && end <= range.end),
+      bold: false,
+    };
+  });
+}
+
 export const referenceRules: ApaRule[] = [
   {
     id: "APA-REFERENCE-001",
@@ -40,6 +99,7 @@ export const referenceRules: ApaRule[] = [
         if (!bold) {
           for (const r of childrenW(p.el, "r")) setRunBold(model.documentXml, r, true);
         }
+        setParagraphRunColorBlack(model.documentXml, p.el);
         if (!newPage) setPageBreakBefore(model.documentXml, p.el, true);
         markDocDirty(ctx);
         ctx.addChange({
@@ -67,6 +127,65 @@ export const referenceRules: ApaRule[] = [
         userResolutionRequired: false,
       });
       return result("APA-REFERENCE-001", 1, 0, false, "fail");
+    },
+  },
+
+  {
+    id: "APA-REFERENCE-008",
+    category: "references",
+    description: "Journal titles and volume numbers are italicized in journal references.",
+    severity: "warning",
+    applies: (ctx) => ctx.analysis.referenceEntryIndexes.length > 0,
+    run(ctx, fix) {
+      let checked = 0;
+      let passed = 0;
+      let fixedCount = 0;
+      let anyFail = false;
+      for (const idx of ctx.analysis.referenceEntryIndexes) {
+        const p = ctx.model.paragraphs[idx]!;
+        const ranges = journalItalicRanges(p.text);
+        if (ranges.length === 0) continue;
+        checked++;
+        if (rangesAreItalic(p, ranges)) {
+          passed++;
+          continue;
+        }
+        if (fix) {
+          const segments = segmentedReference(p.text, ranges).map((segment) => ({
+            ...segment,
+            font: ctx.req.font,
+            halfPoints: ctx.req.fontSizePt * 2,
+            black: true,
+          }));
+          if (replaceParagraphRuns(ctx.model.documentXml, p.el, segments)) {
+            fixedCount++;
+            markDocDirty(ctx);
+            ctx.addChange({
+              ruleId: "APA-REFERENCE-008",
+              category: "references",
+              location: loc(p),
+              before: "journal title and/or volume not italicized",
+              after: "journal title and volume italicized",
+              reason: "APA 7 italicizes the journal title and volume number in periodical references.",
+              confidence: 0.9,
+            });
+            continue;
+          }
+        }
+        anyFail = true;
+        ctx.addIssue({
+          ruleId: "APA-REFERENCE-008",
+          category: "references",
+          severity: "warning",
+          status: "fail",
+          message: "A journal reference is missing italics on its journal title or volume number.",
+          location: loc(p),
+          confidence: 0.85,
+          autoFixable: false,
+          userResolutionRequired: false,
+        });
+      }
+      return result("APA-REFERENCE-008", checked, passed, fixedCount > 0, anyFail ? "fail" : null);
     },
   },
 

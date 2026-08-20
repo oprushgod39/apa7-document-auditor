@@ -1,0 +1,15 @@
+{
+  "documents": [
+    {
+      "path": "C:\\Users\\Rohit Anand\\Downloads\\apa7-document-auditor\\validation\\merge_qa\\alpha.docx",
+      "name": "Alpha Student"
+    },
+    {
+      "path": "C:\\Users\\Rohit Anand\\Downloads\\apa7-document-auditor\\validation\\merge_qa\\beta.docx",
+      "name": "Beta Student"
+    }
+  ],
+  "appendixPath": "C:\\Users\\Rohit Anand\\Downloads\\apa7-document-auditor\\server\\assets\\ignore_appendix.txt",
+  "appendixWords": 9000,
+  "outputPath": "C:\\Users\\Rohit Anand\\Downloads\\apa7-document-auditor\\validation\\merge_qa\\merged-9000-v2.docx"
+}

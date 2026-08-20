@@ -95,6 +95,21 @@ export function setParagraphSpacing(
   removeAttrW(spacing, "afterAutospacing");
 }
 
+/** Enable Word's “Don't add space between paragraphs of the same style”. */
+export function setParagraphContextualSpacing(
+  doc: XDocument,
+  p: XElement,
+  on = true
+): void {
+  const pPr = ensurePPr(doc, p);
+  if (on) {
+    const contextual = ensureOrdered(doc, pPr, "contextualSpacing", PPR_ORDER);
+    removeAttrW(contextual, "val");
+  } else {
+    removeChildW(pPr, "contextualSpacing");
+  }
+}
+
 export interface IndentSpec {
   firstLine?: number | null; // null = remove attribute
   hanging?: number | null;
@@ -160,6 +175,153 @@ export function setPageBreakBefore(doc: XDocument, p: XElement, on: boolean): vo
   }
 }
 
+export function setParagraphKeepNext(doc: XDocument, p: XElement, on: boolean): void {
+  const pPr = ensurePPr(doc, p);
+  if (on) {
+    const keepNext = ensureOrdered(doc, pPr, "keepNext", PPR_ORDER);
+    removeAttrW(keepNext, "val");
+  } else {
+    removeChildW(pPr, "keepNext");
+  }
+}
+
+export function setParagraphKeepLines(doc: XDocument, p: XElement, on: boolean): void {
+  const pPr = ensurePPr(doc, p);
+  if (on) {
+    const keepLines = ensureOrdered(doc, pPr, "keepLines", PPR_ORDER);
+    removeAttrW(keepLines, "val");
+  } else {
+    removeChildW(pPr, "keepLines");
+  }
+}
+
+/**
+ * Turn the paragraph mark into a Word style separator. The following
+ * paragraph remains structurally separate but continues on the same rendered
+ * line, which is required for APA Levels 4 and 5.
+ */
+export function setParagraphStyleSeparator(
+  doc: XDocument,
+  p: XElement,
+  on: boolean
+): void {
+  const pPr = ensurePPr(doc, p);
+  const markRPr = ensureOrdered(doc, pPr, "rPr", PPR_ORDER);
+  if (on) {
+    // Word writes both flags for a style-separator paragraph mark. `vanish`
+    // hides the mark in layout while `specVanish` identifies why it is hidden.
+    const vanish = ensureOrdered(doc, markRPr, "vanish", RPR_ORDER);
+    removeAttrW(vanish, "val");
+    const specVanish = ensureOrdered(doc, markRPr, "specVanish", RPR_ORDER);
+    removeAttrW(specVanish, "val");
+  } else {
+    removeChildW(markRPr, "vanish");
+    removeChildW(markRPr, "specVanish");
+    if (!markRPr.firstChild) pPr.removeChild(markRPr);
+  }
+}
+
+/** Replace a plain-text paragraph with explicitly formatted runs. */
+export function replaceParagraphRuns(
+  doc: XDocument,
+  p: XElement,
+  segments: { text: string; bold?: boolean; italic?: boolean; font?: string; halfPoints?: number; black?: boolean }[]
+): boolean {
+  if (childrenW(p, "hyperlink").length > 0) return false;
+  if (p.getElementsByTagNameNS(NS.w, "drawing").length > 0) return false;
+  for (const r of childrenW(p, "r")) p.removeChild(r);
+  for (const segment of segments) {
+    if (!segment.text) continue;
+    const r = createW(doc, "r");
+    if (segment.font) setRunFont(doc, r, segment.font);
+    if (segment.halfPoints) setRunSize(doc, r, segment.halfPoints);
+    if (segment.bold !== undefined) setRunBold(doc, r, segment.bold);
+    if (segment.italic !== undefined) setRunItalic(doc, r, segment.italic);
+    if (segment.black) setRunColorBlack(doc, r);
+    const t = createW(doc, "t");
+    t.setAttribute("xml:space", "preserve");
+    t.appendChild(doc.createTextNode(segment.text));
+    r.appendChild(t);
+    p.appendChild(r);
+  }
+  return true;
+}
+
+/** Apply APA's minimal horizontal-rule table layout and stable pagination. */
+export function formatApaTable(
+  doc: XDocument,
+  table: XElement,
+  opts: { font: string; halfPoints: number }
+): void {
+  const tblPr = childW(table, "tblPr") ?? (() => {
+    const el = createW(doc, "tblPr");
+    table.insertBefore(el, table.firstChild);
+    return el;
+  })();
+  removeChildW(tblPr, "tblBorders");
+  const borders = ensureChildW(doc, tblPr, "tblBorders", [
+    "shd", "tblLayout", "tblCellMar", "tblLook", "tblCaption", "tblDescription", "tblPrChange",
+  ]);
+  const border = (name: string, val: "single" | "nil") => {
+    const el = createW(doc, name);
+    setAttrW(el, "val", val);
+    if (val === "single") {
+      setAttrW(el, "sz", "8");
+      setAttrW(el, "space", "0");
+      setAttrW(el, "color", "000000");
+    }
+    borders.appendChild(el);
+  };
+  border("top", "single");
+  border("left", "nil");
+  border("bottom", "single");
+  border("right", "nil");
+  border("insideH", "nil");
+  border("insideV", "nil");
+
+  const rows = childrenW(table, "tr");
+  rows.forEach((row, rowIndex) => {
+    const trPr = childW(row, "trPr") ?? (() => {
+      const el = createW(doc, "trPr");
+      row.insertBefore(el, row.firstChild);
+      return el;
+    })();
+    const cantSplit = ensureChildW(doc, trPr, "cantSplit");
+    removeAttrW(cantSplit, "val");
+    if (rowIndex === 0) {
+      const header = ensureChildW(doc, trPr, "tblHeader");
+      removeAttrW(header, "val");
+    }
+    childrenW(row, "tc").forEach((cell, colIndex) => {
+      if (rowIndex === 0) {
+        const tcPr = childW(cell, "tcPr") ?? (() => {
+          const el = createW(doc, "tcPr");
+          cell.insertBefore(el, cell.firstChild);
+          return el;
+        })();
+        const tcBorders = childW(tcPr, "tcBorders") ??
+          ensureChildW(doc, tcPr, "tcBorders", ["shd", "noWrap", "tcMar", "textDirection", "tcFitText", "vAlign"]);
+        removeChildW(tcBorders, "bottom");
+        const bottom = createW(doc, "bottom");
+        setAttrW(bottom, "val", "single");
+        setAttrW(bottom, "sz", "8");
+        setAttrW(bottom, "space", "0");
+        setAttrW(bottom, "color", "000000");
+        tcBorders.appendChild(bottom);
+      }
+      for (const p of childrenW(cell, "p")) {
+        setParagraphSpacing(doc, p, { before: 0, after: 0, line: 480, lineRule: "auto" });
+        setParagraphContextualSpacing(doc, p);
+        setParagraphIndent(doc, p, { firstLine: null, hanging: null, left: 0 });
+        setParagraphAlignment(doc, p, rowIndex === 0 && colIndex > 0 ? "center" : "left");
+        setParagraphKeepLines(doc, p, true);
+        setParagraphKeepNext(doc, p, rowIndex === 0);
+        setParagraphRunFonts(doc, p, opts.font, opts.halfPoints);
+      }
+    });
+  });
+}
+
 // --- Run-level edits -------------------------------------------------------
 
 export function setRunFont(doc: XDocument, r: XElement, font: string): void {
@@ -186,9 +348,8 @@ export function setRunBold(doc: XDocument, r: XElement, on: boolean): void {
     ensureOrdered(doc, rPr, "b", RPR_ORDER).removeAttributeNS(NS.w, "val");
     ensureOrdered(doc, rPr, "bCs", RPR_ORDER).removeAttributeNS(NS.w, "val");
   } else {
-    removeChildW(rPr, "b");
-    removeChildW(rPr, "bCs");
-    if (!rPr.firstChild) rPr.parentNode?.removeChild(rPr);
+    setAttrW(ensureOrdered(doc, rPr, "b", RPR_ORDER), "val", "0");
+    setAttrW(ensureOrdered(doc, rPr, "bCs", RPR_ORDER), "val", "0");
   }
 }
 
@@ -198,9 +359,33 @@ export function setRunItalic(doc: XDocument, r: XElement, on: boolean): void {
     ensureOrdered(doc, rPr, "i", RPR_ORDER).removeAttributeNS(NS.w, "val");
     ensureOrdered(doc, rPr, "iCs", RPR_ORDER).removeAttributeNS(NS.w, "val");
   } else {
-    removeChildW(rPr, "i");
-    removeChildW(rPr, "iCs");
-    if (!rPr.firstChild) rPr.parentNode?.removeChild(rPr);
+    setAttrW(ensureOrdered(doc, rPr, "i", RPR_ORDER), "val", "0");
+    setAttrW(ensureOrdered(doc, rPr, "iCs", RPR_ORDER), "val", "0");
+  }
+}
+
+/** Force a run to ordinary black text and remove all theme-color inheritance. */
+export function setRunColorBlack(doc: XDocument, r: XElement): void {
+  const rPr = ensureRPr(doc, r);
+  const color = ensureOrdered(doc, rPr, "color", RPR_ORDER);
+  setAttrW(color, "val", "000000");
+  removeAttrW(color, "themeColor");
+  removeAttrW(color, "themeTint");
+  removeAttrW(color, "themeShade");
+}
+
+export function setRunUnderlineNone(doc: XDocument, r: XElement): void {
+  const rPr = ensureRPr(doc, r);
+  const underline = ensureOrdered(doc, rPr, "u", RPR_ORDER);
+  setAttrW(underline, "val", "none");
+  removeAttrW(underline, "color");
+  removeAttrW(underline, "themeColor");
+}
+
+export function setParagraphRunColorBlack(doc: XDocument, p: XElement): void {
+  for (const r of childrenW(p, "r")) setRunColorBlack(doc, r);
+  for (const h of childrenW(p, "hyperlink")) {
+    for (const r of childrenW(h, "r")) setRunColorBlack(doc, r);
   }
 }
 
@@ -248,7 +433,13 @@ export function findStyleEl(stylesDoc: XDocument, styleId: string): XElement | n
 export function setStyleRunFormatting(
   stylesDoc: XDocument,
   styleEl: XElement,
-  spec: { font?: string; halfPoints?: number; bold?: boolean; italic?: boolean }
+  spec: {
+    font?: string;
+    halfPoints?: number;
+    bold?: boolean;
+    italic?: boolean;
+    black?: boolean;
+  }
 ): void {
   const rPr = ensureChildW(stylesDoc, styleEl, "rPr", []);
   if (spec.font !== undefined) {
@@ -274,12 +465,24 @@ export function setStyleRunFormatting(
       removeChildW(rPr, "i");
     }
   }
+  if (spec.black) {
+    const color = ensureOrdered(stylesDoc, rPr, "color", RPR_ORDER);
+    setAttrW(color, "val", "000000");
+    removeAttrW(color, "themeColor");
+    removeAttrW(color, "themeTint");
+    removeAttrW(color, "themeShade");
+  }
 }
 
 export function setStyleParaFormatting(
   stylesDoc: XDocument,
   styleEl: XElement,
-  spec: SpacingSpec & { alignment?: string; firstLine?: number | null }
+  spec: SpacingSpec & {
+    alignment?: string;
+    firstLine?: number | null;
+    contextualSpacing?: boolean;
+    keepNext?: boolean;
+  }
 ): void {
   const rPrEl = childW(styleEl, "rPr");
   const pPr = (() => {
@@ -313,6 +516,22 @@ export function setStyleParaFormatting(
     } else {
       setAttrW(ind, "firstLine", String(spec.firstLine));
       removeAttrW(ind, "hanging");
+    }
+  }
+  if (spec.contextualSpacing !== undefined) {
+    if (spec.contextualSpacing) {
+      const contextual = ensureOrdered(stylesDoc, pPr, "contextualSpacing", PPR_ORDER);
+      removeAttrW(contextual, "val");
+    } else {
+      removeChildW(pPr, "contextualSpacing");
+    }
+  }
+  if (spec.keepNext !== undefined) {
+    if (spec.keepNext) {
+      const keepNext = ensureOrdered(stylesDoc, pPr, "keepNext", PPR_ORDER);
+      removeAttrW(keepNext, "val");
+    } else {
+      removeChildW(pPr, "keepNext");
     }
   }
 }
@@ -355,6 +574,7 @@ export function createParagraph(
     alignment?: string;
     bold?: boolean;
     italic?: boolean;
+    black?: boolean;
     font?: string;
     halfPoints?: number;
     spacing?: SpacingSpec;
@@ -370,7 +590,7 @@ export function createParagraph(
   }
   if (text.length > 0) {
     const r = createW(doc, "r");
-    if (opts.bold || opts.italic || opts.font || opts.halfPoints) {
+    if (opts.bold || opts.italic || opts.font || opts.halfPoints || opts.black) {
       const rPr = createW(doc, "rPr");
       r.appendChild(rPr);
       if (opts.font) {
@@ -381,6 +601,11 @@ export function createParagraph(
       }
       if (opts.bold) rPr.appendChild(createW(doc, "b"));
       if (opts.italic) rPr.appendChild(createW(doc, "i"));
+      if (opts.black) {
+        const color = createW(doc, "color");
+        setAttrW(color, "val", "000000");
+        rPr.appendChild(color);
+      }
       if (opts.halfPoints) {
         const sz = createW(doc, "sz");
         setAttrW(sz, "val", String(opts.halfPoints));

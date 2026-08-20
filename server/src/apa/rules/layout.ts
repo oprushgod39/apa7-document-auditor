@@ -7,6 +7,7 @@ import {
   findStyleEl,
   setStyleRunFormatting,
   setStyleParaFormatting,
+  setParagraphContextualSpacing,
   ensurePageNumberHeader,
 } from "../../docx/edit.js";
 import { result, loc, markDocDirty, markStylesDirty, isReferenceEntry } from "./util.js";
@@ -89,12 +90,6 @@ export const layoutRules: ApaRule[] = [
       const stylesDoc = model.stylesXml;
       const targetFont = req.font;
       const targetHalf = req.fontSizePt * 2;
-      const approved = new Set(
-        req.approvedFonts.map((f) => f.name.toLowerCase())
-      );
-      // Instructor override narrows the approved set to the mandated font.
-      const instructorMandated = ctx.settings.instructor.font != null;
-
       let checked = 0;
       let passed = 0;
       let fixedCount = 0;
@@ -106,37 +101,36 @@ export const layoutRules: ApaRule[] = [
         const font = p.runProps.fontAscii ?? p.runProps.fontHAnsi ?? null;
         const sizeHalf = p.runProps.sizeHalfPoints ?? null;
         const fontOk =
-          font != null &&
-          (instructorMandated
-            ? font.toLowerCase() === targetFont.toLowerCase()
-            : approved.has(font.toLowerCase()));
-        const approvedEntry = font
-          ? req.approvedFonts.find((f) => f.name.toLowerCase() === font.toLowerCase())
-          : undefined;
-        const expectedHalf = instructorMandated
-          ? targetHalf
-          : (approvedEntry?.sizePt ?? req.fontSizePt) * 2;
-        const sizeOk = sizeHalf != null && fontOk && sizeHalf === expectedHalf;
+          font != null && font.toLowerCase() === targetFont.toLowerCase();
+        const sizeOk = sizeHalf != null && sizeHalf === targetHalf;
+
+        // In formatting modes normalize every run, even when the paragraph's
+        // first run already looks correct. A Word paragraph can contain mixed
+        // fonts/sizes that the paragraph summary intentionally does not flatten.
+        if (fix) {
+          setParagraphRunFonts(model.documentXml, p.el, targetFont, targetHalf);
+          markDocDirty(ctx);
+          if (fontOk && sizeOk) {
+            passed++;
+          } else {
+            fixedCount++;
+            ctx.addChange({
+              ruleId: "APA-LAYOUT-002",
+              category: "layout",
+              location: loc(p),
+              before: `${font ?? "unspecified font"} ${sizeHalf != null ? sizeHalf / 2 + " pt" : "unspecified size"}`,
+              after: `${targetFont} ${req.fontSizePt} pt`,
+              reason: "The configured APA document font is applied consistently to every text run.",
+              confidence: 0.98,
+            });
+          }
+          continue;
+        }
         if (fontOk && sizeOk) {
           passed++;
           continue;
         }
-        if (fix) {
-          setParagraphRunFonts(model.documentXml, p.el, targetFont, targetHalf);
-          markDocDirty(ctx);
-          fixedCount++;
-          ctx.addChange({
-            ruleId: "APA-LAYOUT-002",
-            category: "layout",
-            location: loc(p),
-            before: `${font ?? "unspecified font"} ${sizeHalf != null ? sizeHalf / 2 + " pt" : "unspecified size"}`,
-            after: `${targetFont} ${req.fontSizePt} pt`,
-            reason: "APA 7 requires a consistent approved font throughout.",
-            confidence: 0.95,
-          });
-        } else {
-          anyFail = true;
-        }
+        anyFail = true;
       }
 
       if (!fix && anyFail) {
@@ -183,6 +177,9 @@ export const layoutRules: ApaRule[] = [
       let anyFail = false;
       for (const p of model.paragraphs) {
         if (p.insideTable) continue; // table cell spacing handled separately
+        // APA permits compact spacing inside figures and their general notes;
+        // these paragraphs are formatted by the figure rule.
+        if (p.hasDrawing || /^Note\.\s/i.test(p.text.trim())) continue;
         checked++;
         const line = p.props.line;
         const rule = p.props.lineRule ?? "auto";
@@ -196,6 +193,7 @@ export const layoutRules: ApaRule[] = [
             line: 480,
             lineRule: "auto",
           });
+          setParagraphContextualSpacing(model.documentXml, p.el);
           markDocDirty(ctx);
           fixedCount++;
           ctx.addChange({
@@ -220,6 +218,7 @@ export const layoutRules: ApaRule[] = [
             lineRule: "auto",
             before: 0,
             after: 0,
+            contextualSpacing: true,
           });
           markStylesDirty(ctx);
         }

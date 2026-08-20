@@ -1,0 +1,5052 @@
+{
+  "id": "ff45e44f-b361-43a5-afae-a0fd2bbd67dd",
+  "originalName": "US_Inflation_Local_Households_Unformatted_Test.docx",
+  "status": "ready",
+  "stages": [
+    {
+      "key": "read",
+      "label": "Reading Word document",
+      "status": "done"
+    },
+    {
+      "key": "structure",
+      "label": "Analyzing document structure",
+      "status": "done"
+    },
+    {
+      "key": "headings",
+      "label": "Detecting headings",
+      "status": "done"
+    },
+    {
+      "key": "page_format",
+      "label": "Checking page formatting",
+      "status": "done"
+    },
+    {
+      "key": "citations",
+      "label": "Analyzing citations",
+      "status": "done"
+    },
+    {
+      "key": "references",
+      "label": "Analyzing references",
+      "status": "done"
+    },
+    {
+      "key": "apply",
+      "label": "Applying APA corrections",
+      "status": "done"
+    },
+    {
+      "key": "prepare_output",
+      "label": "Preparing corrected Word document",
+      "status": "done"
+    },
+    {
+      "key": "verify_metadata",
+      "label": "Verifying scholarly metadata",
+      "status": "skipped"
+    },
+    {
+      "key": "audit",
+      "label": "Running independent APA audit",
+      "status": "done"
+    }
+  ],
+  "error": null,
+  "settings": {
+    "paperType": "student",
+    "mode": "format",
+    "preserveWording": true,
+    "fixCitationMechanics": true,
+    "verifyMetadata": false
+  },
+  "report": {
+    "state": "review_required",
+    "unresolvedCount": 7,
+    "rulesResolvedPercent": 89,
+    "applicableRules": 36,
+    "categories": [
+      {
+        "category": "layout",
+        "label": "Layout",
+        "status": "fail",
+        "rulesChecked": 6,
+        "rulesPassed": 5,
+        "issueCount": 1
+      },
+      {
+        "category": "paragraph",
+        "label": "Paragraphs",
+        "status": "fail",
+        "rulesChecked": 2,
+        "rulesPassed": 1,
+        "issueCount": 1
+      },
+      {
+        "category": "headings",
+        "label": "Headings",
+        "status": "user_review",
+        "rulesChecked": 4,
+        "rulesPassed": 3,
+        "issueCount": 5
+      },
+      {
+        "category": "citations",
+        "label": "Citations",
+        "status": "user_review",
+        "rulesChecked": 2,
+        "rulesPassed": 1,
+        "issueCount": 1
+      },
+      {
+        "category": "figures",
+        "label": "Figures",
+        "status": "user_review",
+        "rulesChecked": 3,
+        "rulesPassed": 1,
+        "issueCount": 3
+      },
+      {
+        "category": "tables",
+        "label": "Tables",
+        "status": "warning",
+        "rulesChecked": 3,
+        "rulesPassed": 2,
+        "issueCount": 2
+      },
+      {
+        "category": "title_page",
+        "label": "Title Page",
+        "status": "pass",
+        "rulesChecked": 5,
+        "rulesPassed": 5,
+        "issueCount": 0
+      },
+      {
+        "category": "references",
+        "label": "References",
+        "status": "pass",
+        "rulesChecked": 7,
+        "rulesPassed": 7,
+        "issueCount": 0
+      },
+      {
+        "category": "statistics",
+        "label": "Statistics",
+        "status": "pass",
+        "rulesChecked": 1,
+        "rulesPassed": 1,
+        "issueCount": 0
+      },
+      {
+        "category": "numbers",
+        "label": "Numbers",
+        "status": "pass",
+        "rulesChecked": 2,
+        "rulesPassed": 2,
+        "issueCount": 0
+      },
+      {
+        "category": "abbreviations",
+        "label": "Abbreviations",
+        "status": "pass",
+        "rulesChecked": 1,
+        "rulesPassed": 1,
+        "issueCount": 0
+      },
+      {
+        "category": "abstract",
+        "label": "Abstract",
+        "status": "not_applicable",
+        "rulesChecked": 0,
+        "rulesPassed": 0,
+        "issueCount": 0
+      },
+      {
+        "category": "quotations",
+        "label": "Quotations",
+        "status": "not_applicable",
+        "rulesChecked": 0,
+        "rulesPassed": 0,
+        "issueCount": 0
+      }
+    ],
+    "issues": [
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "severity": "error",
+        "status": "fail",
+        "message": "4 paragraph(s) are not double-spaced.",
+        "confidence": 0.98,
+        "autoFixable": true,
+        "userResolutionRequired": false,
+        "id": "09abfe74-1e9c-4d1d-990f-bdb9befd15f1",
+        "resolved": true
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "severity": "warning",
+        "status": "fail",
+        "message": "6 body paragraph(s) lack a 0.5\" first-line indent.",
+        "confidence": 0.9,
+        "autoFixable": true,
+        "userResolutionRequired": false,
+        "id": "b594910f-7cf1-463b-bae8-de4d6e841fc7",
+        "resolved": true
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "severity": "warning",
+        "status": "fail",
+        "message": "\"Inflation in the United States and Its Effects on…\" appears to be a Level 1 heading without a heading style.",
+        "location": {
+          "paragraphIndex": 11,
+          "blockIndex": 11,
+          "excerpt": "Inflation in the United States and Its Effects on Local People"
+        },
+        "confidence": 0.9,
+        "autoFixable": true,
+        "userResolutionRequired": false,
+        "id": "bfe51b7d-5053-48d3-824f-b770173d33f3",
+        "resolved": true
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "severity": "warning",
+        "status": "user_review",
+        "message": "\"Table 1\" may be a Level 1 heading (medium confidence).",
+        "explanation": "Signals: bold, short, no terminal period, title case. Confirm the correct level or mark it as a normal paragraph.",
+        "location": {
+          "paragraphIndex": 20,
+          "blockIndex": 20,
+          "excerpt": "Table 1"
+        },
+        "originalValue": "Table 1",
+        "suggestedValue": "Level 1 heading",
+        "confidence": 0.7,
+        "autoFixable": false,
+        "userResolutionRequired": true,
+        "resolutionOptions": [
+          {
+            "id": "normal",
+            "label": "Normal paragraph",
+            "description": "This is body text, not a heading."
+          },
+          {
+            "id": "level1",
+            "label": "Level 1 heading",
+            "description": "Centered, bold, title case."
+          },
+          {
+            "id": "level2",
+            "label": "Level 2 heading",
+            "description": "Flush left, bold."
+          },
+          {
+            "id": "level3",
+            "label": "Level 3 heading",
+            "description": "Flush left, bold italic."
+          },
+          {
+            "id": "level4",
+            "label": "Level 4 heading",
+            "description": "Indented, bold, inline with text."
+          },
+          {
+            "id": "level5",
+            "label": "Level 5 heading",
+            "description": "Indented, bold italic, inline with text."
+          }
+        ],
+        "id": "c1670bde-1793-45b6-abd6-bca6fe371ebc",
+        "resolved": false
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "severity": "warning",
+        "status": "user_review",
+        "message": "\"Figure 1\" may be a Level 1 heading (medium confidence).",
+        "explanation": "Signals: bold, short, no terminal period, title case. Confirm the correct level or mark it as a normal paragraph.",
+        "location": {
+          "paragraphIndex": 25,
+          "blockIndex": 26,
+          "excerpt": "Figure 1"
+        },
+        "originalValue": "Figure 1",
+        "suggestedValue": "Level 1 heading",
+        "confidence": 0.7,
+        "autoFixable": false,
+        "userResolutionRequired": true,
+        "resolutionOptions": [
+          {
+            "id": "normal",
+            "label": "Normal paragraph",
+            "description": "This is body text, not a heading."
+          },
+          {
+            "id": "level1",
+            "label": "Level 1 heading",
+            "description": "Centered, bold, title case."
+          },
+          {
+            "id": "level2",
+            "label": "Level 2 heading",
+            "description": "Flush left, bold."
+          },
+          {
+            "id": "level3",
+            "label": "Level 3 heading",
+            "description": "Flush left, bold italic."
+          },
+          {
+            "id": "level4",
+            "label": "Level 4 heading",
+            "description": "Indented, bold, inline with text."
+          },
+          {
+            "id": "level5",
+            "label": "Level 5 heading",
+            "description": "Indented, bold italic, inline with text."
+          }
+        ],
+        "id": "5dfa21a0-91f1-4d57-acae-530d570eb560",
+        "resolved": false
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "severity": "warning",
+        "status": "user_review",
+        "message": "\"Table 2\" may be a Level 1 heading (medium confidence).",
+        "explanation": "Signals: bold, short, no terminal period, title case. Confirm the correct level or mark it as a normal paragraph.",
+        "location": {
+          "paragraphIndex": 38,
+          "blockIndex": 39,
+          "excerpt": "Table 2"
+        },
+        "originalValue": "Table 2",
+        "suggestedValue": "Level 1 heading",
+        "confidence": 0.7,
+        "autoFixable": false,
+        "userResolutionRequired": true,
+        "resolutionOptions": [
+          {
+            "id": "normal",
+            "label": "Normal paragraph",
+            "description": "This is body text, not a heading."
+          },
+          {
+            "id": "level1",
+            "label": "Level 1 heading",
+            "description": "Centered, bold, title case."
+          },
+          {
+            "id": "level2",
+            "label": "Level 2 heading",
+            "description": "Flush left, bold."
+          },
+          {
+            "id": "level3",
+            "label": "Level 3 heading",
+            "description": "Flush left, bold italic."
+          },
+          {
+            "id": "level4",
+            "label": "Level 4 heading",
+            "description": "Indented, bold, inline with text."
+          },
+          {
+            "id": "level5",
+            "label": "Level 5 heading",
+            "description": "Indented, bold italic, inline with text."
+          }
+        ],
+        "id": "5046e6b9-84f1-4dd9-b7f4-5a11f027f6ad",
+        "resolved": false
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "severity": "warning",
+        "status": "user_review",
+        "message": "\"Figure 2\" may be a Level 1 heading (medium confidence).",
+        "explanation": "Signals: bold, short, no terminal period, title case. Confirm the correct level or mark it as a normal paragraph.",
+        "location": {
+          "paragraphIndex": 43,
+          "blockIndex": 45,
+          "excerpt": "Figure 2"
+        },
+        "originalValue": "Figure 2",
+        "suggestedValue": "Level 1 heading",
+        "confidence": 0.7,
+        "autoFixable": false,
+        "userResolutionRequired": true,
+        "resolutionOptions": [
+          {
+            "id": "normal",
+            "label": "Normal paragraph",
+            "description": "This is body text, not a heading."
+          },
+          {
+            "id": "level1",
+            "label": "Level 1 heading",
+            "description": "Centered, bold, title case."
+          },
+          {
+            "id": "level2",
+            "label": "Level 2 heading",
+            "description": "Flush left, bold."
+          },
+          {
+            "id": "level3",
+            "label": "Level 3 heading",
+            "description": "Flush left, bold italic."
+          },
+          {
+            "id": "level4",
+            "label": "Level 4 heading",
+            "description": "Indented, bold, inline with text."
+          },
+          {
+            "id": "level5",
+            "label": "Level 5 heading",
+            "description": "Indented, bold italic, inline with text."
+          }
+        ],
+        "id": "9293ea79-792f-44d0-96fd-e2bd75af5dfc",
+        "resolved": false
+      },
+      {
+        "ruleId": "APA-CITATION-008",
+        "category": "citations",
+        "severity": "error",
+        "status": "user_review",
+        "message": "Citation The welfare framework in Del Canto et al. (2025) has no matching reference-list entry.",
+        "explanation": "Add the missing reference to the reference list, or confirm the citation refers to a personal communication (which is not listed in references).",
+        "location": {
+          "paragraphIndex": 49,
+          "blockIndex": 51,
+          "excerpt": "Public services are also exposed. Municipalities may collect more nominal tax r…"
+        },
+        "originalValue": "The welfare framework in Del Canto et al. (2025)",
+        "confidence": 0.9,
+        "autoFixable": false,
+        "userResolutionRequired": true,
+        "resolutionOptions": [
+          {
+            "id": "will_add",
+            "label": "I will add the reference",
+            "description": "I will add this entry to the reference list."
+          },
+          {
+            "id": "personal_communication",
+            "label": "Personal communication",
+            "description": "This source is a personal communication and is correctly not in the reference list."
+          },
+          {
+            "id": "not_a_citation",
+            "label": "Not a citation",
+            "description": "This text is not actually a citation."
+          }
+        ],
+        "id": "f24548ed-9683-4b6d-855d-f12cd6ffee2e",
+        "resolved": false
+      },
+      {
+        "ruleId": "APA-TABLE-002",
+        "category": "tables",
+        "severity": "info",
+        "status": "warning",
+        "message": "Table 1 does not appear to be mentioned in the text.",
+        "explanation": "APA 7 requires each table to be called out in the narrative (e.g. “as shown in Table 1”).",
+        "location": {
+          "tableIndex": 0
+        },
+        "confidence": 0.7,
+        "autoFixable": false,
+        "userResolutionRequired": false,
+        "id": "b401cebd-3737-4176-965a-0d7f62825619",
+        "resolved": true
+      },
+      {
+        "ruleId": "APA-TABLE-002",
+        "category": "tables",
+        "severity": "info",
+        "status": "warning",
+        "message": "Table 2 does not appear to be mentioned in the text.",
+        "explanation": "APA 7 requires each table to be called out in the narrative (e.g. “as shown in Table 1”).",
+        "location": {
+          "tableIndex": 1
+        },
+        "confidence": 0.7,
+        "autoFixable": false,
+        "userResolutionRequired": false,
+        "id": "a5f6f03a-bfab-4ac6-bc99-76cb85b554db",
+        "resolved": true
+      },
+      {
+        "ruleId": "APA-FIGURE-002",
+        "category": "figures",
+        "severity": "info",
+        "status": "warning",
+        "message": "Figure 1 does not appear to be mentioned in the text.",
+        "confidence": 0.7,
+        "autoFixable": false,
+        "userResolutionRequired": false,
+        "id": "4e16c60b-b48f-4d4c-9307-bbaef85b915b",
+        "resolved": true
+      },
+      {
+        "ruleId": "APA-FIGURE-002",
+        "category": "figures",
+        "severity": "info",
+        "status": "warning",
+        "message": "Figure 2 does not appear to be mentioned in the text.",
+        "confidence": 0.7,
+        "autoFixable": false,
+        "userResolutionRequired": false,
+        "id": "6066e099-d960-47f3-ab04-65b5e606841a",
+        "resolved": true
+      },
+      {
+        "ruleId": "APA-FIGURE-003",
+        "category": "figures",
+        "severity": "info",
+        "status": "user_review",
+        "message": "Check fonts, labels, and readability inside each embedded figure image.",
+        "explanation": "The formatter can style the Figure number, title, placement, and note, but cannot safely rewrite text baked into a raster image.",
+        "confidence": 1,
+        "autoFixable": false,
+        "userResolutionRequired": true,
+        "id": "05a924b2-1af4-4154-90e0-4f10fdb55f6c",
+        "resolved": false
+      }
+    ],
+    "changes": [
+      {
+        "ruleId": "APA-LAYOUT-001",
+        "category": "layout",
+        "location": {
+          "description": "Section page setup"
+        },
+        "before": "top 1.00\", bottom 1.00\", left 1.25\", right 1.25\"",
+        "after": "all margins 1\"",
+        "reason": "APA 7 requires 1-inch margins on all sides.",
+        "confidence": 0.99,
+        "documentWide": true,
+        "id": "4ef87bea-d413-49f1-ae9b-8e4dc2fcfa89",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.782Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 0,
+          "blockIndex": 0,
+          "excerpt": "Inflation in the United States and Its Effects on Local People"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "c5eff289-2c04-4095-890b-3101bde5640b",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 1,
+          "blockIndex": 1,
+          "excerpt": "This paper examines how inflation changes household purchasing power and commun…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "5afc2c29-8889-4b33-889b-3cb273a6a927",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 2,
+          "blockIndex": 2,
+          "excerpt": "The analysis uses a household-welfare perspective rather than treating inflatio…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "467a701d-840f-460b-bdfd-fa5fb71f6bbc",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 3,
+          "blockIndex": 3,
+          "excerpt": "subheading : Understanding Inflation as a Local Household Experience"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "6637c008-160c-48e0-ac6f-6606d0903d1c",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 4,
+          "blockIndex": 4,
+          "excerpt": "Inflation is often reported as one national percentage, but local people encoun…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "3e4482ec-341b-466e-b2e8-a650addd7845",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 5,
+          "blockIndex": 5,
+          "excerpt": "This distinction matters for understanding the recent U.S. inflation experience…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "f450bd46-6e4e-4c52-a569-f554f32f875b",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 6,
+          "blockIndex": 6,
+          "excerpt": "Sub-heading - Why the Burden Is Unequal"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "03175735-69b3-49f4-ae4d-eda21dff9b0b",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 7,
+          "blockIndex": 7,
+          "excerpt": "Inflation changes real living standards through several channels. The first is …"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "24b77202-ccf3-4f90-8496-e3835d0ba070",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 8,
+          "blockIndex": 8,
+          "excerpt": "These channels mean that inflation is not automatically regressive in every cir…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "5319a8c6-aaf9-4651-91a6-389724b3055f",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 9,
+          "blockIndex": 9,
+          "excerpt": "Table 1"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "a893863a-c101-4bd2-bad2-586af4dc5491",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 10,
+          "blockIndex": 10,
+          "excerpt": "Selected Evidence on Unequal Inflation Exposure"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "fe0c5afa-92fb-4472-82b4-8d6250d5229a",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 11,
+          "blockIndex": 12,
+          "excerpt": "sub heading: Food, Energy, and Everyday Purchases"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "c0e14a97-adaa-4db1-b611-82128758554a",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 12,
+          "blockIndex": 13,
+          "excerpt": "Food prices have an outsized psychological and budgetary role because they are …"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "61b73148-e4f2-42c8-b9bf-f706d3193fbd",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 13,
+          "blockIndex": 14,
+          "excerpt": "Energy costs reach households both directly and indirectly. Gasoline affects co…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "e4e120cd-235f-46b4-afcf-1218528e0f68",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 14,
+          "blockIndex": 15,
+          "excerpt": "Figure 1"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "92989cb6-eb66-40ca-a2fa-1375abec8ce2",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 15,
+          "blockIndex": 16,
+          "excerpt": "Cumulative Inflation Differed Across Household Income Groups"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "2c2924d8-a75e-41e5-a779-f3e785ea573a",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 16,
+          "blockIndex": 17,
+          "excerpt": ""
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "a013bc87-00ec-4242-9cbc-5aa5dd774e97",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.783Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 17,
+          "blockIndex": 18,
+          "excerpt": "Note. Values summarize the cumulative household-level inflation comparison repo…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "24fde127-8ceb-4d6a-9ed0-02e9cf6556f1",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 18,
+          "blockIndex": 19,
+          "excerpt": "Subheading: Housing, Rent, and Neighborhood Stability"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "771e0fc2-a391-4736-a72a-5b7bd3e19ecd",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 19,
+          "blockIndex": 20,
+          "excerpt": "Housing is usually the largest household expense, but housing inflation is expe…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "2c397dee-df26-45b3-9afe-c26e9a5ad52a",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 20,
+          "blockIndex": 21,
+          "excerpt": "Housing costs also interact with community stability. When rent consumes a larg…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "4c8e9a0a-2484-4160-ab70-9bf7fcdeec71",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 21,
+          "blockIndex": 22,
+          "excerpt": "Subheading 2: Wages, Work, and Real Income"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "4afdbadb-9cc3-4c79-b7b9-bfe4b43f55bb",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 22,
+          "blockIndex": 23,
+          "excerpt": "Whether inflation lowers living standards depends partly on wage adjustment. A …"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "d6342970-372f-4c9c-a50a-3d35365236d4",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 23,
+          "blockIndex": 24,
+          "excerpt": "Measurement choices shape the diagnosis. Jaravel (2019) shows that product inno…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "5d32ae42-ff11-4c22-a363-b476c4daf7ff",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 24,
+          "blockIndex": 25,
+          "excerpt": "Subheading: Savings, Debt, and Financial Security"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "72cdad15-3da4-48b9-84c2-08c26346c00e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 25,
+          "blockIndex": 26,
+          "excerpt": "Inflation erodes the purchasing power of cash and fixed nominal assets. This ef…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "8d1085aa-689d-4597-9327-d56d10393b8e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 26,
+          "blockIndex": 27,
+          "excerpt": "Debt complicates the picture. Unexpected inflation can reduce the real burden o…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "934c3a8a-c39a-4f60-9491-81943b3ed31c",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 27,
+          "blockIndex": 28,
+          "excerpt": "Table 2"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "8121a891-781d-4ff8-81fd-ab5d2b34ef12",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 28,
+          "blockIndex": 29,
+          "excerpt": "Channels Connecting Inflation to Local Household Welfare"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "068b8d6d-bae5-41c9-ad22-213768ed3706",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 29,
+          "blockIndex": 31,
+          "excerpt": "Subheading : Expectations, Confidence, and Household Decisions"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "ff3e3624-4c59-411b-b459-c2c74c250649",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 30,
+          "blockIndex": 32,
+          "excerpt": "Households make decisions based not only on current prices but also on expected…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "670d2043-5525-4bd4-8dca-1b90362308f7",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 31,
+          "blockIndex": 33,
+          "excerpt": "Inflation also affects well-being through uncertainty and perceived loss of con…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "ed6e5e1c-4cd4-4d17-b671-f81ede7f6583",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 32,
+          "blockIndex": 34,
+          "excerpt": "Figure 2"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "3716a6ec-d246-4923-b44b-2afd4fca0a2c",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 33,
+          "blockIndex": 35,
+          "excerpt": "Inflation Gap Between Low- and High-Income Households Varied Over Time"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "45878dab-eafb-4f44-900d-051cf10521d6",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 34,
+          "blockIndex": 36,
+          "excerpt": ""
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "8e00216a-f935-4485-bae3-b4bbf2dae177",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 35,
+          "blockIndex": 37,
+          "excerpt": "Note. Annual gaps are based on the income-specific price indexes reported by Ar…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "da7ce756-45f8-4868-bf8a-71788869c04c",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 36,
+          "blockIndex": 38,
+          "excerpt": "Subheading: Community Businesses and Public Services"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "534cc155-e8b5-4413-a66f-52d13a38b980",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 37,
+          "blockIndex": 39,
+          "excerpt": "Local businesses face many of the same pressures as households: higher input pr…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "0ad2953d-55fa-40a3-bcb6-cef75fe45b5a",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 38,
+          "blockIndex": 40,
+          "excerpt": "Public services are also exposed. Municipalities may collect more nominal tax r…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "1ced50b8-8c24-4a2a-9a47-78526fe1c131",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 39,
+          "blockIndex": 41,
+          "excerpt": "subheading : Health, Education, and Family Trade-Offs"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "1fd377e4-8667-4a96-b9f6-ae13021914a5",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 40,
+          "blockIndex": 42,
+          "excerpt": "Inflation can change health behavior even when medical prices are not the faste…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "9c9a4aed-cc71-4de4-ab8d-d4cccd7930dc",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 41,
+          "blockIndex": 43,
+          "excerpt": "Education and caregiving decisions are similarly exposed. Higher rent or food b…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "7e5fc6f5-4e08-4a92-b2a2-06f167ef87ea",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 42,
+          "blockIndex": 44,
+          "excerpt": "Subheading - Policy Implications for Local People"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "3277e939-5885-4d79-a283-cdd04472e608",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 43,
+          "blockIndex": 45,
+          "excerpt": "A distribution-sensitive policy response begins with measurement. National infl…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "90df629a-1644-44b6-a831-67e23738bab1",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 44,
+          "blockIndex": 46,
+          "excerpt": "Targeted fiscal measures can reduce hardship without treating every household a…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "1b468163-afb8-45cb-8274-89a6bfb942f6",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 45,
+          "blockIndex": 47,
+          "excerpt": "Subheading: Conclusion"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "22af3b86-d1d6-4960-8e87-5767450c8f12",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 46,
+          "blockIndex": 48,
+          "excerpt": "Inflation in the United States is a national macroeconomic process with intense…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "aee73489-ecee-41d1-8cf1-796af6b7a9b2",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 47,
+          "blockIndex": 49,
+          "excerpt": "For local people, the central issue is cumulative purchasing power and the narr…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "59bd6be6-f46e-4f4f-bb86-bfe382cf0094",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 48,
+          "blockIndex": 50,
+          "excerpt": "References"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "2648d2b4-2738-4667-ba47-e8bf5a2e9694",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 49,
+          "blockIndex": 51,
+          "excerpt": "Argente, D., & Lee, M. (2021). Cost of living inequality during the Great Reces…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "00606976-a5e7-47f0-82d2-601783dac70d",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 50,
+          "blockIndex": 52,
+          "excerpt": "Attanasio, O. P., Guiso, L., & Jappelli, T. (2002). The demand for money, finan…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "8be9c4e8-70f4-4b11-be58-7a5195f58f6f",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 51,
+          "blockIndex": 53,
+          "excerpt": "Cavallo, A., & Kryvtsov, O. (2024). Price discounts and cheapflation during the…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "ba75882a-5885-48c0-b1a5-cd09046555b9",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 52,
+          "blockIndex": 54,
+          "excerpt": "Charles, M., & Lundy, J. D. (2013). The local Joneses: Household consumption an…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "e5de4c08-6c75-47de-b4b1-40154b885224",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 53,
+          "blockIndex": 55,
+          "excerpt": "D’Acunto, F., Malmendier, U., Ospina, J., & Weber, M. (2021). Exposure to groce…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "3859056a-6406-4a33-a5fd-97b20730c713",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 54,
+          "blockIndex": 56,
+          "excerpt": "Del Canto, F., Grigsby, J., Qian, E., & Walsh, C. (2025). Are inflationary shoc…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "580dced4-086f-44c5-8255-f4c2016f2f9e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 55,
+          "blockIndex": 57,
+          "excerpt": "Doepke, M., & Schneider, M. (2006). Inflation and the redistribution of nominal…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "d4822358-6f28-476b-a250-b9fbe83197d6",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 56,
+          "blockIndex": 58,
+          "excerpt": "Erosa, A., & Ventura, G. (2002). On inflation as a regressive consumption tax. …"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "44be1ac1-5c6e-4920-bb69-de5f514c56ed",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 57,
+          "blockIndex": 59,
+          "excerpt": "Hobijn, B., & Lagakos, D. (2005). Inflation inequality in the United States. Re…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "9a120f26-d002-4faa-902e-8bebfa9922f0",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 58,
+          "blockIndex": 60,
+          "excerpt": "Jaravel, X. (2019). The unequal gains from product innovations: Evidence from t…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "9aa63586-d2b3-47dd-a8a1-11cc579191a8",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 59,
+          "blockIndex": 61,
+          "excerpt": "Kakar, V., & Daniels, G. E. (2019). Role of cash and costs of inflation for dif…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "48b25e21-4337-4d81-a134-bc3db4e00de5",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 60,
+          "blockIndex": 62,
+          "excerpt": "Kaplan, G., & Schulhofer-Wohl, S. (2017). Inflation at the household level. Jou…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "aa69dc0b-261e-4578-9215-9b3a3fea9558",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 61,
+          "blockIndex": 63,
+          "excerpt": "Leblang, D., Smith, M. D., & Wesselbaum, D. (2025). Does inflation affect well-…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "62bce662-6d47-4c65-8a6f-86b2a522bf71",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-002",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 62,
+          "blockIndex": 64,
+          "excerpt": "Weber, M., D’Acunto, F., Gorodnichenko, Y., & Coibion, O. (2022). The subjectiv…"
+        },
+        "before": "unspecified font 11 pt",
+        "after": "Times New Roman 12 pt",
+        "reason": "The configured APA document font is applied consistently to every text run.",
+        "confidence": 0.98,
+        "id": "6a6ed248-28d1-426f-aeaf-c11840dc556c",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.784Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 0,
+          "blockIndex": 0,
+          "excerpt": "Inflation in the United States and Its Effects on Local People"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "f1577aa5-aff9-4518-936d-a6c8bf4f6f4d",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 1,
+          "blockIndex": 1,
+          "excerpt": "This paper examines how inflation changes household purchasing power and commun…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "0b62af73-68e5-4591-96f6-62bd0bcd088b",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 2,
+          "blockIndex": 2,
+          "excerpt": "The analysis uses a household-welfare perspective rather than treating inflatio…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "596cde7a-ebcd-4589-87d7-2e87ceea8ac2",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 3,
+          "blockIndex": 3,
+          "excerpt": "subheading : Understanding Inflation as a Local Household Experience"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "ada44502-c1fd-40d5-9faf-edd14c56c0cc",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 4,
+          "blockIndex": 4,
+          "excerpt": "Inflation is often reported as one national percentage, but local people encoun…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "4cd11bb9-c1da-40c6-82ee-71369b1dd6cd",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 5,
+          "blockIndex": 5,
+          "excerpt": "This distinction matters for understanding the recent U.S. inflation experience…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "6dfe7a5c-1f25-49a2-8748-1e9b91f5c190",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 6,
+          "blockIndex": 6,
+          "excerpt": "Sub-heading - Why the Burden Is Unequal"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "9d9a898b-c9e5-4b6c-b3c0-f3fae696d6ea",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 7,
+          "blockIndex": 7,
+          "excerpt": "Inflation changes real living standards through several channels. The first is …"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "8c246890-297e-4640-a296-08e80454a4bc",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 8,
+          "blockIndex": 8,
+          "excerpt": "These channels mean that inflation is not automatically regressive in every cir…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "8a038729-e834-448d-a16f-aeb14651fff0",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 9,
+          "blockIndex": 9,
+          "excerpt": "Table 1"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "c6082e9a-0e77-4053-bcf6-e28c1031ef25",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 10,
+          "blockIndex": 10,
+          "excerpt": "Selected Evidence on Unequal Inflation Exposure"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "d80a9a12-1439-4156-b510-44eecdd0ae69",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 11,
+          "blockIndex": 12,
+          "excerpt": "sub heading: Food, Energy, and Everyday Purchases"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "fb596037-835a-4af3-98df-7d3588b970ee",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 12,
+          "blockIndex": 13,
+          "excerpt": "Food prices have an outsized psychological and budgetary role because they are …"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "2f9f6cb7-75ba-4121-acf3-0de3a2bde1be",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 13,
+          "blockIndex": 14,
+          "excerpt": "Energy costs reach households both directly and indirectly. Gasoline affects co…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "bdd7b189-b1e5-4841-8cb0-5dd7a50f45ec",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 14,
+          "blockIndex": 15,
+          "excerpt": "Figure 1"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "16460bd8-6596-48a0-b913-18b9bafec160",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 15,
+          "blockIndex": 16,
+          "excerpt": "Cumulative Inflation Differed Across Household Income Groups"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "0f24af37-f7e9-4a83-9483-0d2d42e5614c",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 16,
+          "blockIndex": 17,
+          "excerpt": ""
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "db2ad1a3-fb12-44f9-a3a5-c7b1e46b86c9",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 17,
+          "blockIndex": 18,
+          "excerpt": "Note. Values summarize the cumulative household-level inflation comparison repo…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "7dedbbc6-3435-4e27-a08e-4b47a51106eb",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 18,
+          "blockIndex": 19,
+          "excerpt": "Subheading: Housing, Rent, and Neighborhood Stability"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "0446e26e-887e-46a7-a7a2-b6451be05285",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 19,
+          "blockIndex": 20,
+          "excerpt": "Housing is usually the largest household expense, but housing inflation is expe…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "71eb90b2-376f-42c9-a4ef-f3e6cb065c82",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 20,
+          "blockIndex": 21,
+          "excerpt": "Housing costs also interact with community stability. When rent consumes a larg…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "d70dd903-06b7-47ee-ad46-5eb7357ff958",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 21,
+          "blockIndex": 22,
+          "excerpt": "Subheading 2: Wages, Work, and Real Income"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "b3ca9003-739f-4ba8-9d7e-8ef4fb658ee5",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 22,
+          "blockIndex": 23,
+          "excerpt": "Whether inflation lowers living standards depends partly on wage adjustment. A …"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "715680ad-6126-4c04-b746-8ffd0b612895",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 23,
+          "blockIndex": 24,
+          "excerpt": "Measurement choices shape the diagnosis. Jaravel (2019) shows that product inno…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "55345785-9e81-4b79-86fa-9cf4d05c3e05",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 24,
+          "blockIndex": 25,
+          "excerpt": "Subheading: Savings, Debt, and Financial Security"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "325eaa61-6b8c-41dc-8ecc-cc259d0c851d",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 25,
+          "blockIndex": 26,
+          "excerpt": "Inflation erodes the purchasing power of cash and fixed nominal assets. This ef…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "30b8396c-1a19-43e6-abd9-519492cc0f80",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 26,
+          "blockIndex": 27,
+          "excerpt": "Debt complicates the picture. Unexpected inflation can reduce the real burden o…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "38b3c43a-42bb-419f-83f8-eb1aafe5ca61",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 27,
+          "blockIndex": 28,
+          "excerpt": "Table 2"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "8137b54e-ae72-4744-aa77-9e6d0ba15c82",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 28,
+          "blockIndex": 29,
+          "excerpt": "Channels Connecting Inflation to Local Household Welfare"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "3abcb5e3-d663-4d05-b929-c6e01c618ba7",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 29,
+          "blockIndex": 31,
+          "excerpt": "Subheading : Expectations, Confidence, and Household Decisions"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "1eaeda63-2450-4fe3-b707-4b61dd6fd1c8",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 30,
+          "blockIndex": 32,
+          "excerpt": "Households make decisions based not only on current prices but also on expected…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "d1d58f6d-a7ef-4101-997b-b03ecf4148e5",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 31,
+          "blockIndex": 33,
+          "excerpt": "Inflation also affects well-being through uncertainty and perceived loss of con…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "844b6834-1739-492f-b761-7fa742f69f04",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 32,
+          "blockIndex": 34,
+          "excerpt": "Figure 2"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "2b3beb2f-d010-456f-8a9d-41b351e72d1e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 33,
+          "blockIndex": 35,
+          "excerpt": "Inflation Gap Between Low- and High-Income Households Varied Over Time"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "ad6f8842-fe78-4995-b4d9-789eaa5edf23",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 34,
+          "blockIndex": 36,
+          "excerpt": ""
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "dad046ff-576e-44ba-9030-19c2e1f5da26",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 35,
+          "blockIndex": 37,
+          "excerpt": "Note. Annual gaps are based on the income-specific price indexes reported by Ar…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "0e5e0ee4-2a4b-4946-bfdb-764518b5535d",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 36,
+          "blockIndex": 38,
+          "excerpt": "Subheading: Community Businesses and Public Services"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "41daaea3-8b5c-418b-bf11-e252c8b3b6db",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 37,
+          "blockIndex": 39,
+          "excerpt": "Local businesses face many of the same pressures as households: higher input pr…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "ff08f216-3aee-4299-b178-e73b1cc315b9",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 38,
+          "blockIndex": 40,
+          "excerpt": "Public services are also exposed. Municipalities may collect more nominal tax r…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "723044ac-5471-42d0-afff-ef0f75520ba5",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 39,
+          "blockIndex": 41,
+          "excerpt": "subheading : Health, Education, and Family Trade-Offs"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "9cb578db-ef26-4a4e-a030-00b49ed5c26c",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.785Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 40,
+          "blockIndex": 42,
+          "excerpt": "Inflation can change health behavior even when medical prices are not the faste…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "5902e7ae-cffe-4063-b7db-1fc585e1c713",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 41,
+          "blockIndex": 43,
+          "excerpt": "Education and caregiving decisions are similarly exposed. Higher rent or food b…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "b67b2dbe-dd5b-4b69-9033-215e9547ed03",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 42,
+          "blockIndex": 44,
+          "excerpt": "Subheading - Policy Implications for Local People"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "918b9b1f-e37f-4e37-857b-eab82c9e77c7",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 43,
+          "blockIndex": 45,
+          "excerpt": "A distribution-sensitive policy response begins with measurement. National infl…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "3dd04a44-73d6-4586-8724-261365167752",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 44,
+          "blockIndex": 46,
+          "excerpt": "Targeted fiscal measures can reduce hardship without treating every household a…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "15461412-96bf-4521-b176-9126e546b104",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 45,
+          "blockIndex": 47,
+          "excerpt": "Subheading: Conclusion"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "b0f6f33c-6170-4bd1-b7e2-1b6e1c68076e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 46,
+          "blockIndex": 48,
+          "excerpt": "Inflation in the United States is a national macroeconomic process with intense…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "cc9f755d-7c37-4eac-9680-58edf0fca4d0",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 47,
+          "blockIndex": 49,
+          "excerpt": "For local people, the central issue is cumulative purchasing power and the narr…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "9323422d-4a35-42fc-b894-d01172dd01a8",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 48,
+          "blockIndex": 50,
+          "excerpt": "References"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "1628481d-4274-455c-a33d-5b4cbb3b7819",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 49,
+          "blockIndex": 51,
+          "excerpt": "Argente, D., & Lee, M. (2021). Cost of living inequality during the Great Reces…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "3a558fcc-5481-4308-904d-886e7088ad71",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 50,
+          "blockIndex": 52,
+          "excerpt": "Attanasio, O. P., Guiso, L., & Jappelli, T. (2002). The demand for money, finan…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "fe9bafb9-a2d4-4366-81aa-04366419d363",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 51,
+          "blockIndex": 53,
+          "excerpt": "Cavallo, A., & Kryvtsov, O. (2024). Price discounts and cheapflation during the…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "a25c9860-e325-45ab-8bc1-18f3de328b08",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 52,
+          "blockIndex": 54,
+          "excerpt": "Charles, M., & Lundy, J. D. (2013). The local Joneses: Household consumption an…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "fef34d44-ee6b-4a4f-a3db-14afe79fcadb",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 53,
+          "blockIndex": 55,
+          "excerpt": "D’Acunto, F., Malmendier, U., Ospina, J., & Weber, M. (2021). Exposure to groce…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "78ef5955-839c-417f-921a-09e6c4737e9d",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 54,
+          "blockIndex": 56,
+          "excerpt": "Del Canto, F., Grigsby, J., Qian, E., & Walsh, C. (2025). Are inflationary shoc…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "884377a4-f93b-4045-b530-cdf555fb58d4",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 55,
+          "blockIndex": 57,
+          "excerpt": "Doepke, M., & Schneider, M. (2006). Inflation and the redistribution of nominal…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "2fb239b7-3a74-43a8-86e6-19d8d554d855",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 56,
+          "blockIndex": 58,
+          "excerpt": "Erosa, A., & Ventura, G. (2002). On inflation as a regressive consumption tax. …"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "a5990ca0-1299-458c-b43a-9d87a9a43753",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 57,
+          "blockIndex": 59,
+          "excerpt": "Hobijn, B., & Lagakos, D. (2005). Inflation inequality in the United States. Re…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "32fac404-2cc5-48c0-b99b-688b65189770",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 58,
+          "blockIndex": 60,
+          "excerpt": "Jaravel, X. (2019). The unequal gains from product innovations: Evidence from t…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "f408cf76-7390-4f13-bdda-ed5aa00faf49",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 59,
+          "blockIndex": 61,
+          "excerpt": "Kakar, V., & Daniels, G. E. (2019). Role of cash and costs of inflation for dif…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "4c9ec8ad-c2d3-40c5-a142-f5f4a0a99f1f",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 60,
+          "blockIndex": 62,
+          "excerpt": "Kaplan, G., & Schulhofer-Wohl, S. (2017). Inflation at the household level. Jou…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "7e83bf9f-d6d3-4f54-9d54-e5df42d531cd",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 61,
+          "blockIndex": 63,
+          "excerpt": "Leblang, D., Smith, M. D., & Wesselbaum, D. (2025). Does inflation affect well-…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "966e55da-cfed-436a-b6ba-27f3b9a18413",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-003",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 62,
+          "blockIndex": 64,
+          "excerpt": "Weber, M., D’Acunto, F., Gorodnichenko, Y., & Coibion, O. (2022). The subjectiv…"
+        },
+        "before": "1.15× spacing",
+        "after": "double spacing",
+        "reason": "APA 7 requires double spacing throughout the paper.",
+        "confidence": 0.98,
+        "id": "36a502c1-9b54-4ca8-b9c4-4576b72e1468",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 0,
+          "blockIndex": 0,
+          "excerpt": "Inflation in the United States and Its Effects on Local People"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "24c5ec33-344f-4216-85e4-25ca23b97bd9",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 1,
+          "blockIndex": 1,
+          "excerpt": "This paper examines how inflation changes household purchasing power and commun…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "3674afd9-1198-4cbb-aa8d-994ecde0e48c",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 2,
+          "blockIndex": 2,
+          "excerpt": "The analysis uses a household-welfare perspective rather than treating inflatio…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "6cf72f85-6e42-4b56-9f80-3e229c4af08f",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 3,
+          "blockIndex": 3,
+          "excerpt": "subheading : Understanding Inflation as a Local Household Experience"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "d6fa3a74-f239-4a1d-806e-99b073625f22",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 4,
+          "blockIndex": 4,
+          "excerpt": "Inflation is often reported as one national percentage, but local people encoun…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "cc06f8e4-31d5-4917-a35f-b02278e0557d",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 5,
+          "blockIndex": 5,
+          "excerpt": "This distinction matters for understanding the recent U.S. inflation experience…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "61317fdc-eef3-43e1-b674-5d5f5548022f",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 6,
+          "blockIndex": 6,
+          "excerpt": "Sub-heading - Why the Burden Is Unequal"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "250f11d7-82e0-41c7-a843-1daae080a50e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 7,
+          "blockIndex": 7,
+          "excerpt": "Inflation changes real living standards through several channels. The first is …"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "a73f9edc-578f-4e64-9c08-d710e6c50f10",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 8,
+          "blockIndex": 8,
+          "excerpt": "These channels mean that inflation is not automatically regressive in every cir…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "ff7ff996-8bed-4db0-ab83-20d40879f2c3",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 9,
+          "blockIndex": 9,
+          "excerpt": "Table 1"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "9694dcda-2530-4f87-9549-7a190fdd4dfb",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 10,
+          "blockIndex": 10,
+          "excerpt": "Selected Evidence on Unequal Inflation Exposure"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "caab4348-6897-4a9a-a2a6-97488cadb917",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 11,
+          "blockIndex": 12,
+          "excerpt": "sub heading: Food, Energy, and Everyday Purchases"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "47f2581b-46d1-47cd-968a-9b01ade7e1be",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 12,
+          "blockIndex": 13,
+          "excerpt": "Food prices have an outsized psychological and budgetary role because they are …"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "2d053dfa-834f-4c28-af1f-417371758400",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 13,
+          "blockIndex": 14,
+          "excerpt": "Energy costs reach households both directly and indirectly. Gasoline affects co…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "f3562e89-2a49-4c4a-bacf-0593b805be0a",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 14,
+          "blockIndex": 15,
+          "excerpt": "Figure 1"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "ca997a27-e4c2-4d28-bdd9-fbb1abb676f8",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 15,
+          "blockIndex": 16,
+          "excerpt": "Cumulative Inflation Differed Across Household Income Groups"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "2cb304c3-8ef1-44b1-86a6-239847a8dadb",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 16,
+          "blockIndex": 17,
+          "excerpt": ""
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "b141a23b-94f8-486a-a282-41440e047d45",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 17,
+          "blockIndex": 18,
+          "excerpt": "Note. Values summarize the cumulative household-level inflation comparison repo…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "acc736c0-e015-4b78-993a-4697afcc30f7",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 18,
+          "blockIndex": 19,
+          "excerpt": "Subheading: Housing, Rent, and Neighborhood Stability"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "26603a39-900a-4de2-883d-58e291d78893",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 19,
+          "blockIndex": 20,
+          "excerpt": "Housing is usually the largest household expense, but housing inflation is expe…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "1514df0b-f7ea-4d12-b4aa-1140203dd8aa",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 20,
+          "blockIndex": 21,
+          "excerpt": "Housing costs also interact with community stability. When rent consumes a larg…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "6311e0e5-2489-4e98-b450-aa7d7debeab5",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 21,
+          "blockIndex": 22,
+          "excerpt": "Subheading 2: Wages, Work, and Real Income"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "d9c308be-57a2-4967-91ce-f060950c6ecc",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 22,
+          "blockIndex": 23,
+          "excerpt": "Whether inflation lowers living standards depends partly on wage adjustment. A …"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "0428565c-28fb-4a9b-882f-df5bdfd9774e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 23,
+          "blockIndex": 24,
+          "excerpt": "Measurement choices shape the diagnosis. Jaravel (2019) shows that product inno…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "78c5acac-4b8e-4b50-a04f-4968b873cf0d",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 24,
+          "blockIndex": 25,
+          "excerpt": "Subheading: Savings, Debt, and Financial Security"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "c8a90675-838e-4ac1-9c1e-d236b0601fbb",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 25,
+          "blockIndex": 26,
+          "excerpt": "Inflation erodes the purchasing power of cash and fixed nominal assets. This ef…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "ce659919-2d83-40da-a40d-fcd57d789a9e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 26,
+          "blockIndex": 27,
+          "excerpt": "Debt complicates the picture. Unexpected inflation can reduce the real burden o…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "ca2f7c18-4652-449f-96b7-2aa744116adc",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 27,
+          "blockIndex": 28,
+          "excerpt": "Table 2"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "17048cca-7b29-4068-aa50-3fd0fb4b1df4",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 28,
+          "blockIndex": 29,
+          "excerpt": "Channels Connecting Inflation to Local Household Welfare"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "42476839-af2e-464a-b182-a6453ee631c3",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 29,
+          "blockIndex": 31,
+          "excerpt": "Subheading : Expectations, Confidence, and Household Decisions"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "20586bf6-3102-439e-9c54-fd8bf1f5e376",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 30,
+          "blockIndex": 32,
+          "excerpt": "Households make decisions based not only on current prices but also on expected…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "f9d80383-90c7-4381-a5e0-eb60a223a63a",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 31,
+          "blockIndex": 33,
+          "excerpt": "Inflation also affects well-being through uncertainty and perceived loss of con…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "48794e16-e351-4f97-8770-45388d08f2af",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 32,
+          "blockIndex": 34,
+          "excerpt": "Figure 2"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "98dc4ed3-a4e0-4e6a-8727-329073dd6a22",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 33,
+          "blockIndex": 35,
+          "excerpt": "Inflation Gap Between Low- and High-Income Households Varied Over Time"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "a024019b-d6dc-4e1b-b34d-dbd64e9931c1",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 34,
+          "blockIndex": 36,
+          "excerpt": ""
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "0d491f91-9839-4825-88f8-fe11ac316030",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 35,
+          "blockIndex": 37,
+          "excerpt": "Note. Annual gaps are based on the income-specific price indexes reported by Ar…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "390333b6-3897-470a-8f6c-ea8ff6d01eb3",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 36,
+          "blockIndex": 38,
+          "excerpt": "Subheading: Community Businesses and Public Services"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "ea32ba4f-1f01-45a2-b0f1-bcfb83f24fdc",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 37,
+          "blockIndex": 39,
+          "excerpt": "Local businesses face many of the same pressures as households: higher input pr…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "da62c582-7b77-459e-9c17-8804423c7c08",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 38,
+          "blockIndex": 40,
+          "excerpt": "Public services are also exposed. Municipalities may collect more nominal tax r…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "4dc856d5-05b3-4afa-b1a0-c92bec8a2c81",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 39,
+          "blockIndex": 41,
+          "excerpt": "subheading : Health, Education, and Family Trade-Offs"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "f996f3f6-1f31-48ba-add9-be5286bc2bff",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 40,
+          "blockIndex": 42,
+          "excerpt": "Inflation can change health behavior even when medical prices are not the faste…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "a7f603e9-806b-4415-8236-4f8b2cd1e795",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 41,
+          "blockIndex": 43,
+          "excerpt": "Education and caregiving decisions are similarly exposed. Higher rent or food b…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "e9f48e86-8e48-4a43-a126-3b36424c7fef",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 42,
+          "blockIndex": 44,
+          "excerpt": "Subheading - Policy Implications for Local People"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "667cf6bf-eb77-4899-ab42-e4a2a2d1aa35",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 43,
+          "blockIndex": 45,
+          "excerpt": "A distribution-sensitive policy response begins with measurement. National infl…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "33f6167f-04ca-4ed7-ae15-befea60185bf",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 44,
+          "blockIndex": 46,
+          "excerpt": "Targeted fiscal measures can reduce hardship without treating every household a…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "23ff93ad-0bcc-4f6d-90d2-b9ba2d718847",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 45,
+          "blockIndex": 47,
+          "excerpt": "Subheading: Conclusion"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "99ea248b-3e54-4595-b662-8e9427259ac5",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.786Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 46,
+          "blockIndex": 48,
+          "excerpt": "Inflation in the United States is a national macroeconomic process with intense…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "1eabcbd4-a86d-4d70-81a2-4431276ecdf4",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 47,
+          "blockIndex": 49,
+          "excerpt": "For local people, the central issue is cumulative purchasing power and the narr…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "2cb987f7-23b0-4d77-8846-93ca10aab747",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 48,
+          "blockIndex": 50,
+          "excerpt": "References"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "e388747c-6192-4836-8104-1e9a325561a1",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 49,
+          "blockIndex": 51,
+          "excerpt": "Argente, D., & Lee, M. (2021). Cost of living inequality during the Great Reces…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "136f98c5-2e8b-447d-905b-f9e1ccefadd0",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 50,
+          "blockIndex": 52,
+          "excerpt": "Attanasio, O. P., Guiso, L., & Jappelli, T. (2002). The demand for money, finan…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "20d3cb30-a7ea-4168-a0ce-b985b873c6c3",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 51,
+          "blockIndex": 53,
+          "excerpt": "Cavallo, A., & Kryvtsov, O. (2024). Price discounts and cheapflation during the…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "a3707e1d-f945-4790-9810-2b8e6fbf8b76",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 52,
+          "blockIndex": 54,
+          "excerpt": "Charles, M., & Lundy, J. D. (2013). The local Joneses: Household consumption an…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "ed4ca1e5-d5b8-4b80-a881-8bd51f87d3ef",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 53,
+          "blockIndex": 55,
+          "excerpt": "D’Acunto, F., Malmendier, U., Ospina, J., & Weber, M. (2021). Exposure to groce…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "70c920a2-239f-4da7-8fce-61dde33dd472",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 54,
+          "blockIndex": 56,
+          "excerpt": "Del Canto, F., Grigsby, J., Qian, E., & Walsh, C. (2025). Are inflationary shoc…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "813c80a8-36a1-4c8c-8aa2-292fee86b6ff",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 55,
+          "blockIndex": 57,
+          "excerpt": "Doepke, M., & Schneider, M. (2006). Inflation and the redistribution of nominal…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "b586c4e3-98a0-49cc-83bd-e25e60d641ce",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 56,
+          "blockIndex": 58,
+          "excerpt": "Erosa, A., & Ventura, G. (2002). On inflation as a regressive consumption tax. …"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "9a1c37c9-c4c4-4ea9-94ff-8577167ca690",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 57,
+          "blockIndex": 59,
+          "excerpt": "Hobijn, B., & Lagakos, D. (2005). Inflation inequality in the United States. Re…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "8c53b5b1-e79e-4cfa-b928-328b2ed573ce",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 58,
+          "blockIndex": 60,
+          "excerpt": "Jaravel, X. (2019). The unequal gains from product innovations: Evidence from t…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "b0e701e5-f56f-46f3-ba10-64cbb461bb8f",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 59,
+          "blockIndex": 61,
+          "excerpt": "Kakar, V., & Daniels, G. E. (2019). Role of cash and costs of inflation for dif…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "f2a23ffe-d6b5-4dc2-af64-fd0869849df1",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 60,
+          "blockIndex": 62,
+          "excerpt": "Kaplan, G., & Schulhofer-Wohl, S. (2017). Inflation at the household level. Jou…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "a560faee-eb70-48ac-8d9d-d6fe7ec17e55",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 61,
+          "blockIndex": 63,
+          "excerpt": "Leblang, D., Smith, M. D., & Wesselbaum, D. (2025). Does inflation affect well-…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "a670216e-1f10-4f43-ae13-d12f3ebf9bd0",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-004",
+        "category": "layout",
+        "location": {
+          "paragraphIndex": 62,
+          "blockIndex": 64,
+          "excerpt": "Weber, M., D’Acunto, F., Gorodnichenko, Y., & Coibion, O. (2022). The subjectiv…"
+        },
+        "before": "spacing before 0 pt, after 10 pt",
+        "after": "spacing before 0 pt, after 0 pt",
+        "reason": "APA 7 uses double spacing with no extra space between paragraphs.",
+        "confidence": 0.95,
+        "id": "6e3e8247-3a79-44bd-947b-0ab593f72400",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.787Z"
+      },
+      {
+        "ruleId": "APA-LAYOUT-005",
+        "category": "layout",
+        "location": {
+          "description": "Page header"
+        },
+        "before": "No page numbers",
+        "after": "Page number field added to header (top right)",
+        "reason": "APA 7 requires a page number on every page.",
+        "confidence": 0.97,
+        "documentWide": true,
+        "id": "88263625-23dc-4d60-91ab-45a81ffd0fa9",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.79Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 0,
+          "blockIndex": 0,
+          "excerpt": "Inflation in the United States and Its Effects on Local People"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "cfd6d7b9-17d4-44dd-af53-20f0feee2f8f",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 1,
+          "blockIndex": 1,
+          "excerpt": "This paper examines how inflation changes household purchasing power and commun…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "ea71db3d-dbdf-4362-8352-427b72de47a3",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 2,
+          "blockIndex": 2,
+          "excerpt": "The analysis uses a household-welfare perspective rather than treating inflatio…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "ef797f27-3c2e-4b8a-8612-3400d508a2de",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 4,
+          "blockIndex": 4,
+          "excerpt": "Inflation is often reported as one national percentage, but local people encoun…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "e50480f9-1b37-4142-89e1-c4a394334601",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 5,
+          "blockIndex": 5,
+          "excerpt": "This distinction matters for understanding the recent U.S. inflation experience…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "394a27d9-6d34-4f62-846d-108b7a7ca40d",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 7,
+          "blockIndex": 7,
+          "excerpt": "Inflation changes real living standards through several channels. The first is …"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "713e6fd6-db32-45b8-a2c7-f26b911e53d0",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 8,
+          "blockIndex": 8,
+          "excerpt": "These channels mean that inflation is not automatically regressive in every cir…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "c9b26538-0d73-4e68-bbee-919424473141",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 10,
+          "blockIndex": 10,
+          "excerpt": "Selected Evidence on Unequal Inflation Exposure"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "adf54c96-5324-4ade-aca2-1a561f2982ed",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 12,
+          "blockIndex": 13,
+          "excerpt": "Food prices have an outsized psychological and budgetary role because they are …"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "a19403ac-05e1-4875-bd8c-2da6202f23f6",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 13,
+          "blockIndex": 14,
+          "excerpt": "Energy costs reach households both directly and indirectly. Gasoline affects co…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "b6a40830-0e1b-4b02-b0bb-67ca661a57f8",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 15,
+          "blockIndex": 16,
+          "excerpt": "Cumulative Inflation Differed Across Household Income Groups"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "18991119-1a79-46ea-ae92-7ed1a31f0c51",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 17,
+          "blockIndex": 18,
+          "excerpt": "Note. Values summarize the cumulative household-level inflation comparison repo…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "217b916b-62e9-4e4c-a818-c328dd849775",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 19,
+          "blockIndex": 20,
+          "excerpt": "Housing is usually the largest household expense, but housing inflation is expe…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "24602f11-9850-46b8-8cf1-01aa35a7d0f5",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 20,
+          "blockIndex": 21,
+          "excerpt": "Housing costs also interact with community stability. When rent consumes a larg…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "9e05d10e-1ca8-4cbc-b36a-f7da284a6de0",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 22,
+          "blockIndex": 23,
+          "excerpt": "Whether inflation lowers living standards depends partly on wage adjustment. A …"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "3b22908e-baeb-420c-9fbf-3d44c6b730cb",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 23,
+          "blockIndex": 24,
+          "excerpt": "Measurement choices shape the diagnosis. Jaravel (2019) shows that product inno…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "2e03de5d-1574-453f-ac85-0ae9fabc4b4e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 25,
+          "blockIndex": 26,
+          "excerpt": "Inflation erodes the purchasing power of cash and fixed nominal assets. This ef…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "850dc859-d724-4b24-9bcf-8f552854107f",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 26,
+          "blockIndex": 27,
+          "excerpt": "Debt complicates the picture. Unexpected inflation can reduce the real burden o…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "ee8fff3b-e974-4d4c-9860-2e38e0edc6b8",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 28,
+          "blockIndex": 29,
+          "excerpt": "Channels Connecting Inflation to Local Household Welfare"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "095efbcd-eb0d-4b3e-aa0f-dbed564c9e4f",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.791Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 30,
+          "blockIndex": 32,
+          "excerpt": "Households make decisions based not only on current prices but also on expected…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "8a312121-84cc-44f4-9789-a2c69db37a65",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 31,
+          "blockIndex": 33,
+          "excerpt": "Inflation also affects well-being through uncertainty and perceived loss of con…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "131ef00b-ac9e-4169-9cb5-1e681b4a1b13",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 33,
+          "blockIndex": 35,
+          "excerpt": "Inflation Gap Between Low- and High-Income Households Varied Over Time"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "e352b426-b844-4d22-9a51-e1bdabedaf31",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 35,
+          "blockIndex": 37,
+          "excerpt": "Note. Annual gaps are based on the income-specific price indexes reported by Ar…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "5b6ff44d-184e-45b3-97b0-1b6d151b4d15",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 37,
+          "blockIndex": 39,
+          "excerpt": "Local businesses face many of the same pressures as households: higher input pr…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "05e76a4d-a4e1-4e73-af8d-f78d0f72a1c9",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 38,
+          "blockIndex": 40,
+          "excerpt": "Public services are also exposed. Municipalities may collect more nominal tax r…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "f1b780bc-6c94-4da1-b5cc-100fbee57ef0",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 40,
+          "blockIndex": 42,
+          "excerpt": "Inflation can change health behavior even when medical prices are not the faste…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "83f076c5-5f64-4038-a9b5-71afc561ebab",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 41,
+          "blockIndex": 43,
+          "excerpt": "Education and caregiving decisions are similarly exposed. Higher rent or food b…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "87c943d9-87ac-484e-8c5f-2af07f2a66c1",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 43,
+          "blockIndex": 45,
+          "excerpt": "A distribution-sensitive policy response begins with measurement. National infl…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "47f947d1-88ac-4d0e-84e4-15361c9bbb59",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 44,
+          "blockIndex": 46,
+          "excerpt": "Targeted fiscal measures can reduce hardship without treating every household a…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "1e02f366-57dd-40b3-87ff-681bda46dca1",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 46,
+          "blockIndex": 48,
+          "excerpt": "Inflation in the United States is a national macroeconomic process with intense…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "d77ec9c1-f193-4bfe-a34d-db2a87ae24cd",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-PARA-001",
+        "category": "paragraph",
+        "location": {
+          "paragraphIndex": 47,
+          "blockIndex": 49,
+          "excerpt": "For local people, the central issue is cumulative purchasing power and the narr…"
+        },
+        "before": "first-line indent 0.00\"",
+        "after": "first-line indent 0.5\"",
+        "reason": "APA 7 body paragraphs begin with a 0.5-inch indent.",
+        "confidence": 0.9,
+        "id": "e5a071a7-d484-4d52-af09-718edd8f7ff9",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.792Z"
+      },
+      {
+        "ruleId": "APA-TITLE-001",
+        "category": "title_page",
+        "location": {
+          "description": "Document start"
+        },
+        "before": "No title page detected",
+        "after": "Title page created from your metadata (Inflation in the United States and Its Effects on Local People)",
+        "reason": "APA 7 papers begin with a title page.",
+        "confidence": 0.9,
+        "documentWide": true,
+        "id": "aab3940e-e683-48a8-9879-fa4dcdab1720",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.793Z"
+      },
+      {
+        "ruleId": "APA-TITLE-006",
+        "category": "title_page",
+        "location": {
+          "paragraphIndex": 0,
+          "blockIndex": 0,
+          "excerpt": "Inflation in the United States and Its Effects on Local People"
+        },
+        "before": "source body-title formatting",
+        "after": "centered, bold, unindented body title in the required font",
+        "reason": "APA 7 repeats the paper title as a centered bold heading at the start of the body.",
+        "confidence": 0.95,
+        "id": "7ead9b07-cb57-46a3-8f8a-65ad9ff11ca1",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.793Z"
+      },
+      {
+        "ruleId": "APA-HEAD-001",
+        "category": "headings",
+        "location": {
+          "description": "Style \"Heading1\""
+        },
+        "before": "Word default heading style",
+        "after": "APA Level 1: center, bold, Times New Roman 12 pt, double-spaced",
+        "reason": "APA 7 defines specific formatting for each heading level.",
+        "confidence": 0.95,
+        "documentWide": true,
+        "id": "bd8dc395-45cb-41c5-b689-88b3011a35f8",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.794Z"
+      },
+      {
+        "ruleId": "APA-HEAD-001",
+        "category": "headings",
+        "location": {
+          "description": "Style \"Heading2\""
+        },
+        "before": "Word default heading style",
+        "after": "APA Level 2: left, bold, Times New Roman 12 pt, double-spaced",
+        "reason": "APA 7 defines specific formatting for each heading level.",
+        "confidence": 0.95,
+        "documentWide": true,
+        "id": "e014eef1-f38f-4c88-9f81-0aae4b80b3cb",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.794Z"
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "location": {
+          "paragraphIndex": 3,
+          "blockIndex": 3,
+          "excerpt": "subheading : Understanding Inflation as a Local Household Experience"
+        },
+        "before": "subheading : Understanding Inflation as a Local Household Experience",
+        "after": "Understanding Inflation as a Local Household Experience",
+        "reason": "Detected as a Level 1 heading with high confidence.",
+        "confidence": 0.9,
+        "id": "b1839a5a-7d46-46f2-826b-4d9d8406aad6",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.795Z"
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "location": {
+          "paragraphIndex": 6,
+          "blockIndex": 6,
+          "excerpt": "Sub-heading - Why the Burden Is Unequal"
+        },
+        "before": "Sub-heading - Why the Burden Is Unequal",
+        "after": "Why the Burden Is Unequal",
+        "reason": "Detected as a Level 1 heading with high confidence.",
+        "confidence": 0.9,
+        "id": "1d87eedc-55de-4968-b68d-8e7fae116033",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.795Z"
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "location": {
+          "paragraphIndex": 11,
+          "blockIndex": 12,
+          "excerpt": "sub heading: Food, Energy, and Everyday Purchases"
+        },
+        "before": "sub heading: Food, Energy, and Everyday Purchases",
+        "after": "Food, Energy, and Everyday Purchases",
+        "reason": "Detected as a Level 1 heading with high confidence.",
+        "confidence": 0.9,
+        "id": "30b3ca4d-48e0-4735-bb69-8ba34147c3d9",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.795Z"
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "location": {
+          "paragraphIndex": 18,
+          "blockIndex": 19,
+          "excerpt": "Subheading: Housing, Rent, and Neighborhood Stability"
+        },
+        "before": "Subheading: Housing, Rent, and Neighborhood Stability",
+        "after": "Housing, Rent, and Neighborhood Stability",
+        "reason": "Detected as a Level 1 heading with high confidence.",
+        "confidence": 0.9,
+        "id": "b553b3b0-6aea-4cce-bcea-bb1bc363c8c5",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.795Z"
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "location": {
+          "paragraphIndex": 21,
+          "blockIndex": 22,
+          "excerpt": "Subheading 2: Wages, Work, and Real Income"
+        },
+        "before": "Subheading 2: Wages, Work, and Real Income",
+        "after": "Wages, Work, and Real Income",
+        "reason": "Detected as a Level 2 heading with high confidence.",
+        "confidence": 0.9,
+        "id": "14e1ffc0-1688-4fc7-89ed-e85fc1414233",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.795Z"
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "location": {
+          "paragraphIndex": 24,
+          "blockIndex": 25,
+          "excerpt": "Subheading: Savings, Debt, and Financial Security"
+        },
+        "before": "Subheading: Savings, Debt, and Financial Security",
+        "after": "Savings, Debt, and Financial Security",
+        "reason": "Detected as a Level 1 heading with high confidence.",
+        "confidence": 0.9,
+        "id": "18436df5-f699-4072-b23b-d59e8860a745",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.795Z"
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "location": {
+          "paragraphIndex": 29,
+          "blockIndex": 31,
+          "excerpt": "Subheading : Expectations, Confidence, and Household Decisions"
+        },
+        "before": "Subheading : Expectations, Confidence, and Household Decisions",
+        "after": "Expectations, Confidence, and Household Decisions",
+        "reason": "Detected as a Level 1 heading with high confidence.",
+        "confidence": 0.9,
+        "id": "4485c320-67ce-42a5-bfbe-270feb1929da",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.795Z"
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "location": {
+          "paragraphIndex": 36,
+          "blockIndex": 38,
+          "excerpt": "Subheading: Community Businesses and Public Services"
+        },
+        "before": "Subheading: Community Businesses and Public Services",
+        "after": "Community Businesses and Public Services",
+        "reason": "Detected as a Level 1 heading with high confidence.",
+        "confidence": 0.9,
+        "id": "b713d59f-7943-4613-b7cc-ae668728038c",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.795Z"
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "location": {
+          "paragraphIndex": 39,
+          "blockIndex": 41,
+          "excerpt": "subheading : Health, Education, and Family Trade-Offs"
+        },
+        "before": "subheading : Health, Education, and Family Trade-Offs",
+        "after": "Health, Education, and Family Trade-Offs",
+        "reason": "Detected as a Level 1 heading with high confidence.",
+        "confidence": 0.9,
+        "id": "6892c99e-eaf0-4abe-87f3-d0928a08a036",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.795Z"
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "location": {
+          "paragraphIndex": 42,
+          "blockIndex": 44,
+          "excerpt": "Subheading - Policy Implications for Local People"
+        },
+        "before": "Subheading - Policy Implications for Local People",
+        "after": "Policy Implications for Local People",
+        "reason": "Detected as a Level 1 heading with high confidence.",
+        "confidence": 0.9,
+        "id": "e7916a55-abc7-45c8-a994-456a4159d6d6",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.795Z"
+      },
+      {
+        "ruleId": "APA-HEAD-002",
+        "category": "headings",
+        "location": {
+          "paragraphIndex": 45,
+          "blockIndex": 47,
+          "excerpt": "Subheading: Conclusion"
+        },
+        "before": "Subheading: Conclusion",
+        "after": "Conclusion",
+        "reason": "Detected as a Level 1 heading with high confidence.",
+        "confidence": 0.9,
+        "id": "c0fc98a2-a4b6-4612-b849-9d05dd5abb58",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.795Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-001",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 48,
+          "blockIndex": 50,
+          "excerpt": "References"
+        },
+        "before": "\"References\", not bold, not centered, not on new page",
+        "after": "\"References\", bold, centered, starting on a new page",
+        "reason": "APA 7 titles the reference list \"References\" in bold, centered, on its own page.",
+        "confidence": 0.95,
+        "id": "ad83a858-f51a-4518-9b54-1e4799d4d833",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.796Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 49,
+          "blockIndex": 51,
+          "excerpt": "Argente, D., & Lee, M. (2021). Cost of living inequality during the Great Reces…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "87f495cc-4890-44f1-b2b6-53b3fd41ead0",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.797Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 50,
+          "blockIndex": 52,
+          "excerpt": "Attanasio, O. P., Guiso, L., & Jappelli, T. (2002). The demand for money, finan…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "bcad6fc3-2d21-4f40-aec8-7109cb8b5f57",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.797Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 51,
+          "blockIndex": 53,
+          "excerpt": "Cavallo, A., & Kryvtsov, O. (2024). Price discounts and cheapflation during the…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "c0ae9eb9-89ee-4d50-971d-e48e03b59015",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.798Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 52,
+          "blockIndex": 54,
+          "excerpt": "Charles, M., & Lundy, J. D. (2013). The local Joneses: Household consumption an…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "2c8ce92e-2eac-4be0-afb4-726c4adcb200",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.798Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 53,
+          "blockIndex": 55,
+          "excerpt": "D’Acunto, F., Malmendier, U., Ospina, J., & Weber, M. (2021). Exposure to groce…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "c4e69d5f-14ae-4cad-bce0-b5005747391d",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.798Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 54,
+          "blockIndex": 56,
+          "excerpt": "Del Canto, F., Grigsby, J., Qian, E., & Walsh, C. (2025). Are inflationary shoc…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "402c5a6c-239a-44de-b0be-7207025fdf17",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.798Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 55,
+          "blockIndex": 57,
+          "excerpt": "Doepke, M., & Schneider, M. (2006). Inflation and the redistribution of nominal…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "e2ca81fc-19cc-407c-b466-9acde6143ca1",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.798Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 56,
+          "blockIndex": 58,
+          "excerpt": "Erosa, A., & Ventura, G. (2002). On inflation as a regressive consumption tax. …"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "42b80fd9-b19a-4e0b-aa92-6f2c62981537",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.798Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 57,
+          "blockIndex": 59,
+          "excerpt": "Hobijn, B., & Lagakos, D. (2005). Inflation inequality in the United States. Re…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "c630fe08-6528-4d36-aed7-4e96644a6ef4",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 58,
+          "blockIndex": 60,
+          "excerpt": "Jaravel, X. (2019). The unequal gains from product innovations: Evidence from t…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "b90e12a8-1ab6-4531-8087-0fba0e1d8991",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 59,
+          "blockIndex": 61,
+          "excerpt": "Kakar, V., & Daniels, G. E. (2019). Role of cash and costs of inflation for dif…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "1ea8e239-fc04-4f27-beab-82fa732e304c",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 60,
+          "blockIndex": 62,
+          "excerpt": "Kaplan, G., & Schulhofer-Wohl, S. (2017). Inflation at the household level. Jou…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "f7cfd437-fafa-4cc5-8ae2-90fabe15da8e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 61,
+          "blockIndex": 63,
+          "excerpt": "Leblang, D., Smith, M. D., & Wesselbaum, D. (2025). Does inflation affect well-…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "09974d27-fb6a-4b0b-b7fd-6fc737d41ae9",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-008",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 62,
+          "blockIndex": 64,
+          "excerpt": "Weber, M., D’Acunto, F., Gorodnichenko, Y., & Coibion, O. (2022). The subjectiv…"
+        },
+        "before": "journal title and/or volume not italicized",
+        "after": "journal title and volume italicized",
+        "reason": "APA 7 italicizes the journal title and volume number in periodical references.",
+        "confidence": 0.9,
+        "id": "802a8fbb-ee7c-4f4f-9ba1-3e4ad67602e5",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 49,
+          "blockIndex": 51,
+          "excerpt": "Argente, D., & Lee, M. (2021). Cost of living inequality during the Great Reces…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "0f79d302-b699-41ac-9d83-046188eef136",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 50,
+          "blockIndex": 52,
+          "excerpt": "Attanasio, O. P., Guiso, L., & Jappelli, T. (2002). The demand for money, finan…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "e7ba0dce-252f-42b6-8358-de5a06b1c905",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 51,
+          "blockIndex": 53,
+          "excerpt": "Cavallo, A., & Kryvtsov, O. (2024). Price discounts and cheapflation during the…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "31dc731b-fc54-4f35-84bf-9a8771f282e9",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 52,
+          "blockIndex": 54,
+          "excerpt": "Charles, M., & Lundy, J. D. (2013). The local Joneses: Household consumption an…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "b9a6cb62-c934-4254-a6d5-326d84e3937c",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 53,
+          "blockIndex": 55,
+          "excerpt": "D’Acunto, F., Malmendier, U., Ospina, J., & Weber, M. (2021). Exposure to groce…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "1d9c5db1-4133-4859-8bcc-0f06f100fe30",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 54,
+          "blockIndex": 56,
+          "excerpt": "Del Canto, F., Grigsby, J., Qian, E., & Walsh, C. (2025). Are inflationary shoc…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "c3e523c7-b982-4ab4-b190-10e4ec6168a9",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.799Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 55,
+          "blockIndex": 57,
+          "excerpt": "Doepke, M., & Schneider, M. (2006). Inflation and the redistribution of nominal…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "0baf7cc3-9d5c-4b56-a20e-b46738f0e80e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.8Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 56,
+          "blockIndex": 58,
+          "excerpt": "Erosa, A., & Ventura, G. (2002). On inflation as a regressive consumption tax. …"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "f132e777-8a60-404f-915f-d72af3d92307",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.8Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 57,
+          "blockIndex": 59,
+          "excerpt": "Hobijn, B., & Lagakos, D. (2005). Inflation inequality in the United States. Re…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "a9b5a734-632b-49d3-ba28-644024a0cdac",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.8Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 58,
+          "blockIndex": 60,
+          "excerpt": "Jaravel, X. (2019). The unequal gains from product innovations: Evidence from t…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "ef9e2de6-25ba-4ba7-b95d-34115886af52",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.8Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 59,
+          "blockIndex": 61,
+          "excerpt": "Kakar, V., & Daniels, G. E. (2019). Role of cash and costs of inflation for dif…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "1dfad89b-8c50-4e99-a93d-9e252e2d6f71",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.8Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 60,
+          "blockIndex": 62,
+          "excerpt": "Kaplan, G., & Schulhofer-Wohl, S. (2017). Inflation at the household level. Jou…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "ebcaa922-8fe4-4c4b-814b-a55ce3d5bdc5",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.8Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 61,
+          "blockIndex": 63,
+          "excerpt": "Leblang, D., Smith, M. D., & Wesselbaum, D. (2025). Does inflation affect well-…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "aa4c68f2-ed3d-4b9a-9ce9-7b4cdc8ba539",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.8Z"
+      },
+      {
+        "ruleId": "APA-REFERENCE-002",
+        "category": "references",
+        "location": {
+          "paragraphIndex": 62,
+          "blockIndex": 64,
+          "excerpt": "Weber, M., D’Acunto, F., Gorodnichenko, Y., & Coibion, O. (2022). The subjectiv…"
+        },
+        "before": "no hanging indent",
+        "after": "0.5\" hanging indent",
+        "reason": "APA 7 reference entries use a 0.5-inch hanging indent.",
+        "confidence": 0.95,
+        "id": "34976a46-6ac1-40e2-a5bc-e68c92b71f7a",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.8Z"
+      },
+      {
+        "ruleId": "APA-TABLE-001",
+        "category": "tables",
+        "location": {
+          "paragraphIndex": 9,
+          "excerpt": "Table 1"
+        },
+        "before": "source table label/title formatting",
+        "after": "left-aligned bold table label and left-aligned italic non-bold title",
+        "reason": "APA 7 table numbers and titles use distinct formatting on separate lines.",
+        "confidence": 0.95,
+        "id": "f62b5bee-c68c-4ed3-a062-2087dcc2a632",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.808Z"
+      },
+      {
+        "ruleId": "APA-TABLE-001",
+        "category": "tables",
+        "location": {
+          "paragraphIndex": 27,
+          "excerpt": "Table 2"
+        },
+        "before": "source table label/title formatting",
+        "after": "left-aligned bold table label and left-aligned italic non-bold title",
+        "reason": "APA 7 table numbers and titles use distinct formatting on separate lines.",
+        "confidence": 0.95,
+        "id": "018fcc49-7815-45e3-8dd6-afe06e254a3e",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.808Z"
+      },
+      {
+        "ruleId": "APA-TABLE-003",
+        "category": "tables",
+        "location": {
+          "description": "All document tables"
+        },
+        "before": "source borders, row pagination, and cell spacing",
+        "after": "APA horizontal rules, repeating header rows, unsplit rows, and compact single-spaced cells",
+        "reason": "APA tables avoid vertical rules and should remain readable across page boundaries.",
+        "confidence": 0.95,
+        "documentWide": true,
+        "id": "e4b7ace7-a992-4ca2-98f9-c23d6450a6b2",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.809Z"
+      },
+      {
+        "ruleId": "APA-FIGURE-001",
+        "category": "figures",
+        "location": {
+          "paragraphIndex": 14,
+          "excerpt": "Figure 1"
+        },
+        "before": "source figure label/title formatting",
+        "after": "left-aligned bold figure label and left-aligned italic non-bold title",
+        "reason": "APA 7 figure numbers and titles use distinct formatting on separate lines.",
+        "confidence": 0.95,
+        "id": "51be5fb8-d9ac-4b95-9c1a-a0feb7573fbc",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.81Z"
+      },
+      {
+        "ruleId": "APA-FIGURE-001",
+        "category": "figures",
+        "location": {
+          "paragraphIndex": 32,
+          "excerpt": "Figure 2"
+        },
+        "before": "source figure label/title formatting",
+        "after": "left-aligned bold figure label and left-aligned italic non-bold title",
+        "reason": "APA 7 figure numbers and titles use distinct formatting on separate lines.",
+        "confidence": 0.95,
+        "id": "d6d39dc2-4b0b-48c9-87c9-98fda83bd196",
+        "stage": "format",
+        "timestamp": "2026-08-20T07:51:21.81Z"
+      }
+    ],
+    "changesApplied": 271,
+    "verification": null,
+    "instructorOverrides": [],
+    "generatedAt": "2026-08-20T07:51:21.98Z"
+  },
+  "outline": [
+    {
+      "index": 0,
+      "kind": "title",
+      "text": "Inflation in the United States and Its Effects on Local People",
+      "issues": 0
+    },
+    {
+      "index": 3,
+      "kind": "heading",
+      "text": "Understanding Inflation as a Local Household Experience",
+      "issues": 0,
+      "level": 1,
+      "confidence": "high"
+    },
+    {
+      "index": 6,
+      "kind": "heading",
+      "text": "Why the Burden Is Unequal",
+      "issues": 0,
+      "level": 1,
+      "confidence": "high"
+    },
+    {
+      "index": 11,
+      "kind": "heading",
+      "text": "Food, Energy, and Everyday Purchases",
+      "issues": 1,
+      "level": 1,
+      "confidence": "high"
+    },
+    {
+      "index": 18,
+      "kind": "heading",
+      "text": "Housing, Rent, and Neighborhood Stability",
+      "issues": 0,
+      "level": 1,
+      "confidence": "high"
+    },
+    {
+      "index": 21,
+      "kind": "heading",
+      "text": "Wages, Work, and Real Income",
+      "issues": 0,
+      "level": 2,
+      "confidence": "high"
+    },
+    {
+      "index": 24,
+      "kind": "heading",
+      "text": "Savings, Debt, and Financial Security",
+      "issues": 0,
+      "level": 1,
+      "confidence": "high"
+    },
+    {
+      "index": 29,
+      "kind": "heading",
+      "text": "Expectations, Confidence, and Household Decisions",
+      "issues": 0,
+      "level": 1,
+      "confidence": "high"
+    },
+    {
+      "index": 36,
+      "kind": "heading",
+      "text": "Community Businesses and Public Services",
+      "issues": 0,
+      "level": 1,
+      "confidence": "high"
+    },
+    {
+      "index": 39,
+      "kind": "heading",
+      "text": "Health, Education, and Family Trade-Offs",
+      "issues": 0,
+      "level": 1,
+      "confidence": "high"
+    },
+    {
+      "index": 42,
+      "kind": "heading",
+      "text": "Policy Implications for Local People",
+      "issues": 0,
+      "level": 1,
+      "confidence": "high"
+    },
+    {
+      "index": 45,
+      "kind": "heading",
+      "text": "Conclusion",
+      "issues": 0,
+      "level": 1,
+      "confidence": "high"
+    },
+    {
+      "index": 48,
+      "kind": "references-heading",
+      "text": "References",
+      "issues": 0
+    },
+    {
+      "index": 49,
+      "kind": "reference",
+      "text": "Argente, D., & Lee, M. (2021). Cost of living inequality during the Great Recession. Journal of the European Economic Association, 19(2), 913–952. https://doi.org/10.1093/jeea/jvaa018",
+      "issues": 1
+    },
+    {
+      "index": 50,
+      "kind": "reference",
+      "text": "Attanasio, O. P., Guiso, L., & Jappelli, T. (2002). The demand for money, financial innovation, and the welfare cost of inflation: An analysis with household data. Journal of Political Economy, 110(2), 317–351. https://doi.org/10.1086/3387…",
+      "issues": 0
+    },
+    {
+      "index": 51,
+      "kind": "reference",
+      "text": "Cavallo, A., & Kryvtsov, O. (2024). Price discounts and cheapflation during the post-pandemic inflation surge. Journal of Monetary Economics, 148, 103644. https://doi.org/10.1016/j.jmoneco.2024.103644",
+      "issues": 0
+    },
+    {
+      "index": 52,
+      "kind": "reference",
+      "text": "Charles, M., & Lundy, J. D. (2013). The local Joneses: Household consumption and income inequality in large metropolitan areas. Research in Social Stratification and Mobility, 34, 14–29. https://doi.org/10.1016/j.rssm.2013.08.001",
+      "issues": 0
+    },
+    {
+      "index": 53,
+      "kind": "reference",
+      "text": "D’Acunto, F., Malmendier, U., Ospina, J., & Weber, M. (2021). Exposure to grocery prices and inflation expectations. Journal of Political Economy, 129(5), 1615–1639. https://doi.org/10.1086/713192",
+      "issues": 0
+    },
+    {
+      "index": 54,
+      "kind": "reference",
+      "text": "Del Canto, F., Grigsby, J., Qian, E., & Walsh, C. (2025). Are inflationary shocks regressive? A feasible set approach. The Quarterly Journal of Economics, 140(4), 2685–2747. https://doi.org/10.1093/qje/qjaf028",
+      "issues": 0
+    },
+    {
+      "index": 55,
+      "kind": "reference",
+      "text": "Doepke, M., & Schneider, M. (2006). Inflation and the redistribution of nominal wealth. Journal of Political Economy, 114(6), 1069–1097. https://doi.org/10.1086/508379",
+      "issues": 0
+    },
+    {
+      "index": 56,
+      "kind": "reference",
+      "text": "Erosa, A., & Ventura, G. (2002). On inflation as a regressive consumption tax. Journal of Monetary Economics, 49(4), 761–795. https://doi.org/10.1016/S0304-3932(02)00115-0",
+      "issues": 0
+    },
+    {
+      "index": 57,
+      "kind": "reference",
+      "text": "Hobijn, B., & Lagakos, D. (2005). Inflation inequality in the United States. Review of Income and Wealth, 51(4), 581–606. https://doi.org/10.1111/j.1475-4991.2005.00170.x",
+      "issues": 0
+    },
+    {
+      "index": 58,
+      "kind": "reference",
+      "text": "Jaravel, X. (2019). The unequal gains from product innovations: Evidence from the U.S. retail sector. The Quarterly Journal of Economics, 134(2), 715–783. https://doi.org/10.1093/qje/qjy031",
+      "issues": 0
+    },
+    {
+      "index": 59,
+      "kind": "reference",
+      "text": "Kakar, V., & Daniels, G. E. (2019). Role of cash and costs of inflation for different income groups in the U.S. Economic Modelling, 80, 303–319. https://doi.org/10.1016/j.econmod.2018.11.016",
+      "issues": 0
+    },
+    {
+      "index": 60,
+      "kind": "reference",
+      "text": "Kaplan, G., & Schulhofer-Wohl, S. (2017). Inflation at the household level. Journal of Monetary Economics, 91, 19–38. https://doi.org/10.1016/j.jmoneco.2017.08.002",
+      "issues": 0
+    },
+    {
+      "index": 61,
+      "kind": "reference",
+      "text": "Leblang, D., Smith, M. D., & Wesselbaum, D. (2025). Does inflation affect well-being? Empirical Economics, 69(3), 1527–1549. https://doi.org/10.1007/s00181-025-02761-w",
+      "issues": 0
+    },
+    {
+      "index": 62,
+      "kind": "reference",
+      "text": "Weber, M., D’Acunto, F., Gorodnichenko, Y., & Coibion, O. (2022). The subjective inflation expectations of households and firms: Measurement, determinants, and implications. Journal of Economic Perspectives, 36(3), 157–184. https://doi.org…",
+      "issues": 0
+    }
+  ],
+  "instructorUninterpreted": []
+}

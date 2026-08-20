@@ -19,10 +19,17 @@ import {
 import { processSession, applyResolution } from "../pipeline.js";
 import { renderReportHtml } from "../audit/report_html.js";
 import { log } from "../logging.js";
+import { mergeDocuments } from "../merge/merge.js";
+import { appendixSourceWordCount, countDocumentWords } from "../merge/word_count.js";
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: config.maxUploadBytes, files: 1 },
+});
+
+const mergeUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: config.maxUploadBytes, files: 30 },
 });
 
 const SettingsSchema = z.object({
@@ -84,6 +91,75 @@ function sessionSummary(s: Session) {
 
 export function apiRouter(): Router {
   const router = Router();
+
+  router.post(
+    "/merge-preview",
+    (req, res, next) => {
+      mergeUpload.array("documents", 30)(req, res, (err: unknown) => {
+        if (err && typeof err === "object" && (err as { code?: string }).code === "LIMIT_FILE_SIZE") {
+          next(Errors.tooLarge(config.maxUploadBytes));
+        } else if (err) {
+          next(Errors.invalid("Upload failed. Select no more than 30 DOCX files."));
+        } else next();
+      });
+    },
+    asyncHandler(async (req, res) => {
+      const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+      if (files.length < 1 || files.length > 30) throw Errors.invalid("Select between 1 and 30 DOCX files.");
+      const counts = [];
+      for (const file of files) {
+        if (path.extname(file.originalname).toLowerCase() !== ".docx") throw Errors.unsupportedType();
+        counts.push(await countDocumentWords(file.buffer));
+      }
+      res.json({ contentWords: counts, appendixSourceWords: await appendixSourceWordCount() });
+    })
+  );
+
+  router.post(
+    "/merge-documents",
+    (req, res, next) => {
+      mergeUpload.array("documents", 30)(req, res, (err: unknown) => {
+        if (err && typeof err === "object" && (err as { code?: string }).code === "LIMIT_FILE_SIZE") {
+          next(Errors.tooLarge(config.maxUploadBytes));
+        } else if (err) {
+          next(Errors.invalid("Upload failed. Select no more than 30 DOCX files."));
+        } else next();
+      });
+    },
+    asyncHandler(async (req, res) => {
+      const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+      if (files.length < 2 || files.length > 30) {
+        throw Errors.invalid("Select between 2 and 30 Microsoft Word .docx files.");
+      }
+      let names: unknown;
+      try { names = JSON.parse(String(req.body?.names ?? "[]")); } catch { names = []; }
+      if (!Array.isArray(names) || names.length !== files.length) {
+        throw Errors.invalid("Every document must have a heading name.");
+      }
+
+      const inputs = [];
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index]!;
+        if (path.extname(file.originalname).toLowerCase() !== ".docx") throw Errors.unsupportedType();
+        await DocxPackage.load(file.buffer);
+        const name = String(names[index] ?? "").trim().slice(0, 200);
+        if (!name) throw Errors.invalid("Document headings cannot be empty.");
+        inputs.push({ name, originalName: file.originalname, buffer: file.buffer });
+      }
+
+      const appendixWords = Number.parseInt(String(req.body?.appendixWords ?? "0"), 10);
+      if (!Number.isInteger(appendixWords) || appendixWords < 0 || appendixWords > 50_000) {
+        throw Errors.invalid("Appendix word count must be between 0 and 50,000 words.");
+      }
+      const output = await mergeDocuments(inputs, appendixWords);
+      await DocxPackage.load(output);
+      log.info("documents merged", { files: inputs.length, bytes: output.length, referencesRemoved: true, appendixWords });
+      res
+        .setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        .setHeader("Content-Disposition", 'attachment; filename="Merged_Submissions.docx"')
+        .send(output);
+    })
+  );
 
   // --- Upload ----------------------------------------------------------
   router.post(

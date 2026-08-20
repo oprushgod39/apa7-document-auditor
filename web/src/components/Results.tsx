@@ -33,6 +33,7 @@ export function ResultsScreen(props: {
   const report = data.report;
   const [filter, setFilter] = useState<Filter>("all");
   const [showOutline, setShowOutline] = useState(false);
+  const [showChanges, setShowChanges] = useState(false);
   const [resolving, setResolving] = useState<string | null>(null);
   const [headingResolved, setHeadingResolved] = useState(false);
 
@@ -79,7 +80,11 @@ export function ResultsScreen(props: {
   const canDownload = session.status !== "error" && data.settings.mode !== "check";
 
   return (
-    <div>
+    <div className="results-page">
+      <div className="page-heading results-heading">
+        <div><span className="eyebrow">Analysis complete</span><h1>Your APA 7 document report</h1></div>
+        <p>{session.originalName}</p>
+      </div>
       <div
         className={`state-banner ${validated ? "ok" : "review"}`}
         role="status"
@@ -203,9 +208,17 @@ export function ResultsScreen(props: {
       </div>
 
       <div className="card">
-        <h2>Applied changes ({report.changes.length})</h2>
+        <div className="collapsible-heading">
+          <div>
+            <h2>Applied changes ({report.changes.length})</h2>
+            <p>Optional technical detail — hidden to keep your download within easy reach.</p>
+          </div>
+          <button className="btn small" aria-expanded={showChanges} onClick={() => setShowChanges((shown) => !shown)}>
+            {showChanges ? "Hide changes" : `Show all ${report.changes.length} changes`}
+          </button>
+        </div>
         {report.changes.length === 0 && <p>No changes were applied.</p>}
-        {report.changes.map((c) => (
+        {showChanges && report.changes.map((c) => (
           <div className="change" key={c.id}>
             <span className="rule">{c.ruleId}</span>{" "}
             {c.location.description ??
@@ -221,10 +234,10 @@ export function ResultsScreen(props: {
             <div className="reason">{c.reason}</div>
           </div>
         ))}
-        <p className="section-note">
+        {showChanges && <p className="section-note">
           Want to undo a whole class of changes? Reprocess the pristine
           original — it is kept untouched for the retention period.
-        </p>
+        </p>}
       </div>
 
       <div className="card">

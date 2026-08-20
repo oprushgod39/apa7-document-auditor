@@ -30,15 +30,15 @@ export function ConfigureScreen(props: {
   const [preserveWording] = useState(true);
   const [fixCitationMechanics, setFixCitationMechanics] = useState(true);
   const [verifyMetadata, setVerifyMetadata] = useState(true);
-  const [showOptional, setShowOptional] = useState(false);
+  const [showOptional, setShowOptional] = useState(!d.hasTitlePage);
   const [meta, setMeta] = useState<Record<string, string>>({
     title: d.metadata.title ?? "",
-    author: d.metadata.author ?? "",
-    institution: d.metadata.institution ?? "",
+    author: d.metadata.author ?? "Name",
+    institution: d.metadata.institution ?? "University",
     courseNumber: d.metadata.courseNumber ?? "",
-    courseName: d.metadata.courseName ?? "",
-    instructor: d.metadata.instructor ?? "",
-    dueDate: d.metadata.dueDate ?? "",
+    courseName: d.metadata.courseName ?? "subject code and name",
+    instructor: d.metadata.instructor ?? "Professor _____",
+    dueDate: d.metadata.dueDate ?? "Due date",
     runningHead: "",
   });
   const [instructorRequirements, setInstructorRequirements] = useState("");
@@ -64,7 +64,11 @@ export function ConfigureScreen(props: {
   };
 
   return (
-    <div>
+    <div className="configure-page">
+      <div className="page-heading">
+        <div><span className="eyebrow">Document workspace</span><h1>Customize your APA analysis</h1></div>
+        <p>We detected the document structure. Review the settings below, then let the formatter do the detailed work.</p>
+      </div>
       <div className="card">
         <h2>Document</h2>
         <p>
@@ -194,6 +198,13 @@ export function ConfigureScreen(props: {
               complete a missing title page — the auditor never invents
               information.
             </p>
+            {!d.hasTitlePage && (
+              <p className="section-note" role="status">
+                <strong>No title page was detected.</strong> Confirm the paper title
+                and metadata below. A new APA title page will be created before
+                the existing document.
+              </p>
+            )}
             <div className="grid-2" style={{ marginTop: "0.8rem" }}>
               <div className="field">
                 <label htmlFor="m-title">Paper title {detected("title")}</label>
@@ -249,13 +260,26 @@ export function ConfigureScreen(props: {
                 labeled “Instructor override” in the report.
               </div>
             </div>
+            <div className="section-note" style={{ marginTop: "1rem" }}>
+              <strong>Optional explicit heading markers:</strong>{" "}
+              Main headings are centered and bold. Use{" "}
+              <code>Subheading 1:</code> for left bold, <code>Subheading 2:</code>{" "}
+              for left bold italic, <code>Subheading 3:</code> for indented bold
+              run-in text, and <code>Subheading 4:</code> for indented bold italic
+              run-in text. Run-in headings end with a period and the next body
+              paragraph continues on the same line. Repeated generic{" "}
+              <code>Subheading:</code> markers are assigned levels 1–4 in occurrence
+              order. The marker is removed from the output. Unmarked text confidently
+              detected as a heading defaults to the centered main-heading style.
+            </div>
           </>
         )}
       </div>
 
-      <button className="btn primary" onClick={start}>
-        Start APA Analysis
-      </button>
+      <div className="action-dock">
+        <div><strong>Ready to format?</strong><span>Your original document will remain unchanged.</span></div>
+        <button className="btn primary btn-large" onClick={start}>Start APA Analysis <span aria-hidden="true">→</span></button>
+      </div>
     </div>
   );
 }

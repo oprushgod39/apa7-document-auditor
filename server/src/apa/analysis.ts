@@ -117,9 +117,24 @@ export function analyzeDocument(model: DocumentModel): DocumentAnalysis {
       titlePageEnd = firstBreak;
     }
   }
-  const detectedMetadata = hasTitlePage
-    ? detectTitlePageMetadata(model, titlePageEnd)
-    : {};
+  // Even when no title-page break exists, expose a conservative first-page
+  // metadata candidate so the configuration form can create a title page.
+  // Stop before the first prose-like paragraph to avoid treating body text as
+  // metadata.
+  let metadataCandidateEnd = 0;
+  if (!hasTitlePage) {
+    for (let i = 0; i < Math.min(paras.length, 8); i++) {
+      const text = paras[i]!.text.trim();
+      if (!text) continue;
+      const words = text.split(/\s+/).length;
+      if (words > 20 || /\([^)]*(?:19|20)\d{2}/.test(text)) break;
+      metadataCandidateEnd = i + 1;
+    }
+  }
+  const detectedMetadata = detectTitlePageMetadata(
+    model,
+    hasTitlePage ? titlePageEnd : metadataCandidateEnd
+  );
 
   // --- Abstract --------------------------------------------------------
   let abstractHeadingIndex: number | null = null;
@@ -185,6 +200,12 @@ export function analyzeDocument(model: DocumentModel): DocumentAnalysis {
   const headings = classifyHeadings(model, {
     bodyStartIndex,
     referencesHeadingIndex,
+  }).filter((heading) => {
+    const isBodyTitle =
+      heading.paragraphIndex === bodyStartIndex &&
+      detectedMetadata.title != null &&
+      heading.text.trim() === detectedMetadata.title.trim();
+    return !isBodyTitle;
   });
 
   // --- Citations (body only, excluding reference list) -----------------

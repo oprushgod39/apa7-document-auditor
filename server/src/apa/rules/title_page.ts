@@ -2,8 +2,15 @@ import type { ApaRule, RuleContext } from "../types.js";
 import {
   createParagraph,
   setParagraphAlignment,
+  setParagraphContextualSpacing,
+  setParagraphIndent,
+  setParagraphKeepNext,
+  setParagraphRunFonts,
+  setParagraphSpacing,
   setRunBold,
+  setRunItalic,
   insertBeforeEl,
+  setParagraphRunColorBlack,
 } from "../../docx/edit.js";
 import { childrenW, createW, setAttrW } from "../../docx/xml.js";
 import { result, loc, markDocDirty } from "./util.js";
@@ -99,6 +106,7 @@ export const titlePageRules: ApaRule[] = [
             halfPoints: req.fontSizePt * 2,
             spacing: { line: 480, lineRule: "auto", before: 0, after: 0 },
             firstLineIndent: null,
+            black: true,
             ...opts,
           });
         const lines: ReturnType<typeof createParagraph>[] = [];
@@ -171,6 +179,7 @@ export const titlePageRules: ApaRule[] = [
         if (!bold) {
           for (const r of childrenW(p.el, "r")) setRunBold(model.documentXml, r, true);
         }
+        setParagraphRunColorBlack(model.documentXml, p.el);
         markDocDirty(ctx);
         fixed = true;
         ctx.addChange({
@@ -196,6 +205,68 @@ export const titlePageRules: ApaRule[] = [
         });
       }
       return result("APA-TITLE-002", checked, passed, fixed, passed || fixed ? null : "fail");
+    },
+  },
+
+  {
+    id: "APA-TITLE-006",
+    category: "title_page",
+    description: "The paper title is repeated at the start of the body, centered and bold.",
+    severity: "warning",
+    applies: (ctx) => ctx.analysis.detectedMetadata.title != null,
+    run(ctx, fix) {
+      const detected = ctx.analysis.detectedMetadata;
+      const idx = ctx.analysis.hasTitlePage
+        ? ctx.model.paragraphs.find(
+            (p) => p.index >= ctx.analysis.titlePageEnd && p.text.trim() === detected.title?.trim()
+          )?.index
+        : detected.titleParagraphIndex;
+      if (idx == null) return result("APA-TITLE-006", 0, 0, false, null);
+      const p = ctx.model.paragraphs[idx]!;
+      const correct =
+        p.props.alignment === "center" &&
+        p.runProps.bold === true &&
+        (p.props.firstLineIndent ?? 0) === 0 &&
+        p.runProps.fontAscii === ctx.req.font &&
+        p.runProps.sizeHalfPoints === ctx.req.fontSizePt * 2;
+      if (correct) return result("APA-TITLE-006", 1, 1, false, null);
+      if (fix) {
+        const doc = ctx.model.documentXml;
+        setParagraphAlignment(doc, p.el, "center");
+        setParagraphIndent(doc, p.el, { firstLine: null, hanging: null, left: 0 });
+        setParagraphSpacing(doc, p.el, { before: 0, after: 0, line: 480, lineRule: "auto" });
+        setParagraphContextualSpacing(doc, p.el);
+        setParagraphKeepNext(doc, p.el, true);
+        setParagraphRunFonts(doc, p.el, ctx.req.font, ctx.req.fontSizePt * 2);
+        for (const r of childrenW(p.el, "r")) {
+          setRunBold(doc, r, true);
+          setRunItalic(doc, r, false);
+        }
+        setParagraphRunColorBlack(doc, p.el);
+        markDocDirty(ctx);
+        ctx.addChange({
+          ruleId: "APA-TITLE-006",
+          category: "title_page",
+          location: loc(p),
+          before: "source body-title formatting",
+          after: "centered, bold, unindented body title in the required font",
+          reason: "APA 7 repeats the paper title as a centered bold heading at the start of the body.",
+          confidence: 0.95,
+        });
+        return result("APA-TITLE-006", 1, 0, true, null);
+      }
+      ctx.addIssue({
+        ruleId: "APA-TITLE-006",
+        category: "title_page",
+        severity: "warning",
+        status: "fail",
+        message: "The body should begin with the centered, bold paper title.",
+        location: loc(p),
+        confidence: 0.9,
+        autoFixable: true,
+        userResolutionRequired: false,
+      });
+      return result("APA-TITLE-006", 1, 0, false, "fail");
     },
   },
 
@@ -231,6 +302,7 @@ export const titlePageRules: ApaRule[] = [
             halfPoints: req.fontSizePt * 2,
             spacing: { line: 480, lineRule: "auto", before: 0, after: 0 },
             firstLineIndent: null,
+            black: true,
           });
           insertBeforeEl(model.body, p, lastTitlePara.el);
           markDocDirty(ctx);

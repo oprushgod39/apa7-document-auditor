@@ -14,6 +14,11 @@ describe("citation parser", () => {
     expect(c).toMatchObject({ kind: "narrative", authors: ["Smith"], year: "2024" });
   });
 
+  it("does not absorb preceding prose into a particle surname citation", () => {
+    const [c] = p("The welfare framework in Del Canto et al. (2025) is useful here.");
+    expect(c).toMatchObject({ kind: "narrative", authors: ["Del Canto"], etAl: true, year: "2025" });
+  });
+
   it("parses two-author forms with & and and", () => {
     const [a] = p("This was shown before (Smith & Patel, 2024).");
     expect(a!.authors).toEqual(["Smith", "Patel"]);

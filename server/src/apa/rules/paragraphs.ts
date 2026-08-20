@@ -15,6 +15,29 @@ import {
 
 const INDENT_TOLERANCE = 40; // twips
 
+function isDisplayMaterialParagraph(
+  p: import("../../docx/model.js").ParagraphModel,
+  model: import("../../docx/model.js").DocumentModel,
+  analysis: import("../analysis.js").DocumentAnalysis
+): boolean {
+  const text = p.text.trim();
+  if (/^(?:table|figure)\s+\d+\.?$/i.test(text) || /^Note\.\s/i.test(text)) return true;
+  if (
+    p.index === analysis.bodyStartIndex &&
+    analysis.detectedMetadata.title != null &&
+    text === analysis.detectedMetadata.title.trim()
+  ) return true;
+  const previous = [...model.paragraphs]
+    .reverse()
+    .find((q) => q.index < p.index && !q.isEmpty);
+  if (previous != null && /^(?:table|figure)\s+\d+\.?$/i.test(previous.text.trim())) return true;
+  // Body text following APA Level 4/5 continues on the same line after a
+  // style separator, so it must not receive another first-line indent.
+  return previous != null && analysis.headings.some(
+    (heading) => heading.paragraphIndex === previous.index && heading.level >= 4
+  );
+}
+
 /** B. Paragraph rules (body text). */
 export const paragraphRules: ApaRule[] = [
   {
@@ -38,14 +61,13 @@ export const paragraphRules: ApaRule[] = [
           isReferenceEntry(ctx, p.index) ||
           p.index === analysis.referencesHeadingIndex ||
           p.hasNumbering ||
-          p.hasDrawing
+          p.hasDrawing ||
+          isDisplayMaterialParagraph(p, model, analysis)
         ) {
           continue;
         }
         // Block quotes (left-indented long paragraphs) keep their own rules.
         if ((p.props.leftIndent ?? 0) >= 700) continue;
-        // Table/figure captions: short "Table 1"/"Figure 1" lines
-        if (/^(table|figure)\s+\d+/i.test(p.text.trim()) && p.text.trim().length < 60) continue;
         // Keywords line has its own indent rule.
         if (p.index === analysis.keywordsParagraphIndex) continue;
         // Abstract body is deliberately NOT indented.

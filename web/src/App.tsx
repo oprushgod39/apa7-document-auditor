@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import {
   getReport,
   getStatus,
@@ -12,6 +12,12 @@ import { UploadScreen } from "./components/Upload";
 import { ConfigureScreen } from "./components/Configure";
 import { ProcessingScreen } from "./components/Processing";
 import { ResultsScreen } from "./components/Results";
+const SimilarityScreen = lazy(() =>
+  import("./components/Similarity").then((module) => ({ default: module.SimilarityScreen }))
+);
+const MergeScreen = lazy(() =>
+  import("./components/Merge").then((module) => ({ default: module.MergeScreen }))
+);
 
 const PRODUCT_NAME = "APA 7 Document Auditor"; // configurable product name
 
@@ -22,6 +28,7 @@ type Screen =
   | { kind: "results"; session: UploadResponse; report: ReportResponse };
 
 export function App() {
+  const [tool, setTool] = useState<"formatter" | "similarity" | "merger">("formatter");
   const [screen, setScreen] = useState<Screen>({ kind: "upload" });
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
@@ -94,50 +101,92 @@ export function App() {
     setScreen({ kind: "upload" });
   };
 
+  const selectTool = (next: "formatter" | "similarity" | "merger") => {
+    setTool(next);
+    if (next === "formatter") reset();
+    setError(null);
+  };
+
+  const step = screen.kind === "upload" ? 1 : screen.kind === "configure" ? 2 : 3;
+
   return (
-    <div className="shell">
-      <header className="topbar">
-        <div className="brand">
-          {PRODUCT_NAME}
-          <small>Format and verify Word papers against APA 7th Edition</small>
-        </div>
-        <p className="privacy-note">
-          Your document is processed only to perform formatting and validation
-          and is automatically deleted according to the configured retention
-          policy. Documents are never used for training.
-        </p>
-      </header>
+    <div className="app-frame">
+      <div className="ambient ambient-one" aria-hidden="true" />
+      <div className="ambient ambient-two" aria-hidden="true" />
+      <div className="shell">
+        <header className="topbar">
+          <button className="brand-lockup" onClick={() => selectTool("formatter")} aria-label="Return to APA formatter">
+            <span className="brand-mark" aria-hidden="true">A7</span>
+            <span className="brand-copy">
+              <strong>{PRODUCT_NAME}</strong>
+              <small>Academic formatting, made dependable</small>
+            </span>
+          </button>
+          <nav className="product-switch" aria-label="Choose a document tool">
+            <button className={tool === "formatter" ? "active" : ""} onClick={() => selectTool("formatter")}>APA formatter</button>
+            <button className={tool === "similarity" ? "active" : ""} onClick={() => selectTool("similarity")}>Similarity checker</button>
+            <button className={tool === "merger" ? "active" : ""} onClick={() => selectTool("merger")}>Document merger</button>
+          </nav>
+          <div className="topbar-actions">
+            <span className="secure-pill"><span aria-hidden="true">●</span> Private processing</span>
+            <span className="edition-pill">APA 7th Edition</span>
+          </div>
+        </header>
 
-      {error && (
-        <div className="error-box" role="alert">
-          {error}
-        </div>
-      )}
+        {tool === "formatter" ? <nav className="journey" aria-label="Document workflow">
+          {["Upload", "Customize", "Review & download"].map((label, index) => {
+            const n = index + 1;
+            return (
+              <div className={`journey-step${step === n ? " active" : ""}${step > n ? " complete" : ""}`} key={label}>
+                <span>{step > n ? "✓" : n}</span>
+                <strong>{label}</strong>
+              </div>
+            );
+          })}
+        </nav> : tool === "similarity" ? <div className="similarity-journey"><span>⇄</span><strong>Document-to-document comparison</strong><small>Every unique pair · local browser analysis · exportable report</small></div> : <div className="similarity-journey merge-journey"><span>↧</span><strong>Multi-document submission builder</strong><small>Original formatting preserved · reference lists removed · adjustable appendix budget</small></div>}
 
-      <main>
-        {screen.kind === "upload" && (
-          <UploadScreen onUploaded={handleUploaded} onError={setError} />
+        {error && (
+          <div className="error-box" role="alert">
+            <strong>We couldn’t continue.</strong>
+            <span>{error}</span>
+          </div>
         )}
-        {screen.kind === "configure" && (
-          <ConfigureScreen
-            session={screen.session}
-            onStart={(settings) => handleStart(screen.session, settings)}
-            onReset={reset}
-          />
-        )}
-        {screen.kind === "processing" && (
-          <ProcessingScreen session={screen.session} status={screen.status} />
-        )}
-        {screen.kind === "results" && (
-          <ResultsScreen
-            session={screen.session}
-            data={screen.report}
-            onReportUpdate={handleReportUpdate}
-            onRegenerate={() => handleRegenerate(screen.session)}
-            onReset={reset}
-          />
-        )}
-      </main>
+
+        <main>
+          {tool === "similarity" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the comparison workspace…</p></div>}><SimilarityScreen /></Suspense> : tool === "merger" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the merge workspace…</p></div>}><MergeScreen /></Suspense> : <>
+          {screen.kind === "upload" && (
+            <UploadScreen onUploaded={handleUploaded} onError={setError} />
+          )}
+          {screen.kind === "configure" && (
+            <ConfigureScreen
+              session={screen.session}
+              onStart={(settings) => handleStart(screen.session, settings)}
+              onReset={reset}
+            />
+          )}
+          {screen.kind === "processing" && (
+            <ProcessingScreen session={screen.session} status={screen.status} />
+          )}
+          {screen.kind === "results" && (
+            <ResultsScreen
+              session={screen.session}
+              data={screen.report}
+              onReportUpdate={handleReportUpdate}
+              onRegenerate={() => handleRegenerate(screen.session)}
+              onReset={reset}
+            />
+          )}
+          </>}
+        </main>
+
+        <footer className="site-footer">
+          <div>
+            <strong>Your work stays yours.</strong>
+            <span> Files are processed only for formatting and validation and are never used for training.</span>
+          </div>
+          <span>Original wording preserved · Original file untouched</span>
+        </footer>
+      </div>
     </div>
   );
 }
