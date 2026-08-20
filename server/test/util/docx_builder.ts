@@ -6,6 +6,8 @@ import JSZip from "jszip";
  */
 
 export interface ParaSpec {
+  /** When set, used verbatim as the `<w:p>...</w:p>` XML — every other field is ignored. */
+  rawXml?: string;
   text?: string;
   style?: string;
   bold?: boolean;
@@ -40,6 +42,7 @@ function esc(s: string): string {
 }
 
 function paraXml(p: ParaSpec): string {
+  if (p.rawXml != null) return p.rawXml;
   const pPrParts: string[] = [];
   if (p.style) pPrParts.push(`<w:pStyle w:val="${p.style}"/>`);
   if (p.spacing) {

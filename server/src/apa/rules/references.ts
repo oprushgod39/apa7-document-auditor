@@ -77,9 +77,37 @@ export const referenceRules: ApaRule[] = [
     category: "references",
     description: `The reference list is titled "References", bold, centered, on a new page.`,
     severity: "warning",
-    applies: (ctx) => ctx.analysis.referencesHeadingIndex != null,
+    applies: (ctx) =>
+      ctx.analysis.referencesHeadingIndex != null ||
+      ctx.analysis.embeddedReferencesHeadingCandidate != null,
     run(ctx, fix) {
       const { model, analysis } = ctx;
+      if (analysis.referencesHeadingIndex == null) {
+        // In fix mode the pipeline splits this paragraph and re-analyzes
+        // before rules run, so referencesHeadingIndex is only still null
+        // here in check mode — report it instead of silently skipping.
+        const cand = analysis.embeddedReferencesHeadingCandidate!;
+        const p = model.paragraphs[cand.paragraphIndex]!;
+        ctx.addIssue({
+          ruleId: "APA-REFERENCE-001",
+          category: "references",
+          severity: "warning",
+          status: "fail",
+          message:
+            `The "References" heading is combined with the preceding paragraph, separated ` +
+            `only by a line break, instead of being on its own paragraph.`,
+          explanation:
+            `This usually happens when "References" was typed after pressing Shift+Enter ` +
+            `instead of Enter. Formatting this document will split it onto its own paragraph.`,
+          location: loc(p),
+          originalValue: p.text.trim(),
+          suggestedValue: "References",
+          confidence: 0.9,
+          autoFixable: true,
+          userResolutionRequired: false,
+        });
+        return result("APA-REFERENCE-001", 1, 0, false, "fail");
+      }
       const p = model.paragraphs[analysis.referencesHeadingIndex!]!;
       const text = p.text.trim();
       const correctText = /^references$/i.test(text) && text === "References";

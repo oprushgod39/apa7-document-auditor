@@ -1,4 +1,10 @@
 import type { DocumentModel, ParagraphModel } from "../docx/model.js";
+import {
+  REFERENCES_HEADINGS,
+  looksLikeReferenceEntry,
+  findEmbeddedReferencesHeadingCandidate,
+  type DetectedEmbeddedHeading,
+} from "../docx/repair.js";
 import { parseCitations, type ParsedCitation } from "./citations/parser.js";
 import { parseReference, type ParsedReference } from "./references/parser.js";
 import {
@@ -29,6 +35,20 @@ export interface DocumentAnalysis {
   /** Index of the References heading paragraph, if present. */
   referencesHeadingIndex: number | null;
   referenceEntryIndexes: number[];
+  /**
+   * Set only when no standalone References heading paragraph was found, but
+   * one paragraph's tail is a References-style heading fused onto the end of
+   * a body sentence via a manual line break (Shift+Enter) instead of living
+   * in its own paragraph. Read-only detection; the pipeline decides whether
+   * to physically split the paragraph (fix mode) or just report it (check
+   * mode) — see server/src/docx/repair.ts.
+   */
+  embeddedReferencesHeadingCandidate: {
+    paragraphIndex: number;
+    beforeText: string;
+    headingText: string;
+    detected: DetectedEmbeddedHeading;
+  } | null;
   /** First body paragraph (after title page and abstract). */
   bodyStartIndex: number;
   headings: ClassifiedHeading[];
@@ -38,8 +58,6 @@ export interface DocumentAnalysis {
   /** Candidate block quotations: 40+ word quoted passages. */
   longQuoteCandidates: { paragraphIndex: number; words: number; isIndented: boolean }[];
 }
-
-const REFERENCES_HEADINGS = /^(references|reference list|works cited|bibliography|reference)$/i;
 
 function findFirstPageBreak(model: DocumentModel): number | null {
   for (const p of model.paragraphs) {
@@ -170,9 +188,7 @@ export function analyzeDocument(model: DocumentModel): DocumentAnalysis {
       // Require at least one following non-empty paragraph that looks like a
       // reference (contains a (Year) or a URL) to avoid false positives.
       const following = paras.slice(i + 1).filter((q) => !q.isEmpty);
-      const looksLikeRefs = following.some((q) =>
-        /\((?:1[6-9]|20)\d{2}[a-z]?\)|\(n\.d\.\)|https?:\/\//.test(q.text)
-      );
+      const looksLikeRefs = following.some((q) => looksLikeReferenceEntry(q.text));
       if (looksLikeRefs || following.length === 0) {
         referencesHeadingIndex = i;
         break;
@@ -187,6 +203,24 @@ export function analyzeDocument(model: DocumentModel): DocumentAnalysis {
       // Stop at a subsequent heading-like paragraph (e.g. Appendix)
       if (/^(appendix|appendices|footnotes|tables|figures)\b/i.test(p.text.trim()) && p.text.trim().length < 30) break;
       referenceEntryIndexes.push(i);
+    }
+  }
+
+  // A standalone heading paragraph was not found. Check for the fused-line
+  // pattern (heading label typed after a Shift+Enter at the tail of a body
+  // paragraph) so callers can either repair it (fix mode) or report it
+  // (check mode) instead of silently missing the whole references section.
+  let embeddedReferencesHeadingCandidate: DocumentAnalysis["embeddedReferencesHeadingCandidate"] =
+    null;
+  if (referencesHeadingIndex == null) {
+    const candidate = findEmbeddedReferencesHeadingCandidate(paras);
+    if (candidate) {
+      embeddedReferencesHeadingCandidate = {
+        paragraphIndex: candidate.paragraph.index,
+        beforeText: candidate.detected.beforeText,
+        headingText: candidate.detected.headingText,
+        detected: candidate.detected,
+      };
     }
   }
 
@@ -264,6 +298,7 @@ export function analyzeDocument(model: DocumentModel): DocumentAnalysis {
     keywordsParagraphIndex,
     referencesHeadingIndex,
     referenceEntryIndexes,
+    embeddedReferencesHeadingCandidate,
     bodyStartIndex,
     headings,
     citations,
