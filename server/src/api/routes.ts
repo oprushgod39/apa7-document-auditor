@@ -17,7 +17,7 @@ import {
   readOutput,
   type Session,
 } from "../store/sessions.js";
-import { processSession, applyResolution } from "../pipeline.js";
+import { processSession, applyResolution, repairEmbeddedReferencesHeadingIfNeeded } from "../pipeline.js";
 import { runInBackground } from "../run_background.js";
 import { renderReportHtml } from "../audit/report_html.js";
 import { log } from "../logging.js";
@@ -192,8 +192,15 @@ export function apiRouter(): Router {
 
       // Deep validation: real ZIP, safe package, not macro-enabled.
       const pkg = await DocxPackage.load(file.buffer);
-      const model = await buildDocumentModel(pkg);
-      const analysis = analyzeDocument(model);
+      let model = await buildDocumentModel(pkg);
+      let analysis = analyzeDocument(model);
+      // This pkg/model is transient (never saved — the session stores the
+      // original bytes unchanged), so it's safe to apply the same repair
+      // used in fix mode purely to make the reported structure accurate
+      // before the user has even chosen a processing mode.
+      const repaired = await repairEmbeddedReferencesHeadingIfNeeded(pkg, model, analysis);
+      model = repaired.model;
+      analysis = repaired.analysis;
 
       const session = await createSession(name, file.buffer, defaultSettings());
       session.cachedAnalysis = analysis;

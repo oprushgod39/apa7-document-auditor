@@ -1,18 +1,21 @@
+import { randomUUID } from "node:crypto";
 import { DocxPackage, verifyDocxIntegrity } from "./docx/package.js";
 import {
   buildDocumentModel,
   contentFingerprint,
   type ContentFingerprint,
+  type DocumentModel,
 } from "./docx/model.js";
 import {
   ensureParagraphStyle,
   setParagraphStyle,
   removeParagraphStyle,
 } from "./docx/edit.js";
+import { splitParagraphAtEmbeddedHeading } from "./docx/repair.js";
 import { runEngine, allRules } from "./apa/engine.js";
-import { analyzeDocument } from "./apa/analysis.js";
+import { analyzeDocument, type DocumentAnalysis } from "./apa/analysis.js";
 import { HEADING_SPECS } from "./apa/rules/headings.js";
-import type { Change, RuleCategory } from "./apa/types.js";
+import { excerptOf, type Change, type RuleCategory } from "./apa/types.js";
 import { buildReport, issueKey, type ComplianceReport } from "./audit/auditor.js";
 import { getProvider } from "./verify/crossref.js";
 import { CrossrefProvider } from "./verify/crossref.js";
@@ -110,6 +113,13 @@ export function assertContentPreserved(
       !c.excluded &&
       (c.ruleId === "APA-TITLE-001" || c.ruleId === "APA-TITLE-003")
   );
+  // A fused References-heading repair (docx/repair.ts) splits one paragraph
+  // into two: the retained-body-text half reconciles normally via the
+  // before/after replay above, but the new heading paragraph is a genuinely
+  // extra paragraph the substring-replace reconciliation can't produce.
+  const referencesHeadingSplit = changes.some(
+    (c) => !c.excluded && c.ruleId === "APA-REFERENCE-000"
+  );
 
   const remaining = [...actualParas];
   const missing: string[] = [];
@@ -125,7 +135,7 @@ export function assertContentPreserved(
   }
   // Extra paragraphs in the output are only legitimate when title-page
   // metadata was inserted from user-provided values.
-  if (remaining.length > 0 && !titlePageInsertion) {
+  if (remaining.length > 0 && !titlePageInsertion && !referencesHeadingSplit) {
     problems.push(
       `unexpected content appeared in the output (${remaining.length} paragraph(s))`
     );
@@ -139,6 +149,53 @@ export function assertContentPreserved(
       500
     );
   }
+}
+
+/**
+ * If `analysis` found a References heading fused onto the tail of a body
+ * paragraph via a manual line break (see docx/repair.ts), physically split
+ * that paragraph and re-analyze the rebuilt model so every downstream rule
+ * (headings, citations, references) sees the corrected structure. No-op,
+ * and returns the inputs unchanged, when there is nothing to repair — this
+ * is always safe to call, including in check-only contexts where the
+ * caller simply won't invoke it.
+ *
+ * Must run *after* the "before" content fingerprint has been captured
+ * (the split is itself a content change, reconciled via the recorded
+ * Change through `assertContentPreserved`) and *before* the analysis that
+ * drives rule execution.
+ */
+export async function repairEmbeddedReferencesHeadingIfNeeded(
+  pkg: DocxPackage,
+  model: DocumentModel,
+  analysis: DocumentAnalysis
+): Promise<{ model: DocumentModel; analysis: DocumentAnalysis; change: Change | null }> {
+  const cand = analysis.embeddedReferencesHeadingCandidate;
+  if (!cand) return { model, analysis, change: null };
+
+  const p = model.paragraphs[cand.paragraphIndex]!;
+  const combinedBefore = p.text.trim();
+  splitParagraphAtEmbeddedHeading(model.documentXml, pkg, p.el, cand.detected);
+
+  const change: Change = {
+    id: randomUUID(),
+    ruleId: "APA-REFERENCE-000",
+    category: "references",
+    location: { paragraphIndex: p.index, blockIndex: p.blockIndex, excerpt: excerptOf(combinedBefore) },
+    before: combinedBefore,
+    after: cand.beforeText,
+    reason:
+      `The "References" heading was typed after a line break at the end of a body ` +
+      `paragraph instead of on its own paragraph; it has been split out so it can be ` +
+      `formatted as the reference-list heading.`,
+    confidence: 0.9,
+    stage: "format",
+    timestamp: new Date().toISOString(),
+  };
+
+  const newModel = await buildDocumentModel(pkg);
+  const newAnalysis = analyzeDocument(newModel);
+  return { model: newModel, analysis: newAnalysis, change };
 }
 
 /** Full processing pipeline for a session. Never mutates the original file. */
@@ -155,12 +212,23 @@ export async function processSession(session: Session): Promise<void> {
     await stage(session, "read", "running");
     const originalBuffer = await readOriginal(session);
     const pkg = await DocxPackage.load(originalBuffer);
-    const model = await buildDocumentModel(pkg);
+    let model = await buildDocumentModel(pkg);
     await stage(session, "read", "done");
 
+    const fix = mode !== "check";
+
     await stage(session, "structure", "running");
+    // Fingerprint the document exactly as uploaded, before any repair or
+    // rule mutates it — assertContentPreserved compares against this.
     const beforeFp = contentFingerprint(model);
-    const analysis = analyzeDocument(model);
+    let analysis = analyzeDocument(model);
+    const preChanges: Change[] = [];
+    if (fix) {
+      const repaired = await repairEmbeddedReferencesHeadingIfNeeded(pkg, model, analysis);
+      model = repaired.model;
+      analysis = repaired.analysis;
+      if (repaired.change) preChanges.push(repaired.change);
+    }
     session.cachedAnalysis = analysis;
     await saveSession(session);
     await stage(session, "structure", "done");
@@ -168,8 +236,6 @@ export async function processSession(session: Session): Promise<void> {
     await stage(session, "page_format", "done");
     await stage(session, "citations", "done");
     await stage(session, "references", "done");
-
-    const fix = mode !== "check";
 
     // 2. Format (or check-only) run.
     await stage(session, "apply", fix ? "running" : "skipped");
@@ -179,7 +245,7 @@ export async function processSession(session: Session): Promise<void> {
       stage: "format",
       disabledRules: session.disabledRules,
     });
-    let changes: Change[] = [...formatRun.changes];
+    let changes: Change[] = [...preChanges, ...formatRun.changes];
 
     // 3. Apply user-forced heading levels (from prior resolutions).
     if (fix && session.forcedHeadings.size > 0) {
