@@ -208,21 +208,32 @@ export function classifyParagraph(
   const bold = p.runProps.bold === true;
   const italic = p.runProps.italic === true;
   const centered = p.props.alignment === "center";
-  const endsWithPeriod = /[.!?]$/.test(text) && !/^\d/.test(text);
+  // A literal full stop is the highest-risk terminal punctuation for a false
+  // positive — ordinary declarative sentences end in one far more often than
+  // headings do — so it still requires bold (or centered/a section word) to
+  // be considered at all. "?" and "!" are common on genuine unformatted
+  // question-style or exclamatory subheadings ("How Strongly Do Consumers
+  // React?") and are treated as heading-friendly, not risky, terminal marks.
+  const endsWithFullStop = /\.$/.test(text) && !/^\d/.test(text);
+  const endsWithQuestionOrBang = /[?!]$/.test(text);
   const hasCitation = /\((?:1[6-9]|20)\d{2}[a-z]?\)|\([^)]*,\s*(?:1[6-9]|20)\d{2}/.test(text);
   const sectionWord = SECTION_HEADING_WORDS.test(text);
 
   // Long paragraphs, list items, and citation-bearing text are body text.
   if (words > 14 || p.hasNumbering || hasCitation) return null;
-  if (!bold && !centered && !sectionWord) return null;
-  if (endsWithPeriod && !bold) return null;
+  // Without a strong direct signal (bold, centered, a known section word), a
+  // candidate is only considered when it doesn't end in a literal full stop
+  // — i.e. it may still be an unformatted heading with no terminal
+  // punctuation at all, or one ending in "?"/"!".
+  if (!bold && !centered && !sectionWord && endsWithFullStop) return null;
+  if (endsWithFullStop && !bold) return null;
 
   let score = 0;
   if (bold) { score += 30; signals.push("bold"); }
   if (centered) { score += 15; signals.push("centered"); }
   if (italic) { score += 5; signals.push("italic"); }
   if (words <= 8) { score += 15; signals.push("short"); }
-  if (!endsWithPeriod) { score += 10; signals.push("no terminal period"); }
+  if (!endsWithFullStop) { score += 10; signals.push(endsWithQuestionOrBang ? "question/exclamatory heading" : "no terminal punctuation"); }
   if (isTitleCaseish(text)) { score += 10; signals.push("title case"); }
   if (sectionWord) { score += 25; signals.push("common section heading word"); }
 
