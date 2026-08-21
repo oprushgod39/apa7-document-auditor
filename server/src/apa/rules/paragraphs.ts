@@ -271,6 +271,14 @@ export const paragraphRules: ApaRule[] = [
         // carries one — only checking the neighbors (as this previously did)
         // missed exactly that case and silently destroyed the author's own
         // section-boundary page breaks throughout the document.
+        // A page break sitting directly after a table/figure's "Note." line
+        // is not a genuine section boundary — some authors add one after
+        // every table/figure out of habit — and unlike a real section break
+        // (title page → ToC, ToC → Abstract, → References), forcing the
+        // next heading onto its own fresh page here is unwanted: content
+        // should continue right below the table/figure. This is the one
+        // page-break case still safe to strip.
+        const breakFollowsNote = prev != null && /^Note\.\s/i.test(prev.text.trim());
         const removable =
           prev != null &&
           next != null &&
@@ -280,7 +288,7 @@ export const paragraphRules: ApaRule[] = [
           !next.props.pageBreakBefore &&
           !prev.hasDrawing &&
           !next.hasDrawing &&
-          !p.hasPageBreakAfterInRuns;
+          (!p.hasPageBreakAfterInRuns || breakFollowsNote);
         if (!removable) continue;
         checked++;
         if (fix) {
