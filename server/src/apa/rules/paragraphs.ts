@@ -262,7 +262,15 @@ export const paragraphRules: ApaRule[] = [
         const next = paras[i + 1];
         // Only remove a blank paragraph sandwiched between two text
         // paragraphs — blank paragraphs near tables/figures/breaks may be
-        // intentional spacing.
+        // intentional spacing. Critically, a "blank" paragraph can itself be
+        // carrying a manual page break (a run with a plain <w:br/> or, more
+        // importantly, <w:br type="page"/> — text content is empty either
+        // way, since paragraphText() renders a break as whitespace). Manual
+        // page breaks are commonly authored as their own empty paragraph
+        // (Word's Ctrl+Enter), so this must never delete `p` itself when it
+        // carries one — only checking the neighbors (as this previously did)
+        // missed exactly that case and silently destroyed the author's own
+        // section-boundary page breaks throughout the document.
         const removable =
           prev != null &&
           next != null &&
@@ -271,7 +279,8 @@ export const paragraphRules: ApaRule[] = [
           !prev.hasPageBreakAfterInRuns &&
           !next.props.pageBreakBefore &&
           !prev.hasDrawing &&
-          !next.hasDrawing;
+          !next.hasDrawing &&
+          !p.hasPageBreakAfterInRuns;
         if (!removable) continue;
         checked++;
         if (fix) {
