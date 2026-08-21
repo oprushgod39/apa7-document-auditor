@@ -18,6 +18,33 @@ import { excerptOf } from "../types.js";
 interface TextRange { start: number; end: number }
 
 /** Identify journal title and volume ranges in a conventional journal reference. */
+/**
+ * Italic range for a standalone work (report, book, webpage) that is its
+ * own container — no journal/volume to anchor on. APA 7 italicizes the
+ * work's own title in this case (e.g. `Author. (Year). Title of the
+ * report: Subtitle. Publisher. URL` — the title, not the publisher, is
+ * italicized). The title is taken as running from right after the
+ * year-parenthetical to the first sentence-ending period, which matches
+ * standard APA reference punctuation (a colon separates title from
+ * subtitle, not a period, so this doesn't cut a subtitle off early).
+ *
+ * Deliberately conservative: skipped entirely for anything that looks like
+ * a book-chapter/edited-volume reference ("In Editor (Ed.), Book Title...")
+ * where it's the *containing* book's title that should be italicized, not
+ * the chapter title this heuristic would otherwise grab.
+ */
+function standaloneWorkItalicRange(text: string): TextRange | null {
+  if (/\bIn\s+[A-Z][^()]*\(Eds?\.\)/.test(text)) return null;
+  const year = /\((?:1[6-9]\d{2}|20\d{2})[a-z]?(?:,[^)]*)?\)\.\s+/i.exec(text);
+  if (!year) return null;
+  const titleStart = year.index + year[0].length;
+  const period = /[.?!]\s+/.exec(text.slice(titleStart));
+  if (!period) return null;
+  const titleEnd = titleStart + period.index;
+  if (titleEnd <= titleStart) return null;
+  return { start: titleStart, end: titleEnd };
+}
+
 function journalItalicRanges(text: string): TextRange[] {
   const year = /\((?:1[6-9]\d{2}|20\d{2})[a-z]?\)\.\s+/i.exec(text);
   if (!year) return [];
@@ -161,7 +188,7 @@ export const referenceRules: ApaRule[] = [
   {
     id: "APA-REFERENCE-008",
     category: "references",
-    description: "Journal titles and volume numbers are italicized in journal references.",
+    description: "Journal titles and volume numbers are italicized in journal references; standalone works (reports, books, webpages) have their own title italicized.",
     severity: "warning",
     applies: (ctx) => ctx.analysis.referenceEntryIndexes.length > 0,
     run(ctx, fix) {
@@ -171,7 +198,9 @@ export const referenceRules: ApaRule[] = [
       let anyFail = false;
       for (const idx of ctx.analysis.referenceEntryIndexes) {
         const p = ctx.model.paragraphs[idx]!;
-        const ranges = journalItalicRanges(p.text);
+        const journalRanges = journalItalicRanges(p.text);
+        const standaloneRange = journalRanges.length === 0 ? standaloneWorkItalicRange(p.text) : null;
+        const ranges = journalRanges.length > 0 ? journalRanges : standaloneRange ? [standaloneRange] : [];
         if (ranges.length === 0) continue;
         checked++;
         if (rangesAreItalic(p, ranges)) {
@@ -184,7 +213,9 @@ export const referenceRules: ApaRule[] = [
           // pass may have already edited this paragraph's runs, and
           // rebuilding from stale text would silently discard that edit.
           const liveText = paragraphText(p.el);
-          const liveRanges = journalItalicRanges(liveText);
+          const liveJournalRanges = journalItalicRanges(liveText);
+          const liveStandalone = liveJournalRanges.length === 0 ? standaloneWorkItalicRange(liveText) : null;
+          const liveRanges = liveJournalRanges.length > 0 ? liveJournalRanges : liveStandalone ? [liveStandalone] : [];
           const segments = segmentedReference(liveText, liveRanges).map((segment) => ({
             ...segment,
             font: ctx.req.font,
@@ -198,9 +229,11 @@ export const referenceRules: ApaRule[] = [
               ruleId: "APA-REFERENCE-008",
               category: "references",
               location: loc(p),
-              before: "journal title and/or volume not italicized",
-              after: "journal title and volume italicized",
-              reason: "APA 7 italicizes the journal title and volume number in periodical references.",
+              before: journalRanges.length > 0 ? "journal title and/or volume not italicized" : "work title not italicized",
+              after: journalRanges.length > 0 ? "journal title and volume italicized" : "work title italicized",
+              reason: journalRanges.length > 0
+                ? "APA 7 italicizes the journal title and volume number in periodical references."
+                : "APA 7 italicizes the title of a standalone work (report, book, webpage) that is its own container.",
               confidence: 0.9,
             });
             continue;
