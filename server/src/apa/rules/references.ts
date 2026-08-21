@@ -7,7 +7,7 @@ import {
   setParagraphRunColorBlack,
   replaceParagraphRuns,
 } from "../../docx/edit.js";
-import { childrenW } from "../../docx/xml.js";
+import { childrenW, paragraphText } from "../../docx/xml.js";
 import { replaceParagraphText } from "../../docx/text.js";
 import { referenceSortKey } from "../references/matcher.js";
 import { result, loc, markDocDirty } from "./util.js";
@@ -179,13 +179,19 @@ export const referenceRules: ApaRule[] = [
           continue;
         }
         if (fix) {
-          const segments = segmentedReference(p.text, ranges).map((segment) => ({
+          // Re-derive from the paragraph's live DOM text, not the cached
+          // analysis snapshot (`p.text`): an earlier rule in this same fix
+          // pass may have already edited this paragraph's runs, and
+          // rebuilding from stale text would silently discard that edit.
+          const liveText = paragraphText(p.el);
+          const liveRanges = journalItalicRanges(liveText);
+          const segments = segmentedReference(liveText, liveRanges).map((segment) => ({
             ...segment,
             font: ctx.req.font,
             halfPoints: ctx.req.fontSizePt * 2,
             black: true,
           }));
-          if (replaceParagraphRuns(ctx.model.documentXml, p.el, segments)) {
+          if (liveRanges.length > 0 && replaceParagraphRuns(ctx.model.documentXml, p.el, segments)) {
             fixedCount++;
             markDocDirty(ctx);
             ctx.addChange({

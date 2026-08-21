@@ -10,6 +10,7 @@ import {
 } from "../../docx/edit.js";
 import { result, markDocDirty } from "./util.js";
 import { formatCaptionParagraph } from "./captions.js";
+import { paragraphText } from "../../docx/xml.js";
 
 /** O. Figure rules — audit only plus caption formatting. Images are never touched. */
 export const figureRules: ApaRule[] = [
@@ -84,7 +85,16 @@ export const figureRules: ApaRule[] = [
           const notePara = model.paragraphs.find(
             (p) => p.index > figPara.index && !p.isEmpty && !p.hasDrawing
           );
-          const noteMatch = notePara ? /^(Note\.\s*)/i.exec(notePara.text) : null;
+          // Read this paragraph's text live from the DOM, not the cached
+          // model snapshot: an earlier rule in this same fix pass (e.g. the
+          // citation-mechanics "&" → "and" fix) may have already edited this
+          // exact paragraph's runs. Rebuilding runs from the stale analysis
+          // text would silently discard that prior edit while still logging
+          // this rule's own change as if nothing else was lost — exactly the
+          // kind of unexplained content change the preservation guard exists
+          // to catch.
+          const noteLiveText = notePara ? paragraphText(notePara.el) : "";
+          const noteMatch = notePara ? /^(Note\.\s*)/i.exec(noteLiveText) : null;
           setParagraphKeepNext(doc, figPara.el, noteMatch != null);
           if (notePara && noteMatch) {
             setParagraphAlignment(doc, notePara.el, "left");
@@ -94,7 +104,7 @@ export const figureRules: ApaRule[] = [
             setParagraphRunFonts(doc, notePara.el, ctx.req.font, ctx.req.fontSizePt * 2);
             replaceParagraphRuns(doc, notePara.el, [
               { text: noteMatch[1]!, italic: true, bold: false, font: ctx.req.font, halfPoints: ctx.req.fontSizePt * 2, black: true },
-              { text: notePara.text.slice(noteMatch[1]!.length), italic: false, bold: false, font: ctx.req.font, halfPoints: ctx.req.fontSizePt * 2, black: true },
+              { text: noteLiveText.slice(noteMatch[1]!.length), italic: false, bold: false, font: ctx.req.font, halfPoints: ctx.req.fontSizePt * 2, black: true },
             ]);
           }
           markDocDirty(ctx);
