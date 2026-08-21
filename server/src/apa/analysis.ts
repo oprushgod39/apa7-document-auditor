@@ -159,7 +159,31 @@ export function analyzeDocument(model: DocumentModel): DocumentAnalysis {
   let abstractHeadingIndex: number | null = null;
   const abstractBodyIndexes: number[] = [];
   let keywordsParagraphIndex: number | null = null;
-  for (let i = titlePageEnd; i < Math.min(paras.length, titlePageEnd + 8); i++) {
+  // A Table of Contents (not a core APA element, but common) can sit
+  // between the title page and the Abstract. Without accounting for it,
+  // the "only check the first non-empty paragraph" scan below immediately
+  // hits "Table of Contents" instead of "Abstract" and gives up — silently
+  // failing to detect the Abstract at all. Skip past a leading ToC block by
+  // finding its own section-ending page break (or, failing that, its last
+  // short page-numbered entry line) before starting the real scan.
+  let abstractScanStart = titlePageEnd;
+  {
+    let i = abstractScanStart;
+    while (i < paras.length && paras[i]!.isEmpty) i++;
+    if (i < paras.length && /^table\s+of\s+contents$/i.test(paras[i]!.text.trim())) {
+      let j = i + 1;
+      const tocScanLimit = Math.min(paras.length, i + 60);
+      while (
+        j < tocScanLimit &&
+        !paras[j]!.hasPageBreakAfterInRuns &&
+        !paras[j]!.props.pageBreakBefore
+      ) {
+        j++;
+      }
+      if (j < tocScanLimit) abstractScanStart = j + 1;
+    }
+  }
+  for (let i = abstractScanStart; i < Math.min(paras.length, abstractScanStart + 8); i++) {
     const p = paras[i]!;
     if (p.isEmpty) continue;
     if (/^abstract$/i.test(p.text.trim())) {
