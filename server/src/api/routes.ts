@@ -23,6 +23,13 @@ import { renderReportHtml } from "../audit/report_html.js";
 import { log } from "../logging.js";
 import { mergeDocuments } from "../merge/merge.js";
 import { appendixSourceWordCount, countDocumentWords } from "../merge/word_count.js";
+import {
+  MERGE_MAX_TOTAL_BYTES,
+  authorizeMergeUpload,
+  cleanupMergeBlobs,
+  readMergeInput,
+  storeMergeOutput,
+} from "../merge/blob_transport.js";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -94,6 +101,24 @@ function sessionSummary(s: Session) {
 export function apiRouter(): Router {
   const router = Router();
 
+  // Large merger inputs are uploaded browser-to-Blob so they never pass
+  // through Vercel's small serverless request-body gateway. This route only
+  // issues a tightly scoped upload token; the DOCX bytes do not reach Express.
+  router.post(
+    "/merge-upload",
+    asyncHandler(async (req, res) => {
+      const result = await authorizeMergeUpload(req, req.body);
+      res.json(result);
+    })
+  );
+
+  router.get(
+    "/merge-info",
+    asyncHandler(async (_req, res) => {
+      res.json({ appendixSourceWords: await appendixSourceWordCount() });
+    })
+  );
+
   router.post(
     "/merge-preview",
     (req, res, next) => {
@@ -162,6 +187,101 @@ export function apiRouter(): Router {
         .setHeader("Content-Type", "application/pdf")
         .setHeader("Content-Disposition", 'attachment; filename="Merged_Submissions.pdf"')
         .send(output);
+    })
+  );
+
+  const BlobMergeSchema = z.object({
+    batchId: z.string().uuid(),
+    documents: z
+      .array(
+        z.object({
+          url: z.string().url().max(2048),
+          name: z.string().trim().min(1).max(200),
+          originalName: z.string().trim().min(1).max(240),
+          size: z.number().int().positive().max(config.maxUploadBytes),
+        })
+      )
+      .min(2)
+      .max(30),
+    appendixWords: z.number().int().min(0).max(50_000),
+  });
+
+  router.post(
+    "/merge-documents-from-blobs",
+    asyncHandler(async (req, res) => {
+      const parsed = BlobMergeSchema.safeParse(req.body ?? {});
+      if (!parsed.success) throw Errors.invalid("Invalid large-document merge request.");
+      const { batchId, documents, appendixWords } = parsed.data;
+      const declaredTotal = documents.reduce((sum, document) => sum + document.size, 0);
+      if (declaredTotal > MERGE_MAX_TOTAL_BYTES) {
+        throw Errors.invalid("The combined upload is larger than 200 MB.");
+      }
+
+      const inputUrls = documents.map((document) => document.url);
+      try {
+        const inputs = [];
+        let actualTotal = 0;
+        for (const document of documents) {
+          if (path.extname(document.originalName).toLowerCase() !== ".docx") {
+            throw Errors.unsupportedType();
+          }
+          const buffer = await readMergeInput(document.url, batchId);
+          actualTotal += buffer.length;
+          if (actualTotal > MERGE_MAX_TOTAL_BYTES) {
+            throw Errors.invalid("The combined upload is larger than 200 MB.");
+          }
+          await DocxPackage.load(buffer);
+          inputs.push({
+            name: document.name,
+            originalName: document.originalName,
+            buffer,
+          });
+        }
+
+        const output = await mergeDocuments(inputs, appendixWords);
+        if (output.length < 5 || output.subarray(0, 5).toString("latin1") !== "%PDF-") {
+          throw Errors.internal();
+        }
+        const blob = await storeMergeOutput(output, batchId);
+        log.info("large documents merged", {
+          files: inputs.length,
+          inputBytes: actualTotal,
+          outputBytes: output.length,
+          referencesRemoved: true,
+          appendixWords,
+        });
+        res.json({
+          url: blob.url,
+          downloadUrl: blob.downloadUrl,
+          filename: "Merged_Submissions.pdf",
+        });
+      } finally {
+        try {
+          await cleanupMergeBlobs(inputUrls, batchId, ["merge-inputs"]);
+        } catch (error) {
+          log.warn("temporary merger inputs could not be removed", {
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+    })
+  );
+
+  const MergeCleanupSchema = z.object({
+    batchId: z.string().uuid(),
+    urls: z.array(z.string().url().max(2048)).min(1).max(31),
+  });
+
+  router.post(
+    "/merge-cleanup",
+    asyncHandler(async (req, res) => {
+      const parsed = MergeCleanupSchema.safeParse(req.body ?? {});
+      if (!parsed.success) throw Errors.invalid("Invalid merger cleanup request.");
+      await cleanupMergeBlobs(parsed.data.urls, parsed.data.batchId, [
+        "merge-inputs",
+        "merge-outputs",
+      ]);
+      res.status(204).end();
     })
   );
 

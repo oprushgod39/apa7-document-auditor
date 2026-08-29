@@ -18,7 +18,7 @@ export function createApp(): express.Express {
           scriptSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", "data:"],
-          connectSrc: ["'self'"],
+          connectSrc: ["'self'", "https://*.blob.vercel-storage.com"],
           objectSrc: ["'none'"],
           frameAncestors: ["'none'"],
         },

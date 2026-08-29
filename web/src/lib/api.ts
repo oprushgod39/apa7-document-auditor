@@ -1,5 +1,7 @@
 /** Typed API client for the APA 7 Document Auditor backend. */
 
+import { upload } from "@vercel/blob/client";
+
 export interface DetectedInfo {
   metadata: {
     title?: string;
@@ -226,24 +228,124 @@ export function issueKeyOf(issue: Issue): string {
 export const downloadUrl = (id: string) => `/api/documents/${id}/download`;
 export const reportDownloadUrl = (id: string) => `/api/documents/${id}/report.html`;
 
+const MERGE_DIRECT_LIMIT = 3 * 1024 * 1024;
+const DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const MERGE_WORD_PATTERN = /[\p{L}\p{N}]+(?:['’.-][\p{L}\p{N}]+)*/gu;
+const MERGE_REFERENCE_HEADING = /^(references|bibliography|works\s+cited)\s*:?\s*[.]*$/i;
+
+function countMergeWords(text: string): number {
+  return text.match(MERGE_WORD_PATTERN)?.length ?? 0;
+}
+
+async function countMergeFile(file: File): Promise<number> {
+  const mammoth = (await import("mammoth")).default;
+  const output = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+  const lines = (output.value ?? "").replace(/\r\n?/g, "\n").split("\n");
+  const referenceIndex = lines.findIndex((line) => MERGE_REFERENCE_HEADING.test(line.trim()));
+  return countMergeWords(lines.slice(0, referenceIndex >= 0 ? referenceIndex : undefined).join("\n"));
+}
+
 export async function previewMergeDocuments(files: File[]): Promise<{ contentWords: number[]; appendixSourceWords: number }> {
-  const form = new FormData();
-  for (const file of files) form.append("documents", file);
-  const res = await fetch("/api/merge-preview", { method: "POST", body: form });
-  return handle<{ contentWords: number[]; appendixSourceWords: number }>(res);
+  // Count in the browser so selecting a large batch never sends it through
+  // the hosted request-body limit merely to update the real-time display.
+  const contentWords: number[] = [];
+  for (const file of files) contentWords.push(await countMergeFile(file));
+  const info = await fetch("/api/merge-info");
+  const { appendixSourceWords } = await handle<{ appendixSourceWords: number }>(info);
+  return { contentWords, appendixSourceWords };
 }
 
 export async function mergeDocuments(items: { file: File; name: string }[], appendixWords: number): Promise<Blob> {
+  const totalBytes = items.reduce((sum, item) => sum + item.file.size, 0);
+  const hostname = typeof window === "undefined" ? "" : window.location.hostname;
+  const localHost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  if (totalBytes > MERGE_DIRECT_LIMIT && !localHost) {
+    return mergeLargeDocuments(items, appendixWords);
+  }
   const form = new FormData();
   for (const item of items) form.append("documents", item.file);
   form.append("names", JSON.stringify(items.map((item) => item.name)));
   form.append("appendixWords", String(appendixWords));
   const res = await fetch("/api/merge-documents", { method: "POST", body: form });
   if (res.ok) return res.blob();
-  let message = "The documents could not be merged.";
+  let message = res.status === 413
+    ? "This upload is too large for direct processing. Please try again."
+    : "The documents could not be merged.";
   try {
     const body = await res.json();
     message = body?.error?.message ?? message;
   } catch { /* non-JSON error */ }
   throw new Error(message);
+}
+
+function safeBlobFilename(name: string): string {
+  const safe = name.replace(/[^\p{L}\p{N}_.() -]+/gu, "_").slice(0, 120);
+  return safe.toLowerCase().endsWith(".docx") ? safe : `${safe || "document"}.docx`;
+}
+
+async function cleanupMergeBatch(batchId: string, urls: string[]): Promise<void> {
+  if (urls.length === 0) return;
+  try {
+    await fetch("/api/merge-cleanup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ batchId, urls }),
+    });
+  } catch {
+    // Cleanup is best-effort; it must not hide the useful merge result/error.
+  }
+}
+
+async function mergeLargeDocuments(
+  items: { file: File; name: string }[],
+  appendixWords: number
+): Promise<Blob> {
+  const batchId = crypto.randomUUID();
+  const uploaded: Array<{ url: string; file: File; name: string }> = [];
+  let outputUrl = "";
+  try {
+    for (let index = 0; index < items.length; index++) {
+      const item = items[index]!;
+      const filename = safeBlobFilename(item.file.name);
+      const blob = await upload(`merge-inputs/${batchId}/${index + 1}-${filename}`, item.file, {
+        access: "public",
+        handleUploadUrl: "/api/merge-upload",
+        clientPayload: JSON.stringify({ batchId }),
+        contentType: DOCX_CONTENT_TYPE,
+        multipart: item.file.size >= 5 * 1024 * 1024,
+      });
+      uploaded.push({ url: blob.url, file: item.file, name: item.name });
+    }
+
+    const mergeResponse = await fetch("/api/merge-documents-from-blobs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        batchId,
+        documents: uploaded.map((entry) => ({
+          url: entry.url,
+          name: entry.name,
+          originalName: entry.file.name,
+          size: entry.file.size,
+        })),
+        appendixWords,
+      }),
+    });
+    const result = await handle<{ url: string; downloadUrl: string; filename: string }>(mergeResponse);
+    outputUrl = result.url;
+    const download = await fetch(result.downloadUrl);
+    if (!download.ok) throw new Error("The merged PDF was created but could not be downloaded.");
+    return await download.blob();
+  } catch (cause) {
+    if (cause instanceof ApiError) throw cause;
+    const message = cause instanceof Error ? cause.message : "The documents could not be merged.";
+    throw new Error(message.includes("BLOB_READ_WRITE_TOKEN")
+      ? "Large-document merging is not configured on the published website yet."
+      : message);
+  } finally {
+    await cleanupMergeBatch(batchId, [
+      ...uploaded.map((entry) => entry.url),
+      ...(outputUrl ? [outputUrl] : []),
+    ]);
+  }
 }
