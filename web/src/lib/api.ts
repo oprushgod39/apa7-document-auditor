@@ -229,7 +229,6 @@ export const downloadUrl = (id: string) => `/api/documents/${id}/download`;
 export const reportDownloadUrl = (id: string) => `/api/documents/${id}/report.html`;
 
 const MERGE_DIRECT_LIMIT = 3 * 1024 * 1024;
-const DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const MERGE_WORD_PATTERN = /[\p{L}\p{N}]+(?:['’.-][\p{L}\p{N}]+)*/gu;
 const MERGE_REFERENCE_HEADING = /^(references|bibliography|works\s+cited)\s*:?\s*[.]*$/i;
 
@@ -278,9 +277,18 @@ export async function mergeDocuments(items: { file: File; name: string }[], appe
   throw new Error(message);
 }
 
-function safeBlobFilename(name: string): string {
-  const safe = name.replace(/[^\p{L}\p{N}_.() -]+/gu, "_").slice(0, 120);
-  return safe.toLowerCase().endsWith(".docx") ? safe : `${safe || "document"}.docx`;
+function base64Url(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function fromBase64Url(value: string): Uint8Array<ArrayBuffer> {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const binary = atob(base64 + "=".repeat((4 - base64.length % 4) % 4));
+  const bytes = new Uint8Array(new ArrayBuffer(binary.length));
+  for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+  return bytes;
 }
 
 async function cleanupMergeBatch(batchId: string, urls: string[]): Promise<void> {
@@ -301,20 +309,32 @@ async function mergeLargeDocuments(
   appendixWords: number
 ): Promise<Blob> {
   const batchId = crypto.randomUUID();
-  const uploaded: Array<{ url: string; file: File; name: string }> = [];
+  const encryptionKey = await crypto.subtle.generateKey(
+    { name: "AES-GCM", length: 256 },
+    true,
+    ["encrypt", "decrypt"]
+  );
+  const exportedKey = new Uint8Array(await crypto.subtle.exportKey("raw", encryptionKey));
+  const encryptionKeyValue = base64Url(exportedKey);
+  const uploaded: Array<{ url: string; file: File; name: string; iv: string }> = [];
   let outputUrl = "";
   try {
     for (let index = 0; index < items.length; index++) {
       const item = items[index]!;
-      const filename = safeBlobFilename(item.file.name);
-      const blob = await upload(`merge-inputs/${batchId}/${index + 1}-${filename}`, item.file, {
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encrypted = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        encryptionKey,
+        await item.file.arrayBuffer()
+      );
+      const blob = await upload(`merge-inputs/${batchId}/${index + 1}.bin`, new Blob([encrypted]), {
         access: "public",
         handleUploadUrl: "/api/merge-upload",
         clientPayload: JSON.stringify({ batchId }),
-        contentType: DOCX_CONTENT_TYPE,
-        multipart: item.file.size >= 5 * 1024 * 1024,
+        contentType: "application/octet-stream",
+        multipart: encrypted.byteLength >= 5 * 1024 * 1024,
       });
-      uploaded.push({ url: blob.url, file: item.file, name: item.name });
+      uploaded.push({ url: blob.url, file: item.file, name: item.name, iv: base64Url(iv) });
     }
 
     const mergeResponse = await fetch("/api/merge-documents-from-blobs", {
@@ -327,15 +347,31 @@ async function mergeLargeDocuments(
           name: entry.name,
           originalName: entry.file.name,
           size: entry.file.size,
+          iv: entry.iv,
         })),
         appendixWords,
+        encryptionKey: encryptionKeyValue,
       }),
     });
-    const result = await handle<{ url: string; downloadUrl: string; filename: string }>(mergeResponse);
+    const result = await handle<{
+      url: string;
+      downloadUrl: string;
+      filename: string;
+      iv: string;
+      size: number;
+    }>(mergeResponse);
     outputUrl = result.url;
     const download = await fetch(result.downloadUrl);
     if (!download.ok) throw new Error("The merged PDF was created but could not be downloaded.");
-    return await download.blob();
+    const decrypted = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: fromBase64Url(result.iv) },
+      encryptionKey,
+      await download.arrayBuffer()
+    );
+    if (decrypted.byteLength !== result.size) {
+      throw new Error("The merged PDF download was incomplete.");
+    }
+    return new Blob([decrypted], { type: "application/pdf" });
   } catch (cause) {
     if (cause instanceof ApiError) throw cause;
     const message = cause instanceof Error ? cause.message : "The documents could not be merged.";

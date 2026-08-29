@@ -1,13 +1,11 @@
-import { randomUUID } from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from "node:crypto";
 import { del, get, put } from "@vercel/blob";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import type { Request } from "express";
 import { AppError, Errors } from "../errors.js";
 import { config } from "../config.js";
 
-const DOCX_CONTENT_TYPE =
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-const PDF_CONTENT_TYPE = "application/pdf";
+const BINARY_CONTENT_TYPE = "application/octet-stream";
 export const MERGE_MAX_TOTAL_BYTES = 200 * 1024 * 1024;
 
 function requireBlobStorage(): string {
@@ -77,13 +75,13 @@ export async function authorizeMergeUpload(
       if (
         !validBatchId(batchId) ||
         !pathname.startsWith(`merge-inputs/${batchId}/`) ||
-        !pathname.toLowerCase().endsWith(".docx")
+        !pathname.toLowerCase().endsWith(".bin")
       ) {
         throw Errors.invalid("Only DOCX files can be uploaded to the merger.");
       }
       return {
-        allowedContentTypes: [DOCX_CONTENT_TYPE, "application/octet-stream", "application/zip"],
-        maximumSizeInBytes: config.maxUploadBytes,
+        allowedContentTypes: [BINARY_CONTENT_TYPE],
+        maximumSizeInBytes: config.maxUploadBytes + 32,
         addRandomSuffix: true,
         tokenPayload: JSON.stringify({ batchId }),
       };
@@ -91,29 +89,76 @@ export async function authorizeMergeUpload(
   });
 }
 
-export async function readMergeInput(urlValue: string, batchId: string): Promise<Buffer> {
+function decodeSecret(value: string, expectedBytes: number, label: string): Buffer {
+  if (!/^[A-Za-z0-9_-]+$/.test(value)) throw Errors.invalid(`Invalid merger ${label}.`);
+  const decoded = Buffer.from(value, "base64url");
+  if (decoded.length !== expectedBytes) throw Errors.invalid(`Invalid merger ${label}.`);
+  return decoded;
+}
+
+export function decryptMergePayload(
+  encrypted: Buffer,
+  encryptionKey: string,
+  ivValue: string,
+  expectedBytes: number
+): Buffer {
+  if (encrypted.length < 17) throw Errors.invalid("An encrypted merger file is incomplete.");
+  const key = decodeSecret(encryptionKey, 32, "encryption key");
+  const iv = decodeSecret(ivValue, 12, "encryption value");
+  const authenticationTag = encrypted.subarray(encrypted.length - 16);
+  const ciphertext = encrypted.subarray(0, encrypted.length - 16);
+  try {
+    const decipher = createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAuthTag(authenticationTag);
+    const output = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+    if (output.length !== expectedBytes || output.length > config.maxUploadBytes) {
+      throw Errors.invalid("An uploaded merger file had an unexpected size.");
+    }
+    return output;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw Errors.invalid("An uploaded merger file could not be decrypted.");
+  }
+}
+
+export async function readMergeInput(
+  urlValue: string,
+  batchId: string,
+  encryptionKey: string,
+  iv: string,
+  expectedBytes: number
+): Promise<Buffer> {
   const token = requireBlobStorage();
   const url = validateMergeBlobUrl(urlValue, batchId, "merge-inputs");
   const result = await get(url, { access: "public", token, useCache: false });
   if (!result || result.statusCode !== 200) {
     throw new AppError("PROCESSING_FAILED", "One uploaded document could not be read.", 422);
   }
-  if (result.blob.size > config.maxUploadBytes) throw Errors.tooLarge(config.maxUploadBytes);
-  const buffer = Buffer.from(await new Response(result.stream).arrayBuffer());
-  if (buffer.length > config.maxUploadBytes) throw Errors.tooLarge(config.maxUploadBytes);
-  return buffer;
+  if (result.blob.size > config.maxUploadBytes + 32) throw Errors.tooLarge(config.maxUploadBytes);
+  const encrypted = Buffer.from(await new Response(result.stream).arrayBuffer());
+  if (encrypted.length > config.maxUploadBytes + 32) throw Errors.tooLarge(config.maxUploadBytes);
+  return decryptMergePayload(encrypted, encryptionKey, iv, expectedBytes);
 }
 
-export async function storeMergeOutput(output: Buffer, batchId: string) {
+export async function storeMergeOutput(
+  output: Buffer,
+  batchId: string,
+  encryptionKey: string
+) {
   const token = requireBlobStorage();
   if (!validBatchId(batchId)) throw Errors.invalid("Invalid merger upload batch.");
-  return put(`merge-outputs/${batchId}/${randomUUID()}-Merged_Submissions.pdf`, output, {
+  const key = decodeSecret(encryptionKey, 32, "encryption key");
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(output), cipher.final(), cipher.getAuthTag()]);
+  const blob = await put(`merge-outputs/${batchId}/${randomUUID()}.bin`, encrypted, {
     access: "public",
     addRandomSuffix: true,
-    contentType: PDF_CONTENT_TYPE,
+    contentType: BINARY_CONTENT_TYPE,
     cacheControlMaxAge: 60,
     token,
   });
+  return { ...blob, iv: iv.toString("base64url"), size: output.length };
 }
 
 export async function cleanupMergeBlobs(

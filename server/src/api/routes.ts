@@ -199,11 +199,13 @@ export function apiRouter(): Router {
           name: z.string().trim().min(1).max(200),
           originalName: z.string().trim().min(1).max(240),
           size: z.number().int().positive().max(config.maxUploadBytes),
+          iv: z.string().min(16).max(32),
         })
       )
       .min(2)
       .max(30),
     appendixWords: z.number().int().min(0).max(50_000),
+    encryptionKey: z.string().min(43).max(64),
   });
 
   router.post(
@@ -211,7 +213,7 @@ export function apiRouter(): Router {
     asyncHandler(async (req, res) => {
       const parsed = BlobMergeSchema.safeParse(req.body ?? {});
       if (!parsed.success) throw Errors.invalid("Invalid large-document merge request.");
-      const { batchId, documents, appendixWords } = parsed.data;
+      const { batchId, documents, appendixWords, encryptionKey } = parsed.data;
       const declaredTotal = documents.reduce((sum, document) => sum + document.size, 0);
       if (declaredTotal > MERGE_MAX_TOTAL_BYTES) {
         throw Errors.invalid("The combined upload is larger than 200 MB.");
@@ -225,7 +227,13 @@ export function apiRouter(): Router {
           if (path.extname(document.originalName).toLowerCase() !== ".docx") {
             throw Errors.unsupportedType();
           }
-          const buffer = await readMergeInput(document.url, batchId);
+          const buffer = await readMergeInput(
+            document.url,
+            batchId,
+            encryptionKey,
+            document.iv,
+            document.size
+          );
           actualTotal += buffer.length;
           if (actualTotal > MERGE_MAX_TOTAL_BYTES) {
             throw Errors.invalid("The combined upload is larger than 200 MB.");
@@ -242,7 +250,7 @@ export function apiRouter(): Router {
         if (output.length < 5 || output.subarray(0, 5).toString("latin1") !== "%PDF-") {
           throw Errors.internal();
         }
-        const blob = await storeMergeOutput(output, batchId);
+        const blob = await storeMergeOutput(output, batchId, encryptionKey);
         log.info("large documents merged", {
           files: inputs.length,
           inputBytes: actualTotal,
@@ -254,6 +262,8 @@ export function apiRouter(): Router {
           url: blob.url,
           downloadUrl: blob.downloadUrl,
           filename: "Merged_Submissions.pdf",
+          iv: blob.iv,
+          size: blob.size,
         });
       } finally {
         try {
