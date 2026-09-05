@@ -5,6 +5,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { config } from "./config.js";
 import { apiRouter, errorHandler } from "./api/routes.js";
+import { similarityScanRouter } from "./similarityscan/routes.js";
 
 export function createApp(): express.Express {
   const app = express();
@@ -43,6 +44,7 @@ export function createApp(): express.Express {
   );
 
   app.use(express.json({ limit: "256kb" }));
+  app.use("/api/similarityscan", similarityScanRouter());
   app.use("/api", apiRouter());
 
   // Serve the built frontend when available (production / docker).

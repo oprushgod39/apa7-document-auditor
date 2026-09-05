@@ -18,6 +18,9 @@ const SimilarityScreen = lazy(() =>
 const MergeScreen = lazy(() =>
   import("./components/Merge").then((module) => ({ default: module.MergeScreen }))
 );
+const TurnitinScreen = lazy(() =>
+  import("./components/Turnitin").then((module) => ({ default: module.TurnitinScreen }))
+);
 const BatchWorkspace = lazy(() =>
   import("./components/BatchWorkspace").then((module) => ({ default: module.BatchWorkspace }))
 );
@@ -30,8 +33,25 @@ type Screen =
   | { kind: "processing"; session: UploadResponse; status: SessionInfo | null }
   | { kind: "results"; session: UploadResponse; report: ReportResponse };
 
+type Tool = "formatter" | "similarity" | "merger" | "turnitin";
+
+function toolFromPath(): Tool {
+  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  if (path === "/turnitin") return "turnitin";
+  if (path === "/similarity") return "similarity";
+  if (path === "/merger") return "merger";
+  return "formatter";
+}
+
+const TOOL_PATH: Record<Tool, string> = {
+  formatter: "/",
+  similarity: "/similarity",
+  merger: "/merger",
+  turnitin: "/turnitin",
+};
+
 export function App() {
-  const [tool, setTool] = useState<"formatter" | "similarity" | "merger">("formatter");
+  const [tool, setTool] = useState<Tool>(toolFromPath);
   const [formatterMode, setFormatterMode] = useState<"single" | "batch">("single");
   const [screen, setScreen] = useState<Screen>({ kind: "upload" });
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +64,11 @@ export function App() {
     }
   }, []);
   useEffect(() => stopPolling, [stopPolling]);
+  useEffect(() => {
+    const onPopState = () => { setTool(toolFromPath()); setError(null); };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   const beginPolling = useCallback(
     (session: UploadResponse) => {
@@ -105,8 +130,9 @@ export function App() {
     setScreen({ kind: "upload" });
   };
 
-  const selectTool = (next: "formatter" | "similarity" | "merger") => {
+  const selectTool = (next: Tool) => {
     setTool(next);
+    if (window.location.pathname !== TOOL_PATH[next]) window.history.pushState({}, "", TOOL_PATH[next]);
     if (next === "formatter") reset();
     setError(null);
   };
@@ -130,6 +156,7 @@ export function App() {
             <button className={tool === "formatter" ? "active" : ""} onClick={() => selectTool("formatter")}>APA formatter</button>
             <button className={tool === "similarity" ? "active" : ""} onClick={() => selectTool("similarity")}>Similarity checker</button>
             <button className={tool === "merger" ? "active" : ""} onClick={() => selectTool("merger")}>Document merger</button>
+            <button className={tool === "turnitin" ? "active" : ""} onClick={() => selectTool("turnitin")}>Turnitin checker</button>
           </nav>
           <div className="topbar-actions">
             <span className="secure-pill"><span aria-hidden="true">●</span> Private processing</span>
@@ -147,7 +174,7 @@ export function App() {
               </div>
             );
           })}
-        </nav> : tool === "formatter" ? <div className="similarity-journey batch-journey"><span>▤</span><strong>Batch APA formatting</strong><small>Same settings for every file · independent progress and downloads</small></div> : tool === "similarity" ? <div className="similarity-journey"><span>⇄</span><strong>Document-to-document comparison</strong><small>Every unique pair · local browser analysis · exportable report</small></div> : <div className="similarity-journey merge-journey"><span>↧</span><strong>Multi-document submission builder</strong><small>Original formatting preserved · reference lists removed · adjustable appendix budget</small></div>}
+        </nav> : tool === "formatter" ? <div className="similarity-journey batch-journey"><span>▤</span><strong>Batch APA formatting</strong><small>Same settings for every file · independent progress and downloads</small></div> : tool === "similarity" ? <div className="similarity-journey"><span>⇄</span><strong>Document-to-document comparison</strong><small>Every unique pair · local browser analysis · exportable report</small></div> : tool === "merger" ? <div className="similarity-journey merge-journey"><span>↧</span><strong>Multi-document submission builder</strong><small>Original formatting preserved · reference lists removed · adjustable appendix budget</small></div> : <div className="similarity-journey checker-journey"><span>✓</span><strong>Turnitin checker</strong><small>Official similarity and AI results · secure backend processing</small></div>}
 
         {error && (
           <div className="error-box" role="alert">
@@ -157,7 +184,7 @@ export function App() {
         )}
 
         <main>
-          {tool === "similarity" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the comparison workspace…</p></div>}><SimilarityScreen /></Suspense> : tool === "merger" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the merge workspace…</p></div>}><MergeScreen /></Suspense> : tool === "formatter" && formatterMode === "batch" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the batch workspace…</p></div>}><BatchWorkspace onSwitchToSingle={() => setFormatterMode("single")} /></Suspense> : <>
+          {tool === "similarity" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the comparison workspace…</p></div>}><SimilarityScreen /></Suspense> : tool === "merger" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the merge workspace…</p></div>}><MergeScreen /></Suspense> : tool === "turnitin" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the checker…</p></div>}><TurnitinScreen /></Suspense> : tool === "formatter" && formatterMode === "batch" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the batch workspace…</p></div>}><BatchWorkspace onSwitchToSingle={() => setFormatterMode("single")} /></Suspense> : <>
           {screen.kind === "upload" && (
             <UploadScreen
               onUploaded={handleUploaded}

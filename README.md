@@ -185,6 +185,8 @@ See [.env.example](.env.example). Highlights:
 | `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW_MS` | 60 / 60s | API rate limit |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` (or `KV_URL`) | — | Vercel KV — session metadata backend (Vercel-provisioned) |
 | `BLOB_READ_WRITE_TOKEN` | — | Vercel Blob — document binary backend (Vercel-provisioned) |
+| `SIMILARITYSCAN_API_TOKEN` | — | Server-only SimilarityScan bearer token used by `/turnitin` |
+| `SIMILARITYSCAN_API_BASE_URL` | — | SimilarityScan API base URL, including the documented `/functions/v1` prefix |
 
 No secrets are required; never commit a `.env`.
 
@@ -205,6 +207,22 @@ No secrets are required; never commit a `.env`.
 | `GET  /api/documents/{id}/download` | Corrected `…_APA7_formatted/verified.docx` |
 | `GET  /api/documents/{id}/original` | The untouched original upload |
 | `DELETE /api/documents/{id}` | Delete immediately |
+
+### SimilarityScan checker (`/turnitin`)
+
+The checker uses SimilarityScan/CheckMyText from the Express backend only. It
+checks public service availability, uploads to the documented documents
+endpoint, and polls the document endpoint every five seconds until a terminal
+status. Similarity and AI percentages are displayed only from the provider's
+document response. Report requests always re-fetch document details before
+proxying the current `reports.similarity.downloadUrl` or
+`reports.ai.downloadUrl`; the application never fabricates scores or PDFs.
+
+The accepted upload extensions are PDF, DOCX, TXT, RTF, and XLSX. Configure the
+two `SIMILARITYSCAN_*` variables above in every deployed Vercel environment.
+Vercel KV and Blob are required for reliable cross-invocation sessions and
+secure large uploads. Large files are encrypted in the browser before being
+temporarily placed in Blob storage and are decrypted only by the backend.
 
 Errors are structured (`{ error: { code, message } }`) and never expose stack
 traces: `UNSUPPORTED_FILE_TYPE`, `FILE_TOO_LARGE`, `CORRUPT_DOCUMENT`,
