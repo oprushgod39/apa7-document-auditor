@@ -34,6 +34,13 @@ type Screen =
   | { kind: "results"; session: UploadResponse; report: ReportResponse };
 
 type Tool = "formatter" | "similarity" | "merger" | "turnitin";
+type Theme = "light" | "dark";
+
+function initialTheme(): Theme {
+  const saved = window.localStorage.getItem("scholarlyworks-theme");
+  if (saved === "light" || saved === "dark") return saved;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
 
 function toolFromPath(): Tool {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
@@ -52,6 +59,7 @@ const TOOL_PATH: Record<Tool, string> = {
 
 export function App() {
   const [tool, setTool] = useState<Tool>(toolFromPath);
+  const [theme, setTheme] = useState<Theme>(initialTheme);
   const [formatterMode, setFormatterMode] = useState<"single" | "batch">("single");
   const [screen, setScreen] = useState<Screen>({ kind: "upload" });
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +72,11 @@ export function App() {
     }
   }, []);
   useEffect(() => stopPolling, [stopPolling]);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    window.localStorage.setItem("scholarlyworks-theme", theme);
+  }, [theme]);
   useEffect(() => {
     const onPopState = () => { setTool(toolFromPath()); setError(null); };
     window.addEventListener("popstate", onPopState);
@@ -159,6 +172,16 @@ export function App() {
             <button className={tool === "turnitin" ? "active" : ""} onClick={() => selectTool("turnitin")}>Turnitin checker</button>
           </nav>
           <div className="topbar-actions">
+            <button
+              className="theme-toggle"
+              type="button"
+              aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+              aria-pressed={theme === "dark"}
+              onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}
+            >
+              <span aria-hidden="true">{theme === "light" ? "◐" : "☀"}</span>
+              {theme === "light" ? "Dark" : "Light"}
+            </button>
             <span className="secure-pill"><span aria-hidden="true">●</span> Private processing</span>
             <span className="edition-pill">APA 7th Edition</span>
           </div>
