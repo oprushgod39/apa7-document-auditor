@@ -19,6 +19,7 @@ import {
   createSimilarityScanSession,
   deleteSimilarityScanSession,
   getSimilarityScanSession,
+  hasSimilarityScanPersistentStorage,
   readSimilarityScanOriginal,
   verifySimilarityScanAccess,
   type SimilarityScanSession,
@@ -86,11 +87,11 @@ export function similarityScanRouter(): Router {
 
   router.get("/availability", asyncHandler(async (_req, res) => {
     if (!isSimilarityScanConfigured()) {
-      res.json({ configured: false, ready: false, acceptingUploads: false, status: "unavailable", message: "Checker credentials are not configured.", maxUploadBytes: SIMILARITYSCAN_MAX_UPLOAD_BYTES });
+      res.json({ configured: false, ready: false, acceptingUploads: false, persistenceEnabled: false, status: "unavailable", message: "Checker credentials are not configured.", maxUploadBytes: SIMILARITYSCAN_MAX_UPLOAD_BYTES });
       return;
     }
     const status = await getAvailability();
-    res.json({ configured: true, ...status, maxUploadBytes: SIMILARITYSCAN_MAX_UPLOAD_BYTES });
+    res.json({ configured: true, persistenceEnabled: hasSimilarityScanPersistentStorage(), ...status, maxUploadBytes: SIMILARITYSCAN_MAX_UPLOAD_BYTES });
   }));
 
   router.post("/upload", asyncHandler(async (req, res) => {

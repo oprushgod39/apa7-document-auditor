@@ -25,6 +25,11 @@ const KV_CONFIGURED = Boolean(
   (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) || process.env.KV_URL
 );
 
+/** A refresh-safe check needs persistent session metadata and encrypted Blob storage. */
+export function hasSimilarityScanPersistentStorage(): boolean {
+  return KV_CONFIGURED && Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
 function hash(value: string): string {
   return createHash("sha256").update(value).digest("base64url");
 }
@@ -32,7 +37,7 @@ function hash(value: string): string {
 async function persist(session: SimilarityScanSession): Promise<void> {
   sessions.set(session.id, session);
   if (KV_CONFIGURED) {
-    await kv.set(`${KV_PREFIX}${session.id}`, session, { ex: config.fileRetentionMinutes * 60 });
+    await kv.set(`${KV_PREFIX}${session.id}`, session, { ex: config.similarityScanRetentionDays * 24 * 60 * 60 });
   }
 }
 

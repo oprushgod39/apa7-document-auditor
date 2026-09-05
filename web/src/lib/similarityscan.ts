@@ -4,6 +4,8 @@ export interface CheckerAvailability {
   configured: boolean;
   ready: boolean;
   acceptingUploads: boolean;
+  /** Vercel KV + Blob are connected, so a refresh can safely resume a check. */
+  persistenceEnabled: boolean;
   status: string;
   message?: string;
   retryAfterSeconds?: number;
@@ -28,8 +30,6 @@ export interface CheckerResult {
   accessToken?: string;
 }
 
-const DIRECT_LIMIT = 3 * 1024 * 1024;
-
 async function parse<T>(response: Response): Promise<T> {
   if (response.ok) return await response.json() as T;
   let message = response.status === 429
@@ -53,9 +53,11 @@ export async function checkerAvailability(): Promise<CheckerAvailability> {
   return parse(await fetch("/api/similarityscan/availability"));
 }
 
-export async function createCheck(file: File): Promise<CheckerResult> {
+export async function createCheck(file: File, useDurableStorage: boolean): Promise<CheckerResult> {
   const local = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
-  if (local || file.size <= DIRECT_LIMIT) {
+  // Production checks go through encrypted Blob storage when available. This
+  // preserves both the original upload and server-side session across refreshes.
+  if (local || !useDurableStorage) {
     const form = new FormData();
     form.append("file", file);
     return parse(await fetch("/api/similarityscan/documents", { method: "POST", body: form }));

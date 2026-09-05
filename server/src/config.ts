@@ -11,6 +11,8 @@ export interface AppConfig {
   port: number;
   maxUploadBytes: number;
   fileRetentionMinutes: number;
+  /** How long a SimilarityScan session can be reopened from this browser. */
+  similarityScanRetentionDays: number;
   storageDir: string;
   metadataProvider: "crossref" | "none";
   crossrefBaseUrl: string;
@@ -43,6 +45,8 @@ export function loadConfig(): AppConfig {
     port: intEnv("PORT", 8000),
     maxUploadBytes: intEnv("MAX_UPLOAD_SIZE", 25 * 1024 * 1024),
     fileRetentionMinutes: intEnv("FILE_RETENTION_MINUTES", 60),
+    // Similarity checks are kept separately from short-lived formatter files.
+    similarityScanRetentionDays: intEnv("SIMILARITYSCAN_RETENTION_DAYS", 365),
     storageDir:
       process.env.STORAGE_DIR ||
       path.join(os.tmpdir(), "apa7-auditor-storage"),
