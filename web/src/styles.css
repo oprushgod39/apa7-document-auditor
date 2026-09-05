@@ -159,3 +159,19 @@ html[data-theme="dark"] .field input:focus,html[data-theme="dark"] .field textar
 html[data-theme="dark"] code{background:#1b3033}
 html[data-theme="dark"] .similarity-matrix thead th,html[data-theme="dark"] .similarity-matrix th:first-child{background:#17262a}
 html[data-theme="dark"] .similarity-matrix td.diagonal{background:#203337;color:var(--ink-faint)}
+html[data-theme="dark"] .product-switch,html[data-theme="dark"] .similarity-journey{background:rgba(20,35,39,.94);border-color:var(--line)}
+html[data-theme="dark"] .product-switch button.active{background:#2a6964;color:#fff;box-shadow:0 5px 12px rgba(0,0,0,.24)}
+html[data-theme="dark"] .similarity-formula{background:linear-gradient(135deg,#174544,#1b3036);box-shadow:0 16px 35px rgba(0,0,0,.23)}
+html[data-theme="dark"] .similarity-drop{background:linear-gradient(145deg,#172d2f,#112528);border-color:#4e7771}
+html[data-theme="dark"] .similarity-drop:hover,html[data-theme="dark"] .similarity-drop.dragging{background:#1a3838}
+html[data-theme="dark"] .multi-file-icon i{background:#254a49;border-color:#4b7a74}
+html[data-theme="dark"] .multi-file-icon i:nth-child(2),html[data-theme="dark"] .supported{background:#1a3033}
+html[data-theme="dark"] .selected-files>div{border-color:#2c4547}
+html[data-theme="dark"] .selected-files>div>span,html[data-theme="dark"] .comparison-settings,html[data-theme="dark"] .comparison-status{background:#182e30}
+html[data-theme="dark"] .similarity-metric{background:#172a2d;border-color:#385355}
+html[data-theme="dark"] .workspace-tabs{background:#182d30}
+html[data-theme="dark"] .workspace-tabs button.active{background:#29504f;color:var(--ink);box-shadow:0 3px 10px rgba(0,0,0,.2)}
+html[data-theme="dark"] .results-table thead th,html[data-theme="dark"] .similarity-matrix thead th{background:#1a3033}
+html[data-theme="dark"] .results-table tbody tr:hover{background:#182e30}
+html[data-theme="dark"] .results-table td:last-child button{background:#1a3033;color:var(--accent)}
+html[data-theme="dark"] .passage-match blockquote{background:#172a2d}
