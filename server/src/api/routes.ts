@@ -36,9 +36,11 @@ const upload = multer({
   limits: { fileSize: config.maxUploadBytes, files: 1 },
 });
 
+const MERGE_MAX_DOCUMENTS = 50;
+
 const mergeUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: config.maxUploadBytes, files: 30 },
+  limits: { fileSize: config.maxUploadBytes, files: MERGE_MAX_DOCUMENTS },
 });
 
 const SettingsSchema = z.object({
@@ -122,17 +124,17 @@ export function apiRouter(): Router {
   router.post(
     "/merge-preview",
     (req, res, next) => {
-      mergeUpload.array("documents", 30)(req, res, (err: unknown) => {
+      mergeUpload.array("documents", MERGE_MAX_DOCUMENTS)(req, res, (err: unknown) => {
         if (err && typeof err === "object" && (err as { code?: string }).code === "LIMIT_FILE_SIZE") {
           next(Errors.tooLarge(config.maxUploadBytes));
         } else if (err) {
-          next(Errors.invalid("Upload failed. Select no more than 30 DOCX files."));
+          next(Errors.invalid(`Upload failed. Select no more than ${MERGE_MAX_DOCUMENTS} DOCX files.`));
         } else next();
       });
     },
     asyncHandler(async (req, res) => {
       const files = (req.files as Express.Multer.File[] | undefined) ?? [];
-      if (files.length < 1 || files.length > 30) throw Errors.invalid("Select between 1 and 30 DOCX files.");
+      if (files.length < 1 || files.length > MERGE_MAX_DOCUMENTS) throw Errors.invalid(`Select between 1 and ${MERGE_MAX_DOCUMENTS} DOCX files.`);
       const counts = [];
       for (const file of files) {
         if (path.extname(file.originalname).toLowerCase() !== ".docx") throw Errors.unsupportedType();
@@ -145,18 +147,18 @@ export function apiRouter(): Router {
   router.post(
     "/merge-documents",
     (req, res, next) => {
-      mergeUpload.array("documents", 30)(req, res, (err: unknown) => {
+      mergeUpload.array("documents", MERGE_MAX_DOCUMENTS)(req, res, (err: unknown) => {
         if (err && typeof err === "object" && (err as { code?: string }).code === "LIMIT_FILE_SIZE") {
           next(Errors.tooLarge(config.maxUploadBytes));
         } else if (err) {
-          next(Errors.invalid("Upload failed. Select no more than 30 DOCX files."));
+          next(Errors.invalid(`Upload failed. Select no more than ${MERGE_MAX_DOCUMENTS} DOCX files.`));
         } else next();
       });
     },
     asyncHandler(async (req, res) => {
       const files = (req.files as Express.Multer.File[] | undefined) ?? [];
-      if (files.length < 2 || files.length > 30) {
-        throw Errors.invalid("Select between 2 and 30 Microsoft Word .docx files.");
+      if (files.length < 2 || files.length > MERGE_MAX_DOCUMENTS) {
+        throw Errors.invalid(`Select between 2 and ${MERGE_MAX_DOCUMENTS} Microsoft Word .docx files.`);
       }
       let names: unknown;
       try { names = JSON.parse(String(req.body?.names ?? "[]")); } catch { names = []; }
@@ -203,7 +205,7 @@ export function apiRouter(): Router {
         })
       )
       .min(2)
-      .max(30),
+      .max(MERGE_MAX_DOCUMENTS),
     appendixWords: z.number().int().min(0).max(50_000),
     encryptionKey: z.string().min(43).max(64),
   });

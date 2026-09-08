@@ -7,6 +7,8 @@ interface MergeFile {
   name: string;
 }
 
+const MERGE_MAX_DOCUMENTS = 50;
+
 function suggestedName(filename: string): string {
   const stem = filename.replace(/\.docx$/i, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
   return stem || "Student submission";
@@ -56,12 +58,12 @@ export function MergeScreen() {
       const next = [...current];
       for (const file of docx) {
         const key = `${file.name}|${file.size}|${file.lastModified}`;
-        if (!known.has(key) && next.length < 30) {
+        if (!known.has(key) && next.length < MERGE_MAX_DOCUMENTS) {
           known.add(key);
           next.push({ id: crypto.randomUUID(), file, name: suggestedName(file.name) });
         }
       }
-      if (current.length + docx.length > 30) setError("A merge can contain no more than 30 documents.");
+      if (current.length + docx.length > MERGE_MAX_DOCUMENTS) setError(`A merge can contain no more than ${MERGE_MAX_DOCUMENTS} documents.`);
       return next;
     });
   };
@@ -104,10 +106,10 @@ export function MergeScreen() {
         <div>
           <span className="eyebrow">Submission builder</span>
           <h1>One polished file.<br/><em>Every document intact.</em></h1>
-          <p>Combine up to 30 Word documents in your chosen order while preserving their original formatting, tables, and images.</p>
+          <p>Combine up to 50 Word documents in your chosen order while preserving their original formatting, tables, and images.</p>
         </div>
         <div className="merge-promise" aria-label="Merge rules">
-          <span><strong>30</strong><small>documents max</small></span>
+          <span><strong>50</strong><small>documents max</small></span>
           <span><strong>0</strong><small>reference lists kept</small></span>
           <span><strong>{appendixWords.toLocaleString()}</strong><small>appendix words selected</small></span>
         </div>
@@ -124,7 +126,7 @@ export function MergeScreen() {
           >
             <span className="merge-drop-icon">＋</span>
             <strong>Drop DOCX files here</strong>
-            <small>or click to choose files · 2–30 documents</small>
+            <small>or click to choose files · 2–50 documents</small>
           </button>
           <input ref={inputRef} type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple hidden onChange={(event) => addFiles([...(event.target.files ?? [])])} />
 

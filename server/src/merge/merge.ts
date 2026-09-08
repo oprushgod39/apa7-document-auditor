@@ -15,7 +15,7 @@ type Block =
   | { kind: "table"; blockIndex: number; table: TableModel };
 
 /**
- * Merges 2-30 source .docx files (in the given order, each preceded by a
+ * Merges 2-50 source .docx files (in the given order, each preceded by a
  * centered user-supplied heading) into a single PDF. Each source document
  * has its References/Bibliography/Works Cited section (and everything
  * after it) stripped before being included — the cutoff is located by
