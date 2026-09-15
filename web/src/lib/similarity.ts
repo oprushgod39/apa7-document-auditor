@@ -4,6 +4,11 @@ export interface SimilarityDocument {
   analysis: string;
 }
 
+export interface SimilarityOptions {
+  /** Keep written annotations, but not citation details, in bibliography sections. */
+  includeAnnotatedBibliographies?: boolean;
+}
+
 export interface SimilarityResult {
   i: number;
   j: number;
@@ -40,13 +45,54 @@ function words(text: string): string[] {
   return text.toLocaleLowerCase().match(/[\p{L}\p{N}']+/gu) ?? [];
 }
 
-function stripReferences(text: string): string {
-  const heading = /(?:^|\n)\s*(references|reference list|bibliography|works cited)\s*(?:\n|$)/gi;
+const BIBLIOGRAPHY_HEADING = /(?:^|\n)\s*(annotated bibliography|references|reference list|bibliography|works cited)\s*(?:\n|$)/gi;
+
+function isReferenceEntry(text: string): boolean {
+  const value = text.trim();
+  const hasYear = /\((?:1[6-9]|20)\d{2}[a-z]?\)|\(n\.d\.\)/i.test(value);
+  const authorYear = /^[A-Z][\p{L}'’.-]+(?:\s+[A-Z][\p{L}'’.-]+){0,4},\s*(?:[A-Z]\.)/u.test(value) && hasYear;
+  const organizationYear = /^(?:[A-Z][\p{L}&'’.-]+(?:\s+(?:[A-Z][\p{L}&'’.-]+|of|and|the)){0,7})\.\s*\((?:1[6-9]|20)\d{2}[a-z]?\)/u.test(value);
+  const hasSourceLink = /\b(?:doi\s*:\s*|https?:\/\/)/i.test(value);
+  return authorYear || organizationYear || (hasYear && hasSourceLink);
+}
+
+function annotationText(text: string): string {
+  return text.trim().replace(/^annotation\s*:\s*/i, "").trim();
+}
+
+function annotatedTextAfterHeading(text: string): string {
+  // Word extraction normally separates paragraphs with blank lines. A
+  // single-newline fallback also helps simple TXT exports.
+  const blocks = text.trim().split(/\n{2,}/).flatMap((block) =>
+    block.includes("\n") ? block.split("\n") : [block]
+  ).map((block) => block.trim()).filter(Boolean);
+  const annotations: string[] = [];
+  let afterCitation = false;
+  for (const block of blocks) {
+    if (isReferenceEntry(block)) { afterCitation = true; continue; }
+    const labeled = /^annotation\s*:/i.test(block);
+    // A non-citation paragraph after a citation is the annotation. URLs and
+    // very short fragments are more likely to be citation continuations.
+    if ((labeled || afterCitation) && !/\b(?:doi\s*:\s*|https?:\/\/)/i.test(block) && words(block).length >= 10) {
+      annotations.push(annotationText(block));
+    }
+  }
+  return annotations.join("\n\n");
+}
+
+function stripReferences(text: string, includeAnnotatedBibliographies: boolean): string {
+  const heading = new RegExp(BIBLIOGRAPHY_HEADING.source, "gi");
   const candidates: number[] = [];
   let match: RegExpExecArray | null;
   while ((match = heading.exec(text)) != null) candidates.push(match.index);
   const later = candidates.filter((index) => index >= text.length * 0.3);
-  if (later.length) return text.slice(0, later[0]);
+  if (later.length) {
+    const index = later[0]!;
+    if (!includeAnnotatedBibliographies) return text.slice(0, index);
+    const headingMatch = new RegExp(BIBLIOGRAPHY_HEADING.source, "i").exec(text.slice(index));
+    const annotations = headingMatch ? annotatedTextAfterHeading(text.slice(index + headingMatch[0].length)) : "";
+    return annotations ? `${text.slice(0, index).trim()}\n\n${annotations}` : text.slice(0, index);
+  }
 
   const tailStart = Math.floor(text.length * 0.55);
   const tail = text.slice(tailStart);
@@ -61,10 +107,11 @@ function stripReferences(text: string): string {
   return text;
 }
 
-function prepareDisplay(raw: string): string {
+function prepareDisplay(raw: string, includeAnnotatedBibliographies: boolean): string {
   return stripReferences(
     raw.normalize("NFKC").replace(/\u00ad/g, "").replace(/\r\n?/g, "\n")
-      .replace(/[\t ]+/g, " ").replace(/ *\n */g, "\n").replace(/\n{3,}/g, "\n\n")
+      .replace(/[\t ]+/g, " ").replace(/ *\n */g, "\n").replace(/\n{3,}/g, "\n\n"),
+    includeAnnotatedBibliographies
   ).trim();
 }
 
@@ -150,12 +197,14 @@ function cosine(a: Map<string, number>, b: Map<string, number>): number {
 
 export async function compareFiles(
   files: File[],
-  progress: (message: string) => void
+  progress: (message: string) => void,
+  options: SimilarityOptions = {}
 ): Promise<{ documents: SimilarityDocument[]; results: SimilarityResult[] }> {
+  const includeAnnotatedBibliographies = options.includeAnnotatedBibliographies ?? true;
   const documents: SimilarityDocument[] = [];
   for (let index = 0; index < files.length; index++) {
     progress(`Reading ${index + 1}/${files.length}: ${files[index]!.name}`);
-    const display = prepareDisplay(await extractFile(files[index]!));
+    const display = prepareDisplay(await extractFile(files[index]!), includeAnnotatedBibliographies);
     const analysis = normalizeForAnalysis(display);
     if (words(analysis).length < 25) throw new Error(`${files[index]!.name} contains too little extractable text.`);
     documents.push({ name: files[index]!.name, display, analysis });

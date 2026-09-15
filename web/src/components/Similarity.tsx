@@ -24,6 +24,7 @@ export function SimilarityScreen() {
   const [docB, setDocB] = useState(1);
   const [matches, setMatches] = useState<PassageMatch[] | null>(null);
   const [inspecting, setInspecting] = useState(false);
+  const [includeAnnotatedBibliographies, setIncludeAnnotatedBibliographies] = useState(true);
 
   const totalPairs = files.length > 1 ? files.length * (files.length - 1) / 2 : 0;
   const highest = results[0]?.overall;
@@ -54,7 +55,7 @@ export function SimilarityScreen() {
     setDocuments([]);
     setMatches(null);
     try {
-      const output = await compareFiles(files, setStatus);
+      const output = await compareFiles(files, setStatus, { includeAnnotatedBibliographies });
       setDocuments(output.documents);
       setResults(output.results);
       setDocA(0);
@@ -105,7 +106,7 @@ export function SimilarityScreen() {
         </div>
         <div className="similarity-formula" aria-label="Similarity score formula">
           <span>Overall similarity</span><strong><b>70%</b> content <i>+</i> <b>30%</b> phrase overlap</strong>
-          <small>References and widespread boilerplate are automatically excluded.</small>
+          <small>Reference entries and widespread boilerplate are excluded; annotated summaries are checked.</small>
         </div>
       </div>
 
@@ -137,13 +138,15 @@ export function SimilarityScreen() {
           <details className="comparison-settings">
             <summary>How comparison works</summary>
             <ul>
-              <li>Reference lists are excluded automatically.</li>
+              <li>Reference entries are excluded automatically.</li>
+              <li>Annotated-bibliography summaries are included by default.</li>
               <li>Capitalization, punctuation, and spacing are normalized.</li>
               <li>TF-IDF uses meaningful words and word pairs.</li>
               <li>Repeated boilerplate is suppressed across large sets.</li>
               <li>Passage review begins at 58% similarity.</li>
             </ul>
           </details>
+          <label className="annotated-option"><input type="checkbox" checked={includeAnnotatedBibliographies} onChange={(event) => setIncludeAnnotatedBibliographies(event.target.checked)} /><span><strong>Check annotated summaries</strong><small>Includes written annotations after each citation, while excluding citation details.</small></span></label>
 
           <button className="btn primary similarity-run" disabled={busy || files.length < 2} onClick={() => void run()}>
             {busy ? "Comparing documents…" : `Run ${totalPairs || "full"} pair comparison`}
