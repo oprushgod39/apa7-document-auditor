@@ -19,6 +19,15 @@ const MODES = [
   },
 ] as const;
 
+const HEADING_CHOICES = [
+  { value: 0, label: "This is normal body text", description: "It should not be formatted as a heading." },
+  { value: 1, label: "Main section — centered and bold", description: "Use for major sections such as Method, Results, or Discussion." },
+  { value: 2, label: "Subsection — left aligned and bold", description: "Use for a section inside a main section." },
+  { value: 3, label: "Nested subsection — left aligned, bold italic", description: "Use only inside a Level 2 subsection." },
+  { value: 4, label: "Run-in heading — indented, bold", description: "The paragraph begins directly after the heading." },
+  { value: 5, label: "Run-in heading — indented, bold italic", description: "Use only inside a Level 4 heading." },
+] as const;
+
 export function ConfigureScreen(props: {
   session: UploadResponse;
   onStart: (settings: ProcessSettings) => void;
@@ -32,6 +41,7 @@ export function ConfigureScreen(props: {
   const [verifyMetadata, setVerifyMetadata] = useState(true);
   const [annotatedBibliography, setAnnotatedBibliography] = useState(Boolean(d.annotatedBibliography));
   const [headingOverrides, setHeadingOverrides] = useState<Record<string, number>>({});
+  const [showHeadingReview, setShowHeadingReview] = useState(false);
   const [showOptional, setShowOptional] = useState(!d.hasTitlePage);
   const [meta, setMeta] = useState<Record<string, string>>({
     title: d.metadata.title ?? "",
@@ -75,26 +85,43 @@ export function ConfigureScreen(props: {
       </div>
 
       <div className="card">
-        <h2>Review detected headings</h2>
-        <p className="section-note">Choose a level for any heading you want to change. Level 1 is centered; Levels 2–5 are progressively nested. Leave a heading on “Detected” to use the formatter’s suggestion.</p>
-        {(d.headingCandidates ?? []).length === 0 ? (
-          <p className="section-note">No headings were detected. You can still mark headings in your document with “Subheading 1:” through “Subheading 4:” and upload it again.</p>
-        ) : (d.headingCandidates ?? []).map((h) => (
-          <div className="field" key={h.index} style={{ marginTop: "0.8rem" }}>
-            <label htmlFor={`heading-${h.index}`}>{h.text}</label>
-            <select id={`heading-${h.index}`} value={headingOverrides[String(h.index)] ?? "detected"}
-              onChange={(e) => setHeadingOverrides((previous) => {
-                const next = { ...previous };
-                if (e.target.value === "detected") delete next[String(h.index)];
-                else next[String(h.index)] = Number(e.target.value);
-                return next;
-              })}>
-              <option value="detected">Detected: Level {h.level}</option>
-              <option value="0">Normal paragraph</option>
-              {[1, 2, 3, 4, 5].map((level) => <option key={level} value={level}>Level {level}</option>)}
-            </select>
+        <div className="heading-review-title">
+          <div>
+            <h2>Heading formatting</h2>
+            <p className="section-note">Recommended: leave this unchanged. We will format the headings we detected automatically.</p>
           </div>
-        ))}
+          <button className="btn small" aria-expanded={showHeadingReview} onClick={() => setShowHeadingReview((open) => !open)}>
+            {showHeadingReview ? "Hide heading choices" : "Review or change headings"}
+          </button>
+        </div>
+        {showHeadingReview && (
+          <>
+            <div className="heading-help" role="note">
+              <strong>Only change a heading if you know its place in the paper.</strong>
+              <span>Main sections use Level 1. A heading under a main section uses Level 2. Most student papers only need Levels 1 and 2.</span>
+            </div>
+            {(d.headingCandidates ?? []).length === 0 ? (
+              <p className="section-note">No headings were detected in this document.</p>
+            ) : (d.headingCandidates ?? []).map((h) => {
+              const selected = headingOverrides[String(h.index)];
+              const choice = selected == null ? HEADING_CHOICES.find((item) => item.value === h.level) : HEADING_CHOICES.find((item) => item.value === selected);
+              return <div className="heading-choice" key={h.index}>
+                <div><strong>{h.text}</strong><span>{selected == null ? `We detected this as a ${choice?.label.toLowerCase()}.` : choice?.description}</span></div>
+                <label className="sr-only" htmlFor={`heading-${h.index}`}>Choose formatting for {h.text}</label>
+                <select id={`heading-${h.index}`} value={selected ?? "detected"}
+                  onChange={(e) => setHeadingOverrides((previous) => {
+                    const next = { ...previous };
+                    if (e.target.value === "detected") delete next[String(h.index)];
+                    else next[String(h.index)] = Number(e.target.value);
+                    return next;
+                  })}>
+                  <option value="detected">Keep suggested: {choice?.label}</option>
+                  {HEADING_CHOICES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+                </select>
+              </div>;
+            })}
+          </>
+        )}
       </div>
       <div className="card">
         <h2>Document</h2>
