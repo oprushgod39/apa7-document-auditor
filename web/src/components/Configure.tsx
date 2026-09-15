@@ -30,6 +30,8 @@ export function ConfigureScreen(props: {
   const [preserveWording] = useState(true);
   const [fixCitationMechanics, setFixCitationMechanics] = useState(true);
   const [verifyMetadata, setVerifyMetadata] = useState(true);
+  const [annotatedBibliography, setAnnotatedBibliography] = useState(Boolean(d.annotatedBibliography));
+  const [headingOverrides, setHeadingOverrides] = useState<Record<string, number>>({});
   const [showOptional, setShowOptional] = useState(!d.hasTitlePage);
   const [meta, setMeta] = useState<Record<string, string>>({
     title: d.metadata.title ?? "",
@@ -58,6 +60,8 @@ export function ConfigureScreen(props: {
       preserveWording,
       fixCitationMechanics,
       verifyMetadata,
+      annotatedBibliography,
+      headingOverrides,
       metadata,
       instructorRequirements,
     });
@@ -68,6 +72,29 @@ export function ConfigureScreen(props: {
       <div className="page-heading">
         <div><span className="eyebrow">Document workspace</span><h1>Customize your APA analysis</h1></div>
         <p>We detected the document structure. Review the settings below, then let the formatter do the detailed work.</p>
+      </div>
+
+      <div className="card">
+        <h2>Review detected headings</h2>
+        <p className="section-note">Choose a level for any heading you want to change. Level 1 is centered; Levels 2–5 are progressively nested. Leave a heading on “Detected” to use the formatter’s suggestion.</p>
+        {(d.headingCandidates ?? []).length === 0 ? (
+          <p className="section-note">No headings were detected. You can still mark headings in your document with “Subheading 1:” through “Subheading 4:” and upload it again.</p>
+        ) : (d.headingCandidates ?? []).map((h) => (
+          <div className="field" key={h.index} style={{ marginTop: "0.8rem" }}>
+            <label htmlFor={`heading-${h.index}`}>{h.text}</label>
+            <select id={`heading-${h.index}`} value={headingOverrides[String(h.index)] ?? "detected"}
+              onChange={(e) => setHeadingOverrides((previous) => {
+                const next = { ...previous };
+                if (e.target.value === "detected") delete next[String(h.index)];
+                else next[String(h.index)] = Number(e.target.value);
+                return next;
+              })}>
+              <option value="detected">Detected: Level {h.level}</option>
+              <option value="0">Normal paragraph</option>
+              {[1, 2, 3, 4, 5].map((level) => <option key={level} value={level}>Level {level}</option>)}
+            </select>
+          </div>
+        ))}
       </div>
       <div className="card">
         <h2>Document</h2>
@@ -142,6 +169,13 @@ export function ConfigureScreen(props: {
                 shortened. Only formatting and citation/reference mechanics are
                 touched.
               </div>
+            </label>
+          </div>
+          <div className="switch-row">
+            <input type="checkbox" id="annotated-bibliography" checked={annotatedBibliography}
+              onChange={(e) => setAnnotatedBibliography(e.target.checked)} />
+            <label htmlFor="annotated-bibliography">Annotated bibliography
+              <div className="desc">Format citation entries and their summaries separately. Summaries remain in the final document.</div>
             </label>
           </div>
           <div className="switch-row">

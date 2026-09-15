@@ -4,6 +4,7 @@ import { createApp } from "../src/app.js";
 import { buildDocx, malformedStudentPaper } from "./util/docx_builder.js";
 import { DocxPackage, verifyDocxIntegrity } from "../src/docx/package.js";
 import { buildDocumentModel } from "../src/docx/model.js";
+import { analyzeDocument } from "../src/apa/analysis.js";
 
 const app = createApp();
 
@@ -117,6 +118,55 @@ describe("API workflow", () => {
     expect(res.body.error.code).toBe("UNSUPPORTED_FILE_TYPE");
     expect(res.body.error.message).toContain(".docx");
   });
+
+  it("keeps annotated summaries with their citations and applies a chosen heading level", async () => {
+    const spec = malformedStudentPaper();
+    spec.paragraphs[7] = { text: "Method", bold: true, align: "center" };
+    spec.paragraphs[10] = { text: "Annotated Bibliography", align: "left" };
+    spec.paragraphs.splice(12, 0, {
+      text: "This study explains sleep loss and learning. Its evidence is useful for comparing memory outcomes.",
+    });
+    spec.paragraphs.splice(14, 0, {
+      text: "The authors summarize learning patterns across age groups. This annotation evaluates the method.",
+    });
+    const buf = await buildDocx(spec);
+    const up = await request(app).post("/api/documents")
+      .attach("file", buf, { filename: "annotations.docx", contentType: "application/octet-stream" });
+    expect(up.status).toBe(201);
+    expect(up.body.detected.annotatedBibliography).toBe(true);
+    expect(up.body.detected.headingCandidates.some((h: { text: string }) => h.text === "Method")).toBe(true);
+    const id = up.body.id as string;
+    const proc = await request(app).post(`/api/documents/${id}/process`)
+      .send({ mode: "format", annotatedBibliography: true, headingOverrides: { "7": 2 }, verifyMetadata: false });
+    expect(proc.status).toBe(202);
+    await waitReady(id);
+    const dl = await request(app).get(`/api/documents/${id}/download`).buffer(true)
+      .parse((res, cb) => {
+        const chunks: Buffer[] = [];
+        res.on("data", (c: Buffer) => chunks.push(c));
+        res.on("end", () => cb(null, Buffer.concat(chunks)));
+      });
+    expect(dl.status).toBe(200);
+    const model = await buildDocumentModel(await DocxPackage.load(dl.body as Buffer));
+    const analysis = analyzeDocument(model, true);
+    expect(analysis.references.length).toBe(3);
+    expect(analysis.annotationIndexes.length).toBe(2);
+    const bibliographyText = model.paragraphs.slice(analysis.referencesHeadingIndex! + 1)
+      .filter((p) => !p.isEmpty).map((p) => p.text);
+    expect(bibliographyText[0]).toContain("Adams, B. C.");
+    expect(bibliographyText[1]).toContain("Kumar, A.");
+    expect(bibliographyText[2]).toContain("The authors summarize");
+    expect(bibliographyText[3]).toContain("Smith, J. K.");
+    expect(bibliographyText[4]).toContain("This study explains");
+    const summary = model.paragraphs.find((p) => p.text.startsWith("This study explains"))!;
+    expect(summary.props.hangingIndent ?? 0).toBe(0);
+    expect(summary.props.leftIndent).toBe(720);
+    expect(summary.props.line).toBe(480);
+    expect(model.paragraphs[analysis.referencesHeadingIndex!]!.text).toBe("Annotated Bibliography");
+    const heading = model.paragraphs.find((p) => p.text === "Method")!;
+    expect(heading.styleId).toBe("Heading2");
+    expect(heading.props.alignment).toBe("left");
+  }, 30_000);
 
   it("rejects corrupt docx uploads", async () => {
     const res = await request(app)

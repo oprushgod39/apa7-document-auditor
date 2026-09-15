@@ -14,6 +14,8 @@ export interface DetectedInfo {
   };
   hasTitlePage: boolean;
   hasAbstract: boolean;
+  annotatedBibliography?: boolean;
+  headingCandidates?: { index: number; text: string; level: number; confidence: string }[];
   headings: number;
   citations: number;
   references: number;
@@ -41,6 +43,7 @@ export interface SessionInfo {
     preserveWording: boolean;
     fixCitationMechanics: boolean;
     verifyMetadata: boolean;
+    annotatedBibliography?: boolean;
   };
 }
 
@@ -144,6 +147,8 @@ export interface ProcessSettings {
   preserveWording: boolean;
   fixCitationMechanics: boolean;
   verifyMetadata: boolean;
+  annotatedBibliography?: boolean;
+  headingOverrides?: Record<string, number>;
   metadata: Record<string, string>;
   instructorRequirements: string;
 }

@@ -35,6 +35,8 @@ export interface DocumentAnalysis {
   /** Index of the References heading paragraph, if present. */
   referencesHeadingIndex: number | null;
   referenceEntryIndexes: number[];
+  annotationIndexes: number[];
+  annotatedBibliography: boolean;
   /**
    * Set only when no standalone References heading paragraph was found, but
    * one paragraph's tail is a References-style heading fused onto the end of
@@ -120,7 +122,7 @@ function detectTitlePageMetadata(
   return meta;
 }
 
-export function analyzeDocument(model: DocumentModel): DocumentAnalysis {
+export function analyzeDocument(model: DocumentModel, annotatedMode = false): DocumentAnalysis {
   const paras = model.paragraphs;
 
   // --- Title page ------------------------------------------------------
@@ -220,13 +222,23 @@ export function analyzeDocument(model: DocumentModel): DocumentAnalysis {
     }
   }
   const referenceEntryIndexes: number[] = [];
+  const annotationIndexes: number[] = [];
+  const annotatedBibliography = annotatedMode ||
+    (referencesHeadingIndex != null && /^annotated bibliography$/i.test(paras[referencesHeadingIndex]!.text.trim()));
   if (referencesHeadingIndex != null) {
     for (let i = referencesHeadingIndex + 1; i < paras.length; i++) {
       const p = paras[i]!;
       if (p.isEmpty) continue;
       // Stop at a subsequent heading-like paragraph (e.g. Appendix)
       if (/^(appendix|appendices|footnotes|tables|figures)\b/i.test(p.text.trim()) && p.text.trim().length < 30) break;
-      referenceEntryIndexes.push(i);
+      if (!annotatedBibliography) {
+        referenceEntryIndexes.push(i);
+      } else if (/^.{1,180}\(((?:1[6-9]|20)\d{2}[a-z]?|n\.d\.)\)\.?(?:\s|$)/i.test(p.text.trim()) &&
+        parseReference(p.text, i).surnames.length > 0) {
+        referenceEntryIndexes.push(i);
+      } else {
+        annotationIndexes.push(i);
+      }
     }
   }
 
@@ -322,6 +334,8 @@ export function analyzeDocument(model: DocumentModel): DocumentAnalysis {
     keywordsParagraphIndex,
     referencesHeadingIndex,
     referenceEntryIndexes,
+    annotationIndexes,
+    annotatedBibliography,
     embeddedReferencesHeadingCandidate,
     bodyStartIndex,
     headings,

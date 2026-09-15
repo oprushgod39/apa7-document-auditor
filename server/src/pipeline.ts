@@ -194,7 +194,7 @@ export async function repairEmbeddedReferencesHeadingIfNeeded(
   };
 
   const newModel = await buildDocumentModel(pkg);
-  const newAnalysis = analyzeDocument(newModel);
+  const newAnalysis = analyzeDocument(newModel, analysis.annotatedBibliography);
   return { model: newModel, analysis: newAnalysis, change };
 }
 
@@ -221,7 +221,7 @@ export async function processSession(session: Session): Promise<void> {
     // Fingerprint the document exactly as uploaded, before any repair or
     // rule mutates it — assertContentPreserved compares against this.
     const beforeFp = contentFingerprint(model);
-    let analysis = analyzeDocument(model);
+    let analysis = analyzeDocument(model, session.settings.annotatedBibliography);
     const preChanges: Change[] = [];
     if (fix) {
       const repaired = await repairEmbeddedReferencesHeadingIfNeeded(pkg, model, analysis);
@@ -229,6 +229,22 @@ export async function processSession(session: Session): Promise<void> {
       analysis = repaired.analysis;
       if (repaired.change) preChanges.push(repaired.change);
     }
+    // User choices take precedence over inferred heading levels before the
+    // heading and paragraph rules run, so all five styles are applied fully.
+    if (fix) {
+      for (const [index, level] of session.forcedHeadings) {
+        if (level === 0 && model.paragraphs[index]) {
+          removeParagraphStyle(model.paragraphs[index]!.el);
+          model.pkg.markDirty("word/document.xml");
+        }
+      }
+    }
+    analysis.headings = analysis.headings.filter((heading) => {
+      const selected = session.forcedHeadings.get(heading.paragraphIndex);
+      if (selected === 0) return false;
+      if (selected != null) heading.level = selected;
+      return true;
+    });
     session.cachedAnalysis = analysis;
     await saveSession(session);
     await stage(session, "structure", "done");
@@ -300,7 +316,13 @@ export async function processSession(session: Session): Promise<void> {
 
     // 6. External metadata verification (graceful degradation).
     let verification: VerificationResult[] | null = null;
-    const outAnalysis = analyzeDocument(outModel);
+    const outAnalysis = analyzeDocument(outModel, session.settings.annotatedBibliography);
+    outAnalysis.headings = outAnalysis.headings.filter((heading) => {
+      const selected = session.forcedHeadings.get(heading.paragraphIndex);
+      if (selected === 0) return false;
+      if (selected != null) heading.level = selected;
+      return true;
+    });
     if (
       mode === "format_verify" &&
       session.settings.verifyMetadata &&

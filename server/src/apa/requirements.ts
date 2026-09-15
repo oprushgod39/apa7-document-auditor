@@ -159,6 +159,7 @@ export function defaultSettings(paperType: PaperType = "student"): DocumentSetti
     preserveWording: true,
     fixCitationMechanics: true,
     verifyMetadata: true,
+    annotatedBibliography: false,
     metadata: {},
     instructor: { uninterpreted: [] },
   };

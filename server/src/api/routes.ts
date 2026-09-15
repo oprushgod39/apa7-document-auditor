@@ -49,6 +49,8 @@ const SettingsSchema = z.object({
   preserveWording: z.boolean().default(true),
   fixCitationMechanics: z.boolean().default(true),
   verifyMetadata: z.boolean().default(true),
+  annotatedBibliography: z.boolean().default(false),
+  headingOverrides: z.record(z.string(), z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)])).default({}),
   metadata: z
     .object({
       title: z.string().max(300).optional(),
@@ -96,6 +98,7 @@ function sessionSummary(s: Session) {
       preserveWording: s.settings.preserveWording,
       fixCitationMechanics: s.settings.fixCitationMechanics,
       verifyMetadata: s.settings.verifyMetadata,
+      annotatedBibliography: s.settings.annotatedBibliography ?? false,
     },
   };
 }
@@ -352,6 +355,8 @@ export function apiRouter(): Router {
           metadata: analysis.detectedMetadata,
           hasTitlePage: analysis.hasTitlePage,
           hasAbstract: analysis.abstractHeadingIndex != null,
+          annotatedBibliography: analysis.annotatedBibliography,
+          headingCandidates: analysis.headings.map((h) => ({ index: h.paragraphIndex, text: h.text, level: h.level, confidence: h.confidence })),
           headings: analysis.headings.length,
           citations: analysis.citations.length,
           references: analysis.references.length,
@@ -383,9 +388,13 @@ export function apiRouter(): Router {
         preserveWording: s.preserveWording,
         fixCitationMechanics: s.fixCitationMechanics,
         verifyMetadata: s.verifyMetadata,
+        annotatedBibliography: s.annotatedBibliography,
         metadata: s.metadata,
         instructor: parseInstructorRequirements(s.instructorRequirements),
       };
+      session.forcedHeadings = new Map(Object.entries(s.headingOverrides)
+        .map(([index, level]) => [Number(index), level] as const)
+        .filter(([index]) => Number.isSafeInteger(index) && index >= 0 && index < 100000));
       await saveSession(session);
       // Fire and monitor via /status. Errors are captured on the session.
       runInBackground(processSession(session));

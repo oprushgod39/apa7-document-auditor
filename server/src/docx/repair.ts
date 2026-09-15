@@ -19,7 +19,7 @@ import { NS, childrenW, createW, getAttrW, type XDocument, type XElement } from 
 
 /** Matches a References-list heading, and nothing else, in a trimmed string. */
 export const REFERENCES_HEADINGS =
-  /^(references|reference list|works cited|bibliography|reference)$/i;
+  /^(references|reference list|works cited|bibliography|annotated bibliography|reference)$/i;
 
 /** Same heuristic analysis.ts uses to confirm a heading is followed by real entries. */
 export function looksLikeReferenceEntry(text: string): boolean {

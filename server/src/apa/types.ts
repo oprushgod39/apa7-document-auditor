@@ -114,6 +114,7 @@ export interface DocumentSettings {
   preserveWording: boolean;
   fixCitationMechanics: boolean;
   verifyMetadata: boolean;
+  annotatedBibliography?: boolean;
   metadata: TitlePageMetadata;
   instructor: InstructorRequirements;
 }

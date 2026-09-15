@@ -5,6 +5,8 @@ import {
   setPageBreakBefore,
   setRunBold,
   setParagraphRunColorBlack,
+  setParagraphSpacing,
+  setParagraphKeepNext,
   replaceParagraphRuns,
 } from "../../docx/edit.js";
 import { childrenW, paragraphText } from "../../docx/xml.js";
@@ -137,7 +139,8 @@ export const referenceRules: ApaRule[] = [
       }
       const p = model.paragraphs[analysis.referencesHeadingIndex!]!;
       const text = p.text.trim();
-      const correctText = /^references$/i.test(text) && text === "References";
+      const targetHeading = analysis.annotatedBibliography ? "Annotated Bibliography" : "References";
+      const correctText = text === targetHeading;
       const bold = p.runProps.bold === true;
       const centered = p.props.alignment === "center";
       const prev = model.paragraphs[p.index - 1];
@@ -149,7 +152,7 @@ export const referenceRules: ApaRule[] = [
       }
       if (fix) {
         const beforeDesc = `"${text}", ${bold ? "bold" : "not bold"}, ${centered ? "centered" : "not centered"}, ${newPage ? "new page" : "not on new page"}`;
-        if (!correctText) replaceParagraphText(p.el, text, "References");
+        if (!correctText) replaceParagraphText(p.el, text, targetHeading);
         if (!centered) setParagraphAlignment(model.documentXml, p.el, "center");
         if (!bold) {
           for (const r of childrenW(p.el, "r")) setRunBold(model.documentXml, r, true);
@@ -162,8 +165,8 @@ export const referenceRules: ApaRule[] = [
           category: "references",
           location: loc(p),
           before: beforeDesc,
-          after: `"References", bold, centered, starting on a new page`,
-          reason: `APA 7 titles the reference list "References" in bold, centered, on its own page.`,
+          after: `"${targetHeading}", bold, centered, starting on a new page`,
+          reason: `The bibliography heading is bold, centered, and starts on its own page.`,
           confidence: 0.95,
         });
         return result("APA-REFERENCE-001", 1, 0, true, null);
@@ -173,10 +176,10 @@ export const referenceRules: ApaRule[] = [
         category: "references",
         severity: "warning",
         status: "fail",
-        message: `The reference list heading should be "References", bold, centered, on a new page.`,
+        message: `The bibliography heading should be "${targetHeading}", bold, centered, on a new page.`,
         location: loc(p),
         originalValue: text,
-        suggestedValue: "References",
+        suggestedValue: targetHeading,
         confidence: 0.95,
         autoFixable: true,
         userResolutionRequired: false,
@@ -343,25 +346,31 @@ export const referenceRules: ApaRule[] = [
         const order = entries
           .map((e, i) => ({ i, key: keys[i]! }))
           .sort((a, b) => a.key.localeCompare(b.key));
-        const paraEls = analysis.referenceEntryIndexes.map(
-          (idx) => model.paragraphs[idx]!.el
-        );
+        const paraEls = analysis.referenceEntryIndexes.map((idx) => model.paragraphs[idx]!.el);
+        const groups = analysis.referenceEntryIndexes.map((idx, i) => {
+          const end = analysis.referenceEntryIndexes[i + 1] ??
+            Math.max(...analysis.referenceEntryIndexes, ...analysis.annotationIndexes) + 1;
+          return model.paragraphs.slice(idx, end)
+            .filter((p) => p.index === idx || analysis.annotationIndexes.includes(p.index))
+            .map((p) => p.el);
+        });
         const anchor = paraEls[0]!;
         const parent = anchor.parentNode!;
         const marker = anchor.previousSibling;
         // Detach in current order, reinsert sorted at the same position.
-        for (const el of paraEls) parent.removeChild(el);
+        for (const group of groups) for (const el of group) parent.removeChild(el);
         let insertAfter = marker;
         for (const { i } of order) {
-          const el = paraEls[i]!;
-          if (insertAfter && insertAfter.nextSibling) {
-            parent.insertBefore(el, insertAfter.nextSibling);
-          } else if (insertAfter) {
-            parent.appendChild(el);
-          } else {
-            parent.insertBefore(el, parent.firstChild);
+          for (const el of groups[i]!) {
+            if (insertAfter && insertAfter.nextSibling) {
+              parent.insertBefore(el, insertAfter.nextSibling);
+            } else if (insertAfter) {
+              parent.appendChild(el);
+            } else {
+              parent.insertBefore(el, parent.firstChild);
+            }
+            insertAfter = el;
           }
-          insertAfter = el;
         }
         markDocDirty(ctx);
         ctx.addChange({
@@ -470,7 +479,7 @@ export const referenceRules: ApaRule[] = [
     category: "references",
     description: "Every reference entry is cited in the text.",
     severity: "warning",
-    applies: (ctx) => ctx.analysis.references.length > 0,
+    applies: (ctx) => ctx.analysis.references.length > 0 && !ctx.analysis.annotatedBibliography,
     run(ctx) {
       const { model, analysis } = ctx;
       let checked = 0;
@@ -505,6 +514,51 @@ export const referenceRules: ApaRule[] = [
         });
       }
       return result("APA-REFERENCE-005", checked, passed, false, worst);
+    },
+  },
+
+  {
+    id: "APA-REFERENCE-009",
+    category: "references",
+    description: "Annotated bibliography summaries stay separate from reference entries.",
+    severity: "warning",
+    applies: (ctx) => ctx.analysis.annotatedBibliography && ctx.analysis.annotationIndexes.length > 0,
+    run(ctx, fix) {
+      const { model, analysis } = ctx;
+      let passed = 0;
+      for (const index of analysis.annotationIndexes) {
+        const p = model.paragraphs[index]!;
+        const correct = (p.props.leftIndent ?? 0) === 720 &&
+          (p.props.hangingIndent ?? 0) === 0 && p.props.line === 480;
+        if (correct) { passed++; continue; }
+        if (fix) {
+          setParagraphAlignment(model.documentXml, p.el, "left");
+          setParagraphIndent(model.documentXml, p.el, { left: 720, firstLine: null, hanging: null });
+          setParagraphSpacing(model.documentXml, p.el, { line: 480, lineRule: "auto", before: 0, after: 0 });
+          markDocDirty(ctx);
+        }
+      }
+      if (fix) {
+        for (const index of analysis.referenceEntryIndexes) {
+          if (analysis.annotationIndexes.includes(index + 1)) {
+            setParagraphKeepNext(model.documentXml, model.paragraphs[index]!.el, true);
+            markDocDirty(ctx);
+          }
+        }
+      } else if (passed < analysis.annotationIndexes.length) {
+        ctx.addIssue({
+          ruleId: "APA-REFERENCE-009",
+          category: "references",
+          severity: "warning",
+          status: "fail",
+          message: "One or more annotation summaries need a separate 0.5-inch left indent and double spacing.",
+          confidence: 0.9,
+          autoFixable: true,
+          userResolutionRequired: false,
+        });
+      }
+      return result("APA-REFERENCE-009", analysis.annotationIndexes.length, passed, fix && passed < analysis.annotationIndexes.length,
+        !fix && passed < analysis.annotationIndexes.length ? "fail" : null);
     },
   },
 
