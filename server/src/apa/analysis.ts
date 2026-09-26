@@ -77,6 +77,47 @@ const INSTITUTION_RE =
   /(university|college|institute|school|academy|department of)/i;
 const INSTRUCTOR_RE = /^(dr\.|prof\.?|professor|instructor|mr\.|ms\.|mrs\.)\s/i;
 
+/**
+ * Word does not need a literal page-break element to create a title page.
+ * A common student-paper layout uses centered metadata followed by enough
+ * empty paragraphs for the body to flow onto page 2.  Treat that pattern as
+ * a real title page instead of inserting a duplicate one.
+ *
+ * This deliberately requires a due date plus two other strong metadata
+ * signals.  A centered body title followed by prose therefore cannot be
+ * mistaken for a title page.
+ */
+function findInferredTitlePageEnd(model: DocumentModel): number | null {
+  const scan = model.paragraphs.slice(0, Math.min(model.paragraphs.length, 30));
+  const dueDate = scan.find((p) => !p.isEmpty && DATE_RE.test(p.text.trim()));
+  if (!dueDate) return null;
+
+  const titlePageLines = scan.filter((p) => !p.isEmpty && p.index <= dueDate.index);
+  if (titlePageLines.length < 5 || titlePageLines.length > 12) return null;
+  if (titlePageLines.some((p) => p.text.trim().split(/\s+/).length > 30)) return null;
+
+  const beforeDate = titlePageLines.map((p) => p.text.trim());
+  const strongSignals = [
+    beforeDate.some((text) => COURSE_RE.test(text)),
+    beforeDate.some((text) => INSTITUTION_RE.test(text)),
+    beforeDate.some((text) => INSTRUCTOR_RE.test(text)),
+  ].filter(Boolean).length;
+  if (strongSignals < 2) return null;
+
+  let bodyStart = dueDate.index + 1;
+  let blankCount = 0;
+  while (bodyStart < model.paragraphs.length && model.paragraphs[bodyStart]!.isEmpty) {
+    blankCount++;
+    bodyStart++;
+  }
+  if (bodyStart >= model.paragraphs.length) return null;
+
+  // At least one blank paragraph is expected when no explicit page-break is
+  // present. This extra guard keeps a metadata-like list in body prose from
+  // triggering title-page detection.
+  return blankCount > 0 ? bodyStart : null;
+}
+
 function detectTitlePageMetadata(
   model: DocumentModel,
   end: number
@@ -136,6 +177,13 @@ export function analyzeDocument(model: DocumentModel, annotatedMode = false): Do
     if (chunk.length >= 1 && chunk.length <= 12 && longProse.length === 0) {
       hasTitlePage = true;
       titlePageEnd = firstBreak;
+    }
+  }
+  if (!hasTitlePage) {
+    const inferredEnd = findInferredTitlePageEnd(model);
+    if (inferredEnd != null) {
+      hasTitlePage = true;
+      titlePageEnd = inferredEnd;
     }
   }
   // Even when no title-page break exists, expose a conservative first-page

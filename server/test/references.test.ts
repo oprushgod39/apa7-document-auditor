@@ -68,6 +68,15 @@ describe("reference parser", () => {
     const r = parseReference("Smith, J. Some title without a year. Publisher.", 0);
     expect(r.problems.some((x) => x.code === "MISSING_YEAR")).toBe(true);
   });
+
+  it("keeps surname particles such as Van Aken as one personal surname", () => {
+    const r = parseReference(
+      "Van Aken, J. E. (2007). Design science and organization development interventions. The Journal of Applied Behavioral Science, 43(1), 67–88.",
+      0
+    );
+    expect(r.isOrganizationAuthor).toBe(false);
+    expect(r.surnames).toEqual(["van aken"]);
+  });
 });
 
 describe("citation ↔ reference matching", () => {
@@ -116,5 +125,29 @@ describe("citation ↔ reference matching", () => {
     const result = matchCitationsToReferences(cits, refsAB);
     expect(result.citationMatches[0]!.status).toBe("exact");
     expect(result.citationMatches[0]!.referenceIndexes).toEqual([1]);
+  });
+
+  it("matches HHS to the U.S. Department of Health and Human Services", () => {
+    const hhs = [
+      parseReference(
+        "U.S. Department of Health and Human Services. (n.d.). Summary of the HIPAA Security Rule.",
+        0
+      ),
+    ];
+    const citations = parseCitations("The rule applies (HHS, n.d.).", 0);
+    const result = matchCitationsToReferences(citations, hhs);
+    expect(result.citationMatches[0]!.status).toBe("exact");
+  });
+
+  it("matches a narrative citation containing a surname particle", () => {
+    const refs = [
+      parseReference(
+        "Van Aken, J. E. (2007). Design science and organization development interventions. The Journal of Applied Behavioral Science, 43(1), 67–88.",
+        0
+      ),
+    ];
+    const citations = parseCitations("Van Aken (2007) connects both factors.", 0);
+    const result = matchCitationsToReferences(citations, refs);
+    expect(result.citationMatches[0]!.status).toBe("exact");
   });
 });

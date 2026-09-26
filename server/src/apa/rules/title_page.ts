@@ -221,7 +221,47 @@ export const titlePageRules: ApaRule[] = [
             (p) => p.index >= ctx.analysis.titlePageEnd && p.text.trim() === detected.title?.trim()
           )?.index
         : detected.titleParagraphIndex;
-      if (idx == null) return result("APA-TITLE-006", 0, 0, false, null);
+      if (idx == null) {
+        const bodyStart = ctx.model.paragraphs.find(
+          (p) => p.index >= ctx.analysis.bodyStartIndex && !p.isEmpty
+        );
+        if (fix && bodyStart && detected.title) {
+          const p = createParagraph(ctx.model.documentXml, detected.title, {
+            alignment: "center",
+            font: ctx.req.font,
+            halfPoints: ctx.req.fontSizePt * 2,
+            spacing: { before: 0, after: 0, line: 480, lineRule: "auto" },
+            firstLineIndent: null,
+            bold: true,
+            black: true,
+          });
+          setParagraphContextualSpacing(ctx.model.documentXml, p);
+          setParagraphKeepNext(ctx.model.documentXml, p, true);
+          insertBeforeEl(ctx.model.body, p, bodyStart.el);
+          markDocDirty(ctx);
+          ctx.addChange({
+            ruleId: "APA-TITLE-006",
+            category: "title_page",
+            location: { description: "Start of the paper body" },
+            before: "Body title missing",
+            after: `Body title added: "${detected.title}"`,
+            reason: "APA 7 repeats the paper title as a centered bold heading at the start of the body.",
+            confidence: 0.95,
+          });
+          return result("APA-TITLE-006", 1, 0, true, null);
+        }
+        ctx.addIssue({
+          ruleId: "APA-TITLE-006",
+          category: "title_page",
+          severity: "warning",
+          status: "fail",
+          message: "The paper title is missing at the start of the body.",
+          confidence: 0.9,
+          autoFixable: Boolean(bodyStart && detected.title),
+          userResolutionRequired: false,
+        });
+        return result("APA-TITLE-006", 1, 0, false, "fail");
+      }
       const p = ctx.model.paragraphs[idx]!;
       const correct =
         p.props.alignment === "center" &&

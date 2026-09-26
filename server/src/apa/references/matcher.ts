@@ -38,6 +38,10 @@ const ORG_ABBREVIATIONS: Record<string, string[]> = {
   who: ["world health organization"],
   cdc: ["centers for disease control and prevention"],
   nih: ["national institutes of health"],
+  hhs: [
+    "us department of health and human services",
+    "department of health and human services",
+  ],
   un: ["united nations"],
   unesco: ["united nations educational, scientific and cultural organization"],
 };

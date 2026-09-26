@@ -168,14 +168,14 @@ export function parseReference(text: string, paragraphIndex: number): ParsedRefe
 function extractSurnames(authorsRaw: string): { surnames: string[]; isOrg: boolean } {
   if (!authorsRaw) return { surnames: [], isOrg: false };
   // "Surname, I. I." pattern → personal authors
-  const personal = /^[A-ZÀ-Þ][\w'’\-À-ÿ]+,\s*(?:[A-Z]\.\s*)+/.test(authorsRaw);
+  const personal = /^(?:(?:Van|Von|De|Del|Der|Di|La|Le|Al|Bin|Ter)\s+)?[A-ZÀ-Þ][\w'’\-À-ÿ]+,\s*(?:[A-Z]\.?\s*)+/i.test(authorsRaw);
   if (!personal) {
     // Organization author, e.g. "American Psychological Association"
     return { surnames: [authorsRaw.replace(/\.$/, "").toLowerCase()], isOrg: true };
   }
   const surnames: string[] = [];
   // Split on separators between author units. Each unit: "Surname, I. I."
-  const re = /([A-ZÀ-Þ][\w'’\-À-ÿ]+(?:\s[A-ZÀ-Þ][\w'’\-À-ÿ]+)?),\s*(?:[A-Z]\.?[\s-]*)+/g;
+  const re = /((?:(?:Van|Von|De|Del|Der|Di|La|Le|Al|Bin|Ter)\s+)?[A-ZÀ-Þ][\w'’\-À-ÿ]+),\s*(?:[A-Z]\.?[\s-]*)+/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(authorsRaw)) !== null) {
     surnames.push(m[1]!.toLowerCase());

@@ -111,7 +111,9 @@ export function assertContentPreserved(
   const titlePageInsertion = changes.some(
     (c) =>
       !c.excluded &&
-      (c.ruleId === "APA-TITLE-001" || c.ruleId === "APA-TITLE-003")
+      (c.ruleId === "APA-TITLE-001" ||
+        c.ruleId === "APA-TITLE-003" ||
+        c.ruleId === "APA-TITLE-006")
   );
   // A fused References-heading repair (docx/repair.ts) splits one paragraph
   // into two: the retained-body-text half reconciles normally via the

@@ -143,6 +143,36 @@ describe("golden document formatting", () => {
     expect(method!.level).toBe(1); // centered + bold + section word
   });
 
+  it("recognizes a title page created with blank spacing instead of a hard page break", async () => {
+    const spec = malformedStudentPaper();
+    spec.paragraphs[5]!.pageBreakAfter = false;
+    spec.paragraphs.splice(6, 0, ...Array.from({ length: 10 }, () => ({ text: "" })));
+    const original = await buildDocx(spec);
+    const source = await buildDocumentModel(await DocxPackage.load(original));
+    const sourceAnalysis = analyzeDocument(source);
+
+    expect(sourceAnalysis.hasTitlePage).toBe(true);
+    expect(sourceAnalysis.titlePageEnd).toBe(16);
+    expect(sourceAnalysis.bodyStartIndex).toBe(16);
+    expect(sourceAnalysis.detectedMetadata.title).toBe(
+      "The Effects of Sleep on Memory Consolidation"
+    );
+    expect(sourceAnalysis.headings.some((h) => h.text === "Jordan A. Rivera")).toBe(false);
+
+    const { out, run } = await formatDocument(original);
+    expect(run.changes.some((c) => c.ruleId === "APA-TITLE-001")).toBe(false);
+    expect(run.changes.some((c) => c.ruleId === "APA-TITLE-006")).toBe(true);
+    const formatted = await buildDocumentModel(await DocxPackage.load(out));
+    expect(
+      formatted.paragraphs.filter((p) => p.text === "Jordan A. Rivera")
+    ).toHaveLength(1);
+    expect(
+      formatted.paragraphs.filter(
+        (p) => p.text === "The Effects of Sleep on Memory Consolidation"
+      )
+    ).toHaveLength(2);
+  });
+
   it("strips manual tab indentation and applies real first-line indent", async () => {
     const original = await buildDocx(malformedStudentPaper());
     const { out } = await formatDocument(original);
