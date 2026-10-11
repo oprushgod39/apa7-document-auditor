@@ -111,6 +111,33 @@ describe("golden document formatting", () => {
     assertContentPreserved(before, after, run.changes);
   });
 
+  it("reconciles citation fixes against the paragraph that was actually changed", async () => {
+    const spec = malformedStudentPaper();
+    spec.paragraphs[6]!.text =
+      "Smith and Patel (2024) described the result in narrative form before another paragraph cited the same work.";
+    spec.paragraphs[9]!.text =
+      "The same result was later confirmed in a parenthetical citation (Smith and Patel, 2024).";
+    const original = await buildDocx(spec);
+    const before = contentFingerprint(
+      await buildDocumentModel(await DocxPackage.load(original))
+    );
+    const { out, run } = await formatDocument(original);
+    const after = contentFingerprint(
+      await buildDocumentModel(await DocxPackage.load(out))
+    );
+
+    expect(run.changes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: "APA-CITATION-001",
+          before: "(Smith and Patel, 2024)",
+          after: "(Smith & Patel, 2024)",
+        }),
+      ])
+    );
+    expect(() => assertContentPreserved(before, after, run.changes)).not.toThrow();
+  });
+
   it("is idempotent: reformatting a formatted document makes no meaningful changes", async () => {
     const original = await buildDocx(malformedStudentPaper());
     const first = await formatDocument(original);

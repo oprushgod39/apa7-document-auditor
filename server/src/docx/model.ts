@@ -543,6 +543,8 @@ export interface ContentFingerprint {
   text: string;
   /** Trimmed text of every non-empty paragraph, in document order. */
   paragraphs: string[];
+  /** Original model index for each entry in `paragraphs`. */
+  paragraphIndexes: number[];
   imageCount: number;
   tableShapes: string[];
   hyperlinkCount: number;
@@ -552,12 +554,14 @@ export interface ContentFingerprint {
 }
 
 export function contentFingerprint(model: DocumentModel): ContentFingerprint {
-  const paragraphs = model.paragraphs
-    .map((p) => p.text.trim())
-    .filter((t) => t.length > 0);
+  const paragraphEntries = model.paragraphs
+    .map((p) => ({ text: p.text.trim(), paragraphIndex: p.index }))
+    .filter((p) => p.text.length > 0);
+  const paragraphs = paragraphEntries.map((p) => p.text);
   return {
     text: paragraphs.join("\n"),
     paragraphs,
+    paragraphIndexes: paragraphEntries.map((p) => p.paragraphIndex),
     imageCount: model.imageCount,
     tableShapes: model.tables.map((t) => `${t.rows}x${t.cols}`),
     hyperlinkCount: model.hyperlinkCount,

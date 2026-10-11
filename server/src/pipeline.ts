@@ -86,7 +86,12 @@ export function assertContentPreserved(
   // the reference list) are allowed; content loss or unexplained edits are
   // not. Textual changes recorded in the change log are replayed onto the
   // "before" paragraphs so that legitimate mechanics fixes reconcile.
-  let expectedParas = before.paragraphs.map(collapse).filter((t) => t.length > 0);
+  let expectedParas = before.paragraphs
+    .map((text, i) => ({
+      text: collapse(text),
+      paragraphIndex: before.paragraphIndexes[i] ?? i,
+    }))
+    .filter((p) => p.text.length > 0);
   const actualParas = after.paragraphs.map(collapse).filter((t) => t.length > 0);
 
   for (const c of changes) {
@@ -100,9 +105,21 @@ export function assertContentPreserved(
     if (qb && qa) candidates.push([collapse(qb[1]!), collapse(qa[1]!)]);
     for (const [b, a] of candidates) {
       if (b.length === 0 || a === b) continue;
-      const i = expectedParas.findIndex((t) => t.includes(b));
+      const targetParagraphIndex = c.location?.paragraphIndex;
+      let i = targetParagraphIndex == null
+        ? -1
+        : expectedParas.findIndex(
+            (p) => p.paragraphIndex === targetParagraphIndex && p.text.includes(b)
+          );
+      // Some document-wide or structural changes do not have a paragraph
+      // location. Retain the old fallback for those, but never let a located
+      // citation edit reconcile against an earlier occurrence of the same
+      // author/year text in another paragraph.
+      if (i < 0 && targetParagraphIndex == null) {
+        i = expectedParas.findIndex((p) => p.text.includes(b));
+      }
       if (i >= 0) {
-        expectedParas[i] = expectedParas[i]!.replace(b, a);
+        expectedParas[i]!.text = expectedParas[i]!.text.replace(b, a);
         break;
       }
     }
@@ -126,9 +143,9 @@ export function assertContentPreserved(
   const remaining = [...actualParas];
   const missing: string[] = [];
   for (const exp of expectedParas) {
-    const i = remaining.indexOf(exp);
+    const i = remaining.indexOf(exp.text);
     if (i >= 0) remaining.splice(i, 1);
-    else missing.push(exp);
+    else missing.push(exp.text);
   }
   if (missing.length > 0) {
     problems.push(
