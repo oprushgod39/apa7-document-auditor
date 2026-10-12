@@ -10,6 +10,7 @@ import {
 } from "../lib/similarity";
 
 type Tab = "results" | "matrix" | "passages";
+const SIMILARITY_MAX_DOCUMENTS = 50;
 
 export function SimilarityScreen() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,11 +42,18 @@ export function SimilarityScreen() {
 
   const acceptFiles = (incoming: File[]) => {
     const supported = incoming.filter((file) => /\.(docx|pdf|txt)$/i.test(file.name));
-    setFiles(supported.slice(0, 30));
+    const selected = supported.slice(0, SIMILARITY_MAX_DOCUMENTS);
+    setFiles(selected);
     setResults([]);
     setDocuments([]);
     setMatches(null);
-    setStatus(supported.length < 2 ? "Choose at least two DOCX, PDF, or TXT files." : `${Math.min(supported.length, 30)} documents ready for comparison.`);
+    setStatus(
+      supported.length < 2
+        ? "Choose at least two DOCX, PDF, or TXT files."
+        : supported.length > SIMILARITY_MAX_DOCUMENTS
+          ? `${SIMILARITY_MAX_DOCUMENTS} documents ready. Only the first ${SIMILARITY_MAX_DOCUMENTS} supported files were selected.`
+          : `${selected.length} documents ready for comparison.`
+    );
   };
 
   const run = async () => {
@@ -112,7 +120,7 @@ export function SimilarityScreen() {
 
       <div className="similarity-layout">
         <aside className="similarity-sidebar card">
-          <div className="tool-card-heading"><span aria-hidden="true">⇄</span><div><strong>Comparison set</strong><small>2–30 documents</small></div></div>
+          <div className="tool-card-heading"><span aria-hidden="true">⇄</span><div><strong>Comparison set</strong><small>2–50 documents</small></div></div>
           <div
             className={`similarity-drop${dragging ? " dragging" : ""}`}
             role="button" tabIndex={0}
