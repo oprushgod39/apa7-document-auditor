@@ -174,6 +174,7 @@ function PdfRepairPanel() {
   const [file, setFile] = useState<File | null>(null);
   const [terms, setTerms] = useState("");
   const [removeLabels, setRemoveLabels] = useState(true);
+  const [replaceHeadings, setReplaceHeadings] = useState(true);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Upload a faulty merged PDF to begin.");
   const [result, setResult] = useState<PdfRepairResult | null>(null);
@@ -196,9 +197,9 @@ function PdfRepairPanel() {
     setBusy(true);
     setResult(null);
     try {
-      const repaired = await repairPdf(file, parseRedactionTerms(terms), removeLabels, setStatus);
+      const repaired = await repairPdf(file, parseRedactionTerms(terms), removeLabels, replaceHeadings, setStatus);
       setResult(repaired);
-      setStatus(`${repaired.matches} matching text item${repaired.matches === 1 ? "" : "s"} removed across ${repaired.pages} pages.`);
+      setStatus(`${repaired.matches} matching text item${repaired.matches === 1 ? "" : "s"} removed, ${repaired.headingsReplaced} heading${repaired.headingsReplaced === 1 ? "" : "s"} numbered, and ${repaired.words.toLocaleString()} searchable words preserved.`);
     } catch (cause) {
       setStatus(cause instanceof Error ? cause.message : "The PDF could not be repaired.");
     } finally {
@@ -221,8 +222,8 @@ function PdfRepairPanel() {
   return <section className="pdf-repair">
     <div className="pdf-repair-copy">
       <span className="eyebrow">Optional PDF repair</span>
-      <h2>Remove names from a faulty PDF.</h2>
-      <p>Use this after merging if an older PDF still contains a student or university name. Processing stays in your browser, and the repaired PDF contains no hidden searchable text layer.</p>
+      <h2>Repair an older merged PDF.</h2>
+      <p>Names are permanently removed from the PDF’s real text, while all remaining words stay searchable and countable. Old filename headings can also be replaced with 1, 2, 3, and so on. Processing stays in your browser.</p>
     </div>
     <div className="pdf-repair-form">
       <button className="pdf-repair-file" onClick={() => inputRef.current?.click()}>
@@ -231,8 +232,9 @@ function PdfRepairPanel() {
       <input ref={inputRef} type="file" accept=".pdf,application/pdf" hidden onChange={(event) => choose(event.target.files?.[0] ?? null)} />
       <label className="pdf-repair-terms"><span>Names and universities to remove</span><textarea rows={4} value={terms} onChange={(event) => { setTerms(event.target.value); setResult(null); }} placeholder={"Mahesh\nRiverside University\nAnother student name"} /><small>Enter one exact name per line. Commas and semicolons also work.</small></label>
       <label className="pdf-repair-labels"><input type="checkbox" checked={removeLabels} onChange={(event) => { setRemoveLabels(event.target.checked); setResult(null); }} /><span><strong>Also remove default title-page labels</strong><small>Name, University, Subject code and name, Professor, and Due date.</small></span></label>
+      <label className="pdf-repair-labels"><input type="checkbox" checked={replaceHeadings} onChange={(event) => { setReplaceHeadings(event.target.checked); setResult(null); }} /><span><strong>Replace old document headings with numbers</strong><small>Centered filename headings become 1, 2, 3, and so on.</small></span></label>
       <div className="pdf-repair-actions">
-        <button className="btn primary" disabled={!file || busy || (parseRedactionTerms(terms).length === 0 && !removeLabels)} onClick={() => void run()}>{busy ? "Repairing PDF…" : "Find & remove"}</button>
+        <button className="btn primary" disabled={!file || busy || (parseRedactionTerms(terms).length === 0 && !removeLabels && !replaceHeadings)} onClick={() => void run()}>{busy ? "Repairing PDF…" : "Repair PDF"}</button>
         <button className="btn" disabled={!result || busy} onClick={download}>Download anonymized PDF</button>
       </div>
       <p className={`pdf-repair-status${busy ? " busy" : ""}`} aria-live="polite"><span />{status}</p>

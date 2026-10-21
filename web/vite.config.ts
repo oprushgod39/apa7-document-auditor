@@ -15,5 +15,8 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: false,
+    // MuPDF's official browser bundle initializes its WebAssembly module with
+    // top-level await. All browsers supported by this app handle ES modules.
+    target: "esnext",
   },
 });

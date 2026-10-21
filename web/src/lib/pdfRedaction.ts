@@ -1,11 +1,26 @@
-import { PDFDocument, StandardFonts, type PDFFont, type PDFPage } from "pdf-lib";
+import type { Page, PDFPage, Quad, Rect } from "mupdf";
 
 const DEFAULT_LABELS = ["Name", "University", "Subject code and name", "Professor", "Due date"];
+const HEADING_EXCLUSIONS = /^(?:appendix|references|bibliography|works cited|table\s+\d+|figure\s+\d+)$/i;
 
 export interface PdfRepairResult {
   blob: Blob;
   matches: number;
   pages: number;
+  words: number;
+  headingsReplaced: number;
+}
+
+interface TextLine {
+  text: string;
+  bbox: Rect;
+  maxSize: number;
+  bold: boolean;
+}
+
+interface NumberedHeading {
+  rect: Rect;
+  number: string;
 }
 
 export function parseRedactionTerms(value: string): string[] {
@@ -31,149 +46,214 @@ export function findRedactionRanges(text: string, terms: string[]): Array<{ star
   return ranges.filter((range, index) => index === 0 || range.start >= ranges[index - 1]!.end);
 }
 
-function defaultLabelRanges(text: string): Array<{ start: number; end: number }> {
-  const trimmed = text.trim();
-  const normalized = trimmed.replace(/[:_\s]+$/g, "").trim().toLocaleLowerCase();
-  return DEFAULT_LABELS.some((label) => normalized === label.toLocaleLowerCase())
-    ? [{ start: text.indexOf(trimmed), end: text.indexOf(trimmed) + trimmed.length }]
-    : [];
-}
-
-function mergeRanges(ranges: Array<{ start: number; end: number }>): Array<{ start: number; end: number }> {
-  const sorted = ranges.slice().sort((left, right) => left.start - right.start || left.end - right.end);
-  const merged: Array<{ start: number; end: number }> = [];
-  for (const range of sorted) {
-    const previous = merged[merged.length - 1];
-    if (!previous || range.start > previous.end) merged.push({ ...range });
-    else previous.end = Math.max(previous.end, range.end);
-  }
-  return merged;
-}
-
 export function textWithoutRanges(text: string, ranges: Array<{ start: number; end: number }>): string {
   let result = "";
   let cursor = 0;
-  for (const range of mergeRanges(ranges)) {
+  for (const range of ranges) {
     result += text.slice(cursor, range.start);
-    // Keep a separator so words on either side of removed content do not join together.
     if (range.start > 0 && range.end < text.length) result += " ";
     cursor = range.end;
   }
   return result + text.slice(cursor);
 }
 
-function searchableWinAnsiText(text: string, font: PDFFont): string {
-  let result = "";
-  for (const character of text) {
-    try {
-      font.encodeText(character);
-      result += character;
-    } catch {
-      result += " ";
+function quadBounds(quads: Quad[]): Rect {
+  const xs = quads.flatMap((quad) => [quad[0], quad[2], quad[4], quad[6]]);
+  const ys = quads.flatMap((quad) => [quad[1], quad[3], quad[5], quad[7]]);
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+}
+
+function redactionRect(rect: Rect): Rect {
+  // PDF glyph boxes from adjacent lines can overlap even when the printed
+  // letters do not. A narrow band through the middle of the requested glyphs
+  // removes those glyphs without touching the line above or below.
+  const inset = Math.min(4, Math.max(0.5, (rect[3] - rect[1]) * 0.25));
+  return [rect[0] - 0.1, rect[1] + inset, rect[2] + 0.1, rect[3] - inset];
+}
+
+function rectKey(rect: Rect): string {
+  return rect.map((value) => Math.round(value * 10)).join(":");
+}
+
+function extractLines(page: Page): { lines: TextLine[]; text: string } {
+  const structured = page.toStructuredText({});
+  const lines: TextLine[] = [];
+  let current: TextLine | null = null;
+  structured.walk({
+    beginLine(bbox) {
+      current = { text: "", bbox: [...bbox] as Rect, maxSize: 0, bold: false };
+    },
+    onChar(character, _origin, font, size) {
+      if (!current) return;
+      current.text += character;
+      current.maxSize = Math.max(current.maxSize, size);
+      current.bold ||= font.isBold();
+    },
+    endLine() {
+      if (current?.text.trim()) lines.push(current);
+      current = null;
     }
-  }
-  return result;
+  });
+  const text = structured.asText();
+  structured.destroy();
+  return { lines, text };
 }
 
-function addSearchableText(
-  page: PDFPage,
-  font: PDFFont,
-  text: string,
-  transform: number[]
-): void {
-  const searchable = searchableWinAnsiText(text, font);
-  if (!searchable.trim()) return;
-  const size = Math.max(1, Math.hypot(transform[2] ?? 0, transform[3] ?? 0));
-  page.drawText(searchable, {
-    x: transform[4] ?? 0,
-    y: transform[5] ?? 0,
-    size,
-    font,
-    opacity: 0
-  });
+function legacyHeading(lines: TextLine[], pageBounds: Rect): TextLine | null {
+  const pageWidth = pageBounds[2] - pageBounds[0];
+  const pageHeight = pageBounds[3] - pageBounds[1];
+  const pageCenter = pageBounds[0] + pageWidth / 2;
+  return lines.find((line) => {
+    const text = line.text.trim();
+    const center = (line.bbox[0] + line.bbox[2]) / 2;
+    const nearTop = line.bbox[1] <= pageBounds[1] + pageHeight * 0.24;
+    const centered = Math.abs(center - pageCenter) <= pageWidth * 0.1;
+    return nearTop && centered && line.bold && line.maxSize >= 13 && !HEADING_EXCLUSIONS.test(text);
+  }) ?? null;
 }
 
-function canvasBlob(canvas: HTMLCanvasElement): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("The repaired page could not be encoded.")), "image/jpeg", 0.94);
-  });
+function countWords(text: string): number {
+  return text.match(/[\p{L}\p{N}]+(?:['’.\-][\p{L}\p{N}]+)*/gu)?.length ?? 0;
+}
+
+function addRedaction(page: PDFPage, rect: Rect): void {
+  const annotation = page.createAnnotation("Redact");
+  annotation.setRect(redactionRect(rect));
+  annotation.setColor([1, 1, 1]);
+  annotation.update();
+}
+
+function addNumber(page: PDFPage, pageBounds: Rect, heading: NumberedHeading): void {
+  const annotation = page.createAnnotation("FreeText");
+  const pageCenter = (pageBounds[0] + pageBounds[2]) / 2;
+  annotation.setRect([
+    pageCenter - 6,
+    heading.rect[1] - 2,
+    pageCenter + 18,
+    heading.rect[3] + 4
+  ]);
+  annotation.setContents(heading.number);
+  annotation.setDefaultAppearance("Helv", 14, [0, 0, 0]);
+  annotation.setQuadding(1);
+  annotation.setBorderWidth(0);
+  annotation.update();
 }
 
 export async function repairPdf(
   file: File,
   terms: string[],
   removeDefaultLabels: boolean,
+  replaceLegacyHeadings: boolean,
   progress: (message: string) => void
 ): Promise<PdfRepairResult> {
   if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) throw new Error("Choose a PDF file.");
-  if (terms.length === 0 && !removeDefaultLabels) throw new Error("Enter at least one student or university name to remove.");
-
-  const pdfjsLib = await import("pdfjs-dist");
-  const pdfWorker = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
-  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
-  const source = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
-  const output = await PDFDocument.create();
-  const searchableFont = await output.embedFont(StandardFonts.Helvetica);
-  let matches = 0;
-  let selectableItems = 0;
-
-  for (let pageNumber = 1; pageNumber <= source.numPages; pageNumber++) {
-    progress(`Repairing page ${pageNumber} of ${source.numPages}…`);
-    const page = await source.getPage(pageNumber);
-    const viewport = page.getViewport({ scale: 2 });
-    const original = page.getViewport({ scale: 1 });
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.ceil(viewport.width);
-    canvas.height = Math.ceil(viewport.height);
-    const context = canvas.getContext("2d", { alpha: false });
-    if (!context) throw new Error("This browser cannot prepare the repaired PDF.");
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvas, canvasContext: context, viewport }).promise;
-
-    const content = await page.getTextContent();
-    const searchableItems: Array<{ text: string; transform: number[] }> = [];
-    for (const raw of content.items) {
-      if (!("str" in raw) || !raw.str.trim() || !("transform" in raw) || !("width" in raw)) continue;
-      selectableItems++;
-      const ranges = mergeRanges([
-        ...findRedactionRanges(raw.str, terms),
-        ...(removeDefaultLabels ? defaultLabelRanges(raw.str) : [])
-      ]);
-      searchableItems.push({ text: textWithoutRanges(raw.str, ranges), transform: Array.from(raw.transform) });
-      if (ranges.length === 0) continue;
-      const transformed = pdfjsLib.Util.transform(viewport.transform, raw.transform);
-      const fontHeight = Math.max(8, Math.hypot(transformed[2], transformed[3]));
-      const itemWidth = Math.max(fontHeight, raw.width * 2);
-      for (const range of ranges) {
-        const startRatio = range.start / Math.max(1, raw.str.length);
-        const endRatio = range.end / Math.max(1, raw.str.length);
-        const x = transformed[4] + itemWidth * startRatio - 3;
-        const width = itemWidth * (endRatio - startRatio) + 6;
-        const y = transformed[5] - fontHeight * 1.08;
-        context.fillStyle = "#ffffff";
-        context.fillRect(x, y, width, fontHeight * 1.35);
-        matches++;
-      }
-    }
-
-    const image = await output.embedJpg(await (await canvasBlob(canvas)).arrayBuffer());
-    const outputPage = output.addPage([original.width, original.height]);
-    outputPage.drawImage(image, { x: 0, y: 0, width: original.width, height: original.height });
-    // The rendered page preserves appearance. This invisible text layer restores
-    // search, copy/paste, accessibility, and word counting without reintroducing
-    // any of the redacted names or labels.
-    for (const item of searchableItems) addSearchableText(outputPage, searchableFont, item.text, item.transform);
-    canvas.width = 1;
-    canvas.height = 1;
-    await new Promise((resolve) => window.setTimeout(resolve, 0));
+  if (terms.length === 0 && !removeDefaultLabels && !replaceLegacyHeadings) {
+    throw new Error("Choose at least one repair option or enter a name to remove.");
   }
 
-  if (selectableItems === 0) throw new Error("This PDF has no selectable text. Scanned image-only PDFs need OCR before automatic redaction.");
-  if (matches === 0) throw new Error("No matching names or title-page labels were found. Enter the text exactly as it appears in the PDF.");
+  progress("Opening the original PDF text…");
+  const mupdf = await import("mupdf");
+  const source = mupdf.Document.openDocument(new Uint8Array(await file.arrayBuffer()), "application/pdf");
+  const pdf = source.asPDF();
+  if (!pdf) {
+    source.destroy();
+    throw new Error("This file is not a valid PDF.");
+  }
 
-  progress("Preparing download…");
-  const bytes = await output.save({ useObjectStreams: true });
-  const copied = Uint8Array.from(bytes);
-  return { blob: new Blob([copied.buffer], { type: "application/pdf" }), matches, pages: source.numPages };
+  let matches = 0;
+  let selectableWords = 0;
+  let headingsReplaced = 0;
+
+  try {
+    for (let pageNumber = 0; pageNumber < pdf.countPages(); pageNumber++) {
+      progress(`Editing page ${pageNumber + 1} of ${pdf.countPages()}…`);
+      const page = pdf.loadPage(pageNumber) as PDFPage;
+      const pageBounds = page.getBounds();
+      const { lines, text } = extractLines(page);
+      selectableWords += countWords(text);
+      const redactions = new Map<string, Rect>();
+      const numberedHeadings: NumberedHeading[] = [];
+
+      for (const term of terms) {
+        for (const hit of page.search(term, {})) {
+          const rect = quadBounds(hit);
+          redactions.set(rectKey(rect), rect);
+          matches++;
+        }
+      }
+
+      if (removeDefaultLabels) {
+        for (const line of lines) {
+          const normalized = line.text.trim().replace(/[:_\s]+$/g, "").trim();
+          if (DEFAULT_LABELS.some((label) => normalized.toLocaleLowerCase() === label.toLocaleLowerCase())) {
+            redactions.set(rectKey(line.bbox), line.bbox);
+            matches++;
+          }
+        }
+      }
+
+      if (replaceLegacyHeadings) {
+        const heading = legacyHeading(lines, pageBounds);
+        if (heading) {
+          headingsReplaced++;
+          redactions.set(rectKey(heading.bbox), heading.bbox);
+          numberedHeadings.push({ rect: heading.bbox, number: String(headingsReplaced) });
+        }
+      }
+
+      for (const rect of redactions.values()) addRedaction(page, rect);
+      if (redactions.size > 0) {
+        page.applyRedactions(
+          false,
+          mupdf.PDFPage.REDACT_IMAGE_NONE,
+          mupdf.PDFPage.REDACT_LINE_ART_NONE,
+          mupdf.PDFPage.REDACT_TEXT_REMOVE
+        );
+      }
+      for (const heading of numberedHeadings) addNumber(page, pageBounds, heading);
+      page.destroy();
+      await new Promise((resolve) => globalThis.setTimeout(resolve, 0));
+    }
+
+    if (selectableWords === 0) {
+      throw new Error("This PDF contains no real text. It is an image-only scan and needs OCR before words can be edited.");
+    }
+    if (matches === 0 && headingsReplaced === 0) {
+      throw new Error("No matching names, labels, or old document headings were found.");
+    }
+
+    if (headingsReplaced > 0) pdf.bake(true, false);
+    progress("Verifying searchable words…");
+    const saved = pdf.saveToBuffer("garbage,compress").asUint8Array();
+    const verification = mupdf.Document.openDocument(saved, "application/pdf");
+    let searchableText = "";
+    try {
+      for (let index = 0; index < verification.countPages(); index++) {
+        const page = verification.loadPage(index);
+        const structured = page.toStructuredText({});
+        searchableText += `\n${structured.asText()}`;
+        structured.destroy();
+        page.destroy();
+      }
+    } finally {
+      verification.destroy();
+    }
+    const words = countWords(searchableText);
+    if (words === 0) throw new Error("The PDF repair did not preserve searchable words. No output was created.");
+    const remainingTerms = terms.filter((term) => findRedactionRanges(searchableText, [term]).length > 0);
+    if (remainingTerms.length > 0) {
+      throw new Error("One or more requested names could still be extracted, so no output was created. Check the spelling and try again.");
+    }
+
+    const copied = Uint8Array.from(saved);
+    return {
+      blob: new Blob([copied.buffer], { type: "application/pdf" }),
+      matches,
+      pages: pdf.countPages(),
+      words,
+      headingsReplaced
+    };
+  } finally {
+    source.destroy();
+  }
 }
