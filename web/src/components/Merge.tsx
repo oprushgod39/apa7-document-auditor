@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { mergeDocuments, previewMergeDocuments } from "../lib/api";
+import { parseRedactionTerms, repairPdf, type PdfRepairResult } from "../lib/pdfRedaction";
 
 interface MergeFile {
   id: string;
@@ -164,6 +165,77 @@ export function MergeScreen() {
           </div>
         </aside>
       </div>
+      <PdfRepairPanel />
     </section>
   );
+}
+
+function PdfRepairPanel() {
+  const [file, setFile] = useState<File | null>(null);
+  const [terms, setTerms] = useState("");
+  const [removeLabels, setRemoveLabels] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState("Upload a faulty merged PDF to begin.");
+  const [result, setResult] = useState<PdfRepairResult | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const choose = (selected: File | null) => {
+    setResult(null);
+    if (!selected) return setFile(null);
+    if (selected.type !== "application/pdf" && !/\.pdf$/i.test(selected.name)) {
+      setFile(null);
+      setStatus("Choose a PDF file.");
+      return;
+    }
+    setFile(selected);
+    setStatus("Enter each student or university name exactly as it appears in the PDF.");
+  };
+
+  const run = async () => {
+    if (!file) return;
+    setBusy(true);
+    setResult(null);
+    try {
+      const repaired = await repairPdf(file, parseRedactionTerms(terms), removeLabels, setStatus);
+      setResult(repaired);
+      setStatus(`${repaired.matches} matching text item${repaired.matches === 1 ? "" : "s"} removed across ${repaired.pages} pages.`);
+    } catch (cause) {
+      setStatus(cause instanceof Error ? cause.message : "The PDF could not be repaired.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const download = () => {
+    if (!result || !file) return;
+    const url = URL.createObjectURL(result.blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${file.name.replace(/\.pdf$/i, "")}_anonymized.pdf`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 2_000);
+  };
+
+  return <section className="pdf-repair">
+    <div className="pdf-repair-copy">
+      <span className="eyebrow">Optional PDF repair</span>
+      <h2>Remove names from a faulty PDF.</h2>
+      <p>Use this after merging if an older PDF still contains a student or university name. Processing stays in your browser, and the repaired PDF contains no hidden searchable text layer.</p>
+    </div>
+    <div className="pdf-repair-form">
+      <button className="pdf-repair-file" onClick={() => inputRef.current?.click()}>
+        <span>PDF</span><div><strong>{file ? "PDF selected" : "Choose faulty PDF"}</strong><small>{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "One PDF at a time"}</small></div>
+      </button>
+      <input ref={inputRef} type="file" accept=".pdf,application/pdf" hidden onChange={(event) => choose(event.target.files?.[0] ?? null)} />
+      <label className="pdf-repair-terms"><span>Names and universities to remove</span><textarea rows={4} value={terms} onChange={(event) => { setTerms(event.target.value); setResult(null); }} placeholder={"Mahesh\nRiverside University\nAnother student name"} /><small>Enter one exact name per line. Commas and semicolons also work.</small></label>
+      <label className="pdf-repair-labels"><input type="checkbox" checked={removeLabels} onChange={(event) => { setRemoveLabels(event.target.checked); setResult(null); }} /><span><strong>Also remove default title-page labels</strong><small>Name, University, Subject code and name, Professor, and Due date.</small></span></label>
+      <div className="pdf-repair-actions">
+        <button className="btn primary" disabled={!file || busy || (parseRedactionTerms(terms).length === 0 && !removeLabels)} onClick={() => void run()}>{busy ? "Repairing PDF…" : "Find & remove"}</button>
+        <button className="btn" disabled={!result || busy} onClick={download}>Download anonymized PDF</button>
+      </div>
+      <p className={`pdf-repair-status${busy ? " busy" : ""}`} aria-live="polite"><span />{status}</p>
+    </div>
+  </section>;
 }
