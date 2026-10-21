@@ -3,6 +3,7 @@ import { buildDocumentModel, type ParagraphModel, type TableModel } from "../doc
 import { AppError } from "../errors.js";
 import { MergePdfRenderer } from "./pdf_render.js";
 import { buildAppendixParagraphs, REFERENCE_HEADING } from "./word_count.js";
+import { mergeExcludedTitleParagraphIndexes } from "./filters.js";
 
 export interface MergeInput {
   name: string;
@@ -51,10 +52,11 @@ export async function mergeDocuments(inputs: MergeInput[], appendixWords: number
 
       const reference = model.paragraphs.find((p) => REFERENCE_HEADING.test(p.text.trim()));
       const cutoff = reference?.blockIndex ?? Number.POSITIVE_INFINITY;
+      const excludedTitleParagraphs = mergeExcludedTitleParagraphIndexes(model);
 
       const blocks: Block[] = [
         ...model.paragraphs
-          .filter((p) => p.blockIndex < cutoff)
+          .filter((p) => p.blockIndex < cutoff && !excludedTitleParagraphs.has(p.index))
           .map((paragraph): Block => ({ kind: "paragraph", blockIndex: paragraph.blockIndex, paragraph })),
         ...model.tables
           .filter((t) => t.blockIndex < cutoff)

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { DocxPackage } from "../docx/package.js";
 import { buildDocumentModel } from "../docx/model.js";
 import { descendantsW, paragraphText } from "../docx/xml.js";
+import { mergeExcludedTitleParagraphIndexes } from "./filters.js";
 
 const WORD_PATTERN = /[\p{L}\p{N}]+(?:['’.-][\p{L}\p{N}]+)*/gu;
 /**
@@ -22,9 +23,12 @@ export async function countDocumentWords(buffer: Buffer): Promise<number> {
   const model = await buildDocumentModel(await DocxPackage.load(buffer));
   const reference = model.paragraphs.find((paragraph) => REFERENCE_HEADING.test(paragraph.text.trim()));
   const cutoff = reference?.blockIndex ?? Number.POSITIVE_INFINITY;
+  const excludedTitleParagraphs = mergeExcludedTitleParagraphIndexes(model);
   let words = 0;
   for (const paragraph of model.paragraphs) {
-    if (paragraph.blockIndex < cutoff) words += countWords(paragraph.text);
+    if (paragraph.blockIndex < cutoff && !excludedTitleParagraphs.has(paragraph.index)) {
+      words += countWords(paragraph.text);
+    }
   }
   for (const table of model.tables) {
     if (table.blockIndex >= cutoff) continue;

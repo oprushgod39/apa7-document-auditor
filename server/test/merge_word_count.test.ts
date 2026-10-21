@@ -20,6 +20,22 @@ describe("merge word count", () => {
     expect(await countDocumentWords(document)).toBe(13);
   });
 
+  it("excludes title-page details from the preview word count", async () => {
+    const document = await buildDocx({
+      paragraphs: [
+        { text: "A Paper Title" },
+        { text: "Name" },
+        { text: "University" },
+        { text: "Subject code and name" },
+        { text: "Professor _____" },
+        { text: "Due date", pageBreakAfter: true },
+        { text: "Exactly four body words remain." },
+      ],
+    });
+
+    expect(await countDocumentWords(document)).toBe(8);
+  });
+
   it("builds an exact appendix word budget by repeating and truncating the source", async () => {
     const paragraphs = await buildAppendixParagraphs(9000);
     expect(paragraphs.reduce((sum, paragraph) => sum + countWords(paragraph.text), 0)).toBe(9000);

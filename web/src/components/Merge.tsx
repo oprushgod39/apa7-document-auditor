@@ -134,7 +134,7 @@ export function MergeScreen() {
             <div className="merge-queue-head"><div><span>{items.length}</span><strong>Documents in final order</strong></div><button onClick={() => setItems([])}>Clear all</button></div>
             {items.map((item, index) => <article className="merge-item" key={item.id}>
               <span className="merge-order">{String(index + 1).padStart(2, "0")}</span>
-              <div className="merge-file-copy"><strong>{item.file.name}</strong><small>{(item.file.size / 1024 / 1024).toFixed(2)} MB · {counting ? "Counting…" : `${((contentCounts[item.id] ?? 0) + countWords(item.name)).toLocaleString()} words`} · References excluded</small></div>
+              <div className="merge-file-copy"><strong>{item.file.name}</strong><small>{(item.file.size / 1024 / 1024).toFixed(2)} MB · {counting ? "Counting…" : `${((contentCounts[item.id] ?? 0) + countWords(item.name)).toLocaleString()} words`} · Student details and references excluded</small></div>
               <label><small>Heading in merged file</small><input value={item.name} maxLength={200} onChange={(event) => setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, name: event.target.value } : entry))} /></label>
               <div className="merge-controls">
                 <button aria-label={`Move ${item.file.name} up`} disabled={index === 0} onClick={() => move(index, -1)}>↑</button>
@@ -150,12 +150,12 @@ export function MergeScreen() {
             <span className="eyebrow">Final document recipe</span>
             <ol>
               <li><span>1</span><div><strong>Centered document heading</strong><small>Editable above for every student or submission.</small></div></li>
-              <li><span>2</span><div><strong>Original document content</strong><small>Formatting, tables, and images stay intact.</small></div></li>
+              <li><span>2</span><div><strong>Original document content</strong><small>Body formatting, tables, and images stay intact; title-page details are omitted.</small></div></li>
               <li><span>3</span><div><strong>References removed</strong><small>References, Bibliography, or Works Cited through the end.</small></div></li>
               <li><span>4</span><div><strong>Controlled appendix</strong><small>The source repeats as needed and stops at your exact word target.</small></div></li>
             </ol>
             <div className="word-budget" aria-live="polite">
-              <div><span>Before appendix</span><strong>{counting ? "Counting…" : documentWords.toLocaleString()}</strong><small>words · references excluded</small></div>
+              <div><span>Before appendix</span><strong>{counting ? "Counting…" : documentWords.toLocaleString()}</strong><small>words · student details and references excluded</small></div>
               <label><span>Appendix word target</span><input type="number" min={0} max={50000} step={100} value={appendixWords} onChange={(event) => setAppendixWords(Math.max(0, Math.min(50000, Number.parseInt(event.target.value || "0", 10))))} /></label>
               <div className="projected-total"><span>Projected final total</span><strong>{projectedWords.toLocaleString()}</strong><small>words · IGNORE label excluded</small></div>
               {appendixSourceWords > 0 && <p>Global-warming source: {appendixSourceWords.toLocaleString()} words. It repeats automatically when your target is longer.</p>}

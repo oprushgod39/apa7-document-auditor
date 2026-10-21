@@ -87,6 +87,60 @@ describe("mergeDocuments", () => {
     expect(flat).not.toContain("Works Cited");
   }, 60_000);
 
+  it("removes the source title page and its student details before merging", async () => {
+    const doc = await buildDocx({
+      paragraphs: [
+        { text: "A Paper Title", align: "center" },
+        { text: "Jordan Rivera", align: "center" },
+        { text: "Riverside University", align: "center" },
+        { text: "PSY 301: Cognitive Psychology", align: "center" },
+        { text: "Professor Maya Chen", align: "center" },
+        { text: "October 21, 2026", align: "center", pageBreakAfter: true },
+        { text: "This body paragraph must remain in the merged document." },
+      ],
+    });
+
+    const output = await mergeDocuments(
+      [{ name: "Student Submission", originalName: "student.docx", buffer: doc }],
+      0
+    );
+    const { text } = await extractPdfText(output);
+    const flat = text.replace(/\s+/g, " ");
+
+    expect(flat).toContain("Student Submission");
+    expect(flat).toContain("This body paragraph must remain");
+    expect(flat).toContain("A Paper Title");
+    expect(flat).not.toContain("Jordan Rivera");
+    expect(flat).not.toContain("Riverside University");
+    expect(flat).not.toContain("PSY 301");
+    expect(flat).not.toContain("Professor Maya Chen");
+    expect(flat).not.toContain("October 21, 2026");
+  }, 60_000);
+
+  it("removes standalone default title-detail labels even when no page break exists", async () => {
+    const doc = await buildDocx({
+      paragraphs: [
+        { text: "Name" },
+        { text: "University" },
+        { text: "Subject code and name" },
+        { text: "Professor" },
+        { text: "Due date" },
+        { text: "Body content remains available." },
+      ],
+    });
+
+    const output = await mergeDocuments(
+      [{ name: "Submission", originalName: "labels.docx", buffer: doc }],
+      0
+    );
+    const { text } = await extractPdfText(output);
+    const flat = text.replace(/\s+/g, " ");
+
+    expect(flat).toContain("Body content remains available");
+    expect(flat).not.toContain("Subject code and name");
+    expect(flat).not.toContain("Due date");
+  }, 60_000);
+
   it("does not crash when a source document contains an embedded image, and renders the surrounding content", async () => {
     const doc = await buildDocx({
       paragraphs: [
