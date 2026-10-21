@@ -174,7 +174,7 @@ export function apiRouter(): Router {
         const file = files[index]!;
         if (path.extname(file.originalname).toLowerCase() !== ".docx") throw Errors.unsupportedType();
         await DocxPackage.load(file.buffer);
-        inputs.push({ name: `Document ${index + 1}`, originalName: file.originalname, buffer: file.buffer });
+        inputs.push({ name: String(index + 1), originalName: file.originalname, buffer: file.buffer });
       }
 
       const appendixWords = Number.parseInt(String(req.body?.appendixWords ?? "0"), 10);
@@ -243,7 +243,7 @@ export function apiRouter(): Router {
           }
           await DocxPackage.load(buffer);
           inputs.push({
-            name: `Document ${inputs.length + 1}`,
+            name: String(inputs.length + 1),
             originalName: document.originalName,
             buffer,
           });

@@ -155,13 +155,13 @@ describe("mergeDocuments", () => {
     });
 
     const output = await mergeDocuments(
-      [{ name: "Document 1", originalName: "student-name-assignment.docx", buffer: doc }],
+      [{ name: "1", originalName: "student-name-assignment.docx", buffer: doc }],
       0
     );
     const { text } = await extractPdfText(output);
     const flat = text.replace(/\s+/g, " ");
 
-    expect(flat).toContain("Document 1");
+    expect(flat).toContain("1");
     expect(flat).toContain("Research Paper Title");
     expect(flat).toContain("This sufficiently long body paragraph remains intact");
     expect(flat).not.toContain("Jordan Rivera");

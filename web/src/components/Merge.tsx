@@ -10,7 +10,7 @@ interface MergeFile {
 const MERGE_MAX_DOCUMENTS = 50;
 
 function anonymousHeading(index: number): string {
-  return `Document ${index + 1}`;
+  return String(index + 1);
 }
 
 function countWords(text: string): number {
@@ -147,7 +147,7 @@ export function MergeScreen() {
           <div className="merge-summary">
             <span className="eyebrow">Final document recipe</span>
             <ol>
-              <li><span>1</span><div><strong>Anonymous document heading</strong><small>Uses Document 1, Document 2, and so on—never the uploaded filename.</small></div></li>
+              <li><span>1</span><div><strong>Numbered document heading</strong><small>Uses 1, 2, 3, and so on—never the uploaded filename.</small></div></li>
               <li><span>2</span><div><strong>Original document content</strong><small>Body formatting, tables, and images stay intact; title-page details are omitted.</small></div></li>
               <li><span>3</span><div><strong>References removed</strong><small>References, Bibliography, or Works Cited through the end.</small></div></li>
               <li><span>4</span><div><strong>Controlled appendix</strong><small>The source repeats as needed and stops at your exact word target.</small></div></li>
