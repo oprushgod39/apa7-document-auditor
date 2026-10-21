@@ -141,6 +141,34 @@ describe("mergeDocuments", () => {
     expect(flat).not.toContain("Due date");
   }, 60_000);
 
+  it("removes detected names and university details from a malformed opening without a page break", async () => {
+    const doc = await buildDocx({
+      paragraphs: [
+        { text: "Research Paper Title" },
+        { text: "Jordan Rivera" },
+        { text: "Riverside University" },
+        { text: "PSY 301: Cognitive Psychology" },
+        { text: "Professor Maya Chen" },
+        { text: "October 21, 2026" },
+        { text: "This sufficiently long body paragraph remains intact and is not mistaken for title-page metadata by the document merger." },
+      ],
+    });
+
+    const output = await mergeDocuments(
+      [{ name: "Document 1", originalName: "student-name-assignment.docx", buffer: doc }],
+      0
+    );
+    const { text } = await extractPdfText(output);
+    const flat = text.replace(/\s+/g, " ");
+
+    expect(flat).toContain("Document 1");
+    expect(flat).toContain("Research Paper Title");
+    expect(flat).toContain("This sufficiently long body paragraph remains intact");
+    expect(flat).not.toContain("Jordan Rivera");
+    expect(flat).not.toContain("Riverside University");
+    expect(flat).not.toContain("Professor Maya Chen");
+  }, 60_000);
+
   it("does not crash when a source document contains an embedded image, and renders the surrounding content", async () => {
     const doc = await buildDocx({
       paragraphs: [

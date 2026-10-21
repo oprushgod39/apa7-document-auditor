@@ -4,14 +4,12 @@ import { mergeDocuments, previewMergeDocuments } from "../lib/api";
 interface MergeFile {
   id: string;
   file: File;
-  name: string;
 }
 
 const MERGE_MAX_DOCUMENTS = 50;
 
-function suggestedName(filename: string): string {
-  const stem = filename.replace(/\.docx$/i, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
-  return stem || "Student submission";
+function anonymousHeading(index: number): string {
+  return `Document ${index + 1}`;
 }
 
 function countWords(text: string): number {
@@ -30,7 +28,7 @@ export function MergeScreen() {
   const inputRef = useRef<HTMLInputElement>(null);
   const totalSize = useMemo(() => items.reduce((sum, item) => sum + item.file.size, 0), [items]);
   const fileSignature = useMemo(() => items.map((item) => `${item.id}:${item.file.size}:${item.file.lastModified}`).join("|"), [items]);
-  const documentWords = useMemo(() => items.reduce((sum, item) => sum + (contentCounts[item.id] ?? 0) + countWords(item.name), 0), [items, contentCounts]);
+  const documentWords = useMemo(() => items.reduce((sum, item, index) => sum + (contentCounts[item.id] ?? 0) + countWords(anonymousHeading(index)), 0), [items, contentCounts]);
   const projectedWords = documentWords + appendixWords;
 
   useEffect(() => {
@@ -60,7 +58,7 @@ export function MergeScreen() {
         const key = `${file.name}|${file.size}|${file.lastModified}`;
         if (!known.has(key) && next.length < MERGE_MAX_DOCUMENTS) {
           known.add(key);
-          next.push({ id: crypto.randomUUID(), file, name: suggestedName(file.name) });
+          next.push({ id: crypto.randomUUID(), file });
         }
       }
       if (current.length + docx.length > MERGE_MAX_DOCUMENTS) setError(`A merge can contain no more than ${MERGE_MAX_DOCUMENTS} documents.`);
@@ -80,11 +78,10 @@ export function MergeScreen() {
 
   const runMerge = async () => {
     if (items.length < 2) return setError("Add at least two DOCX files to create a merged document.");
-    if (items.some((item) => !item.name.trim())) return setError("Each document needs a heading name.");
     setBusy(true);
     setError(null);
     try {
-      const blob = await mergeDocuments(items.map(({ file, name }) => ({ file, name: name.trim() })), appendixWords);
+      const blob = await mergeDocuments(items.map(({ file }, index) => ({ file, name: anonymousHeading(index) })), appendixWords);
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
@@ -134,12 +131,12 @@ export function MergeScreen() {
             <div className="merge-queue-head"><div><span>{items.length}</span><strong>Documents in final order</strong></div><button onClick={() => setItems([])}>Clear all</button></div>
             {items.map((item, index) => <article className="merge-item" key={item.id}>
               <span className="merge-order">{String(index + 1).padStart(2, "0")}</span>
-              <div className="merge-file-copy"><strong>{item.file.name}</strong><small>{(item.file.size / 1024 / 1024).toFixed(2)} MB · {counting ? "Counting…" : `${((contentCounts[item.id] ?? 0) + countWords(item.name)).toLocaleString()} words`} · Student details and references excluded</small></div>
-              <label><small>Heading in merged file</small><input value={item.name} maxLength={200} onChange={(event) => setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, name: event.target.value } : entry))} /></label>
+              <div className="merge-file-copy"><strong>{anonymousHeading(index)}</strong><small>{(item.file.size / 1024 / 1024).toFixed(2)} MB · {counting ? "Counting…" : `${((contentCounts[item.id] ?? 0) + countWords(anonymousHeading(index))).toLocaleString()} words`} · Student details and references excluded</small></div>
+              <label><small>Anonymous heading in merged file</small><input value={anonymousHeading(index)} readOnly aria-readonly="true" /></label>
               <div className="merge-controls">
-                <button aria-label={`Move ${item.file.name} up`} disabled={index === 0} onClick={() => move(index, -1)}>↑</button>
-                <button aria-label={`Move ${item.file.name} down`} disabled={index === items.length - 1} onClick={() => move(index, 1)}>↓</button>
-                <button className="remove" aria-label={`Remove ${item.file.name}`} onClick={() => setItems((current) => current.filter((entry) => entry.id !== item.id))}>×</button>
+                <button aria-label={`Move ${anonymousHeading(index)} up`} disabled={index === 0} onClick={() => move(index, -1)}>↑</button>
+                <button aria-label={`Move ${anonymousHeading(index)} down`} disabled={index === items.length - 1} onClick={() => move(index, 1)}>↓</button>
+                <button className="remove" aria-label={`Remove ${anonymousHeading(index)}`} onClick={() => setItems((current) => current.filter((entry) => entry.id !== item.id))}>×</button>
               </div>
             </article>)}
           </div>}
@@ -149,7 +146,7 @@ export function MergeScreen() {
           <div className="merge-summary">
             <span className="eyebrow">Final document recipe</span>
             <ol>
-              <li><span>1</span><div><strong>Centered document heading</strong><small>Editable above for every student or submission.</small></div></li>
+              <li><span>1</span><div><strong>Anonymous document heading</strong><small>Uses Document 1, Document 2, and so on—never the uploaded filename.</small></div></li>
               <li><span>2</span><div><strong>Original document content</strong><small>Body formatting, tables, and images stay intact; title-page details are omitted.</small></div></li>
               <li><span>3</span><div><strong>References removed</strong><small>References, Bibliography, or Works Cited through the end.</small></div></li>
               <li><span>4</span><div><strong>Controlled appendix</strong><small>The source repeats as needed and stops at your exact word target.</small></div></li>

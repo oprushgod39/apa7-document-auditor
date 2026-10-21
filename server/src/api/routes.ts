@@ -174,9 +174,7 @@ export function apiRouter(): Router {
         const file = files[index]!;
         if (path.extname(file.originalname).toLowerCase() !== ".docx") throw Errors.unsupportedType();
         await DocxPackage.load(file.buffer);
-        const name = String(names[index] ?? "").trim().slice(0, 200);
-        if (!name) throw Errors.invalid("Document headings cannot be empty.");
-        inputs.push({ name, originalName: file.originalname, buffer: file.buffer });
+        inputs.push({ name: `Document ${index + 1}`, originalName: file.originalname, buffer: file.buffer });
       }
 
       const appendixWords = Number.parseInt(String(req.body?.appendixWords ?? "0"), 10);
@@ -245,7 +243,7 @@ export function apiRouter(): Router {
           }
           await DocxPackage.load(buffer);
           inputs.push({
-            name: document.name,
+            name: `Document ${inputs.length + 1}`,
             originalName: document.originalName,
             buffer,
           });
