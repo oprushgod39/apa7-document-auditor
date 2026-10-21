@@ -1,4 +1,4 @@
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts, type PDFFont, type PDFPage } from "pdf-lib";
 
 const DEFAULT_LABELS = ["Name", "University", "Subject code and name", "Professor", "Due date"];
 
@@ -39,6 +39,60 @@ function defaultLabelRanges(text: string): Array<{ start: number; end: number }>
     : [];
 }
 
+function mergeRanges(ranges: Array<{ start: number; end: number }>): Array<{ start: number; end: number }> {
+  const sorted = ranges.slice().sort((left, right) => left.start - right.start || left.end - right.end);
+  const merged: Array<{ start: number; end: number }> = [];
+  for (const range of sorted) {
+    const previous = merged[merged.length - 1];
+    if (!previous || range.start > previous.end) merged.push({ ...range });
+    else previous.end = Math.max(previous.end, range.end);
+  }
+  return merged;
+}
+
+export function textWithoutRanges(text: string, ranges: Array<{ start: number; end: number }>): string {
+  let result = "";
+  let cursor = 0;
+  for (const range of mergeRanges(ranges)) {
+    result += text.slice(cursor, range.start);
+    // Keep a separator so words on either side of removed content do not join together.
+    if (range.start > 0 && range.end < text.length) result += " ";
+    cursor = range.end;
+  }
+  return result + text.slice(cursor);
+}
+
+function searchableWinAnsiText(text: string, font: PDFFont): string {
+  let result = "";
+  for (const character of text) {
+    try {
+      font.encodeText(character);
+      result += character;
+    } catch {
+      result += " ";
+    }
+  }
+  return result;
+}
+
+function addSearchableText(
+  page: PDFPage,
+  font: PDFFont,
+  text: string,
+  transform: number[]
+): void {
+  const searchable = searchableWinAnsiText(text, font);
+  if (!searchable.trim()) return;
+  const size = Math.max(1, Math.hypot(transform[2] ?? 0, transform[3] ?? 0));
+  page.drawText(searchable, {
+    x: transform[4] ?? 0,
+    y: transform[5] ?? 0,
+    size,
+    font,
+    opacity: 0
+  });
+}
+
 function canvasBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("The repaired page could not be encoded.")), "image/jpeg", 0.94);
@@ -59,6 +113,7 @@ export async function repairPdf(
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
   const source = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
   const output = await PDFDocument.create();
+  const searchableFont = await output.embedFont(StandardFonts.Helvetica);
   let matches = 0;
   let selectableItems = 0;
 
@@ -77,10 +132,15 @@ export async function repairPdf(
     await page.render({ canvas, canvasContext: context, viewport }).promise;
 
     const content = await page.getTextContent();
+    const searchableItems: Array<{ text: string; transform: number[] }> = [];
     for (const raw of content.items) {
       if (!("str" in raw) || !raw.str.trim() || !("transform" in raw) || !("width" in raw)) continue;
       selectableItems++;
-      const ranges = [...findRedactionRanges(raw.str, terms), ...(removeDefaultLabels ? defaultLabelRanges(raw.str) : [])];
+      const ranges = mergeRanges([
+        ...findRedactionRanges(raw.str, terms),
+        ...(removeDefaultLabels ? defaultLabelRanges(raw.str) : [])
+      ]);
+      searchableItems.push({ text: textWithoutRanges(raw.str, ranges), transform: Array.from(raw.transform) });
       if (ranges.length === 0) continue;
       const transformed = pdfjsLib.Util.transform(viewport.transform, raw.transform);
       const fontHeight = Math.max(8, Math.hypot(transformed[2], transformed[3]));
@@ -100,6 +160,10 @@ export async function repairPdf(
     const image = await output.embedJpg(await (await canvasBlob(canvas)).arrayBuffer());
     const outputPage = output.addPage([original.width, original.height]);
     outputPage.drawImage(image, { x: 0, y: 0, width: original.width, height: original.height });
+    // The rendered page preserves appearance. This invisible text layer restores
+    // search, copy/paste, accessibility, and word counting without reintroducing
+    // any of the redacted names or labels.
+    for (const item of searchableItems) addSearchableText(outputPage, searchableFont, item.text, item.transform);
     canvas.width = 1;
     canvas.height = 1;
     await new Promise((resolve) => window.setTimeout(resolve, 0));
