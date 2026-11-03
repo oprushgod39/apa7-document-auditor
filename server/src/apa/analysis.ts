@@ -329,6 +329,26 @@ export function analyzeDocument(model: DocumentModel, annotatedMode = false): Do
   });
   normalizeStyleLevels(headings);
   inferAdjacentHeadingLevels(model, headings);
+  // Some papers use Heading1 for every tier, expressing nesting through
+  // alignment instead. Preserve that distinction instead of centering all.
+  const mixedAlignmentStyles = new Set(headings.filter((h) =>
+    h.fromStyle && h.level === 1 && paras[h.paragraphIndex]!.props.alignment === "center"
+  ).map((h) => paras[h.paragraphIndex]!.styleId));
+  for (const h of headings) {
+    const p = paras[h.paragraphIndex]!;
+    const firstBodyHeading = h === headings[0] && detectedMetadata.title &&
+      paras.slice(bodyStartIndex, h.paragraphIndex).every((q) => q.isEmpty ||
+        q.text.trim() === detectedMetadata.title!.trim());
+    const leftTier = h.fromStyle && p.props.alignment === "left" &&
+      mixedAlignmentStyles.has(p.styleId);
+    if (h.level === 1 && !h.marker && (firstBodyHeading || leftTier)) {
+      h.level = 2;
+      h.confidence = "medium";
+      h.signals.push(firstBodyHeading
+        ? "inferred Level 2: first body heading directly beneath the paper title"
+        : "inferred Level 2: left-aligned tier within a mixed-alignment Word heading style");
+    }
+  }
 
   // --- Citations (body only, excluding reference list) -----------------
   const citations: ParsedCitation[] = [];

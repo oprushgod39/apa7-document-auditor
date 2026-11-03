@@ -21,6 +21,22 @@ async function formatDocument(buf: Buffer, settings = defaultSettings()) {
 }
 
 describe("golden document formatting", () => {
+  it("handles a generated body title and mixed-alignment headings using the same Word style", async () => {
+    const spec = malformedStudentPaper();
+    spec.paragraphs.splice(6, 4,
+      { text: "Executive Stakeholder Interests and Priorities", style: "Heading1", bold: true, align: "center" },
+      { text: "The executive team works together to understand the different responsibilities and priorities of stakeholders throughout the project and to deliver the intended outcomes for the organisation." },
+      { text: "Individual Executive Priorities", style: "Heading1", bold: true, align: "left" },
+      { text: "The executives bring their own perspectives to the project and support their teams in delivering the intended benefits and outcomes for everyone involved in the organisation." },
+      { text: "Managing Scope, Budget, and Schedule", style: "Heading1", bold: true, align: "center" },
+      { text: "The team considers the scope and budget of the project and ensures that the schedule provides enough time for everyone to contribute and complete their work." },
+    );
+    const { out } = await formatDocument(await buildDocx(spec));
+    const model = await buildDocumentModel(await DocxPackage.load(out));
+    expect(model.paragraphs.find((p) => p.text === "Executive Stakeholder Interests and Priorities")!.props.alignment).toBe("left");
+    expect(model.paragraphs.find((p) => p.text === "Individual Executive Priorities")!.props.alignment).toBe("left");
+    expect(model.paragraphs.find((p) => p.text === "Managing Scope, Budget, and Schedule")!.props.alignment).toBe("center");
+  });
   it("formats adjacent parent and child headings with a centered parent and left-aligned siblings", async () => {
     const spec = malformedStudentPaper();
     spec.paragraphs.splice(7, 0,
