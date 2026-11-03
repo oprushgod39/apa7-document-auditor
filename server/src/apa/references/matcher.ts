@@ -89,6 +89,12 @@ function citationMatchesReference(
   }
   if (!yearOk) return null;
 
+  if (ref.isOrganizationAuthor) {
+    const normalizeOrganization = (s: string) => normName(s).replace(/&/g, "and").replace(/[^\p{L}\p{N}]/gu, "");
+    const rawAuthor = cit.raw.replace(/^\(/, "").replace(/,?\s*(?:\d{4}[a-z]?|n\.d\.)[\s\S]*$/, "").trim();
+    if (normalizeOrganization(rawAuthor) === normalizeOrganization(ref.authorsRaw)) return yearOk;
+  }
+
   const first = cit.authors[0];
   if (!first) return null;
   if (!surnameMatches(first, ref.surnames[0]!)) return null;

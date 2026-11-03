@@ -13,6 +13,7 @@ import {
 } from "./docx/edit.js";
 import { splitParagraphAtEmbeddedHeading } from "./docx/repair.js";
 import { replaceParagraphText } from "./docx/text.js";
+import { insertDraftCitations, clearConfirmedDrafts } from "./apa/citations/drafts.js";
 import { runEngine, allRules } from "./apa/engine.js";
 import { analyzeDocument, type DocumentAnalysis } from "./apa/analysis.js";
 import { HEADING_SPECS } from "./apa/rules/headings.js";
@@ -283,8 +284,7 @@ export async function processSession(session: Session): Promise<void> {
     });
     let changes: Change[] = [...preChanges, ...formatRun.changes];
 
-    // An approved suggestion from the previous audit is the only authority
-    // for adding a missing in-text citation. Revalidate its exact source and
+    // Revalidate approved suggestions against their exact source and
     // destination against the pristine document on every regeneration.
     if (fix && session.report) {
       for (const oldIssue of session.report.issues) {
@@ -316,6 +316,21 @@ export async function processSession(session: Session): Promise<void> {
             stage: "resolution", timestamp: new Date().toISOString(),
           });
         }
+      }
+    }
+
+    if (fix) {
+      const draftModel = await buildDocumentModel(pkg);
+      clearConfirmedDrafts(draftModel, session.resolutions);
+      if (session.settings.draftCitationPlacement && !session.settings.annotatedBibliography &&
+        !session.disabledRules.has("APA-CITATION-DRAFT")) {
+        const drafts = insertDraftCitations(draftModel, session.resolutions);
+        for (const change of drafts) {
+          const target = draftModel.paragraphs[change.location.paragraphIndex!];
+          const original = model.paragraphs.find((p) => p.el === target?.el);
+          if (original) change.location.paragraphIndex = original.index;
+        }
+        changes.push(...drafts);
       }
     }
 

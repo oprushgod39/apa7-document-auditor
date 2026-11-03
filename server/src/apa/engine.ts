@@ -17,6 +17,7 @@ import { titlePageRules } from "./rules/title_page.js";
 import { headingRules } from "./rules/headings.js";
 import { abstractRules } from "./rules/abstract.js";
 import { citationRules } from "./rules/citations.js";
+import { draftCitationRule } from "./citations/drafts.js";
 import { referenceRules } from "./rules/references.js";
 import { quotationRules } from "./rules/quotations.js";
 import { tableRules } from "./rules/tables.js";
@@ -34,6 +35,7 @@ export function allRules(): ApaRule[] {
     ...headingRules,
     ...abstractRules,
     ...citationRules,
+    draftCitationRule,
     ...referenceRules,
     ...quotationRules,
     ...tableRules,

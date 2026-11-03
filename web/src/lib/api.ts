@@ -147,6 +147,7 @@ export interface ProcessSettings {
   preserveWording: boolean;
   fixCitationMechanics: boolean;
   suggestMissingCitations?: boolean;
+  draftCitationPlacement?: boolean;
   verifyMetadata: boolean;
   annotatedBibliography?: boolean;
   headingOverrides?: Record<string, number>;

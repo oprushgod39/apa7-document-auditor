@@ -21,6 +21,42 @@ async function waitReady(id: string): Promise<void> {
 }
 
 describe("API workflow", () => {
+  it("inserts highlighted draft citations, requires review, and removes highlights after confirmation", async () => {
+    const spec = malformedStudentPaper();
+    const up = await request(app).post("/api/documents")
+      .attach("file", await buildDocx(spec), { filename: "draft.docx" });
+    const id = up.body.id as string;
+    expect((await request(app).post(`/api/documents/${id}/process`)
+      .send({ mode: "format", verifyMetadata: false, draftCitationPlacement: true })).status).toBe(202);
+    await waitReady(id);
+    const getDocument = async () => {
+      const response = await request(app).get(`/api/documents/${id}/download`).buffer(true)
+        .parse((res, cb) => { const chunks: Buffer[] = []; res.on("data", (c: Buffer) => chunks.push(c));
+          res.on("end", () => cb(null, Buffer.concat(chunks))); });
+      expect(response.status).toBe(200);
+      return DocxPackage.load(response.body as Buffer);
+    };
+    const first = await getDocument();
+    const model = await buildDocumentModel(first);
+    expect(model.paragraphs.some((p) => p.text.includes("(Adams, 2021)"))).toBe(true);
+    expect((await first.getXml("word/document.xml"))!.toString()).toContain('w:val="yellow"');
+    const report = (await request(app).get(`/api/documents/${id}/report`)).body.report;
+    const drafts = report.issues.filter((i: { ruleId: string }) => i.ruleId === "APA-CITATION-DRAFT");
+    expect(drafts).toHaveLength(1);
+    expect(report.state).toBe("review_required");
+    for (const issue of drafts) {
+      const key = [issue.ruleId, issue.location.paragraphIndex, issue.originalValue].join("|");
+      expect((await request(app).post(`/api/documents/${id}/resolve`)
+        .send({ issueKey: key, optionId: "confirmed" })).status).toBe(200);
+    }
+    await request(app).post(`/api/documents/${id}/generate`);
+    await waitReady(id);
+    const second = await getDocument();
+    expect((await second.getXml("word/document.xml"))!.toString()).not.toContain('w:val="yellow"');
+    expect((await buildDocumentModel(second)).paragraphs.map((p) => p.text).join(" ").match(/\(Adams, 2021\)/g)).toHaveLength(1);
+    const updated = (await request(app).get(`/api/documents/${id}/report`)).body.report;
+    expect(updated.issues.some((i: { ruleId: string }) => i.ruleId === "APA-CITATION-DRAFT")).toBe(false);
+  }, 30_000);
   it("suggests an uncited source and inserts it only after approval", async () => {
     const spec = malformedStudentPaper();
     spec.paragraphs.splice(9, 0, {

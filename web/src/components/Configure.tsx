@@ -39,6 +39,7 @@ export function ConfigureScreen(props: {
   const [preserveWording] = useState(true);
   const [fixCitationMechanics, setFixCitationMechanics] = useState(true);
   const [suggestMissingCitations, setSuggestMissingCitations] = useState(false);
+  const [draftCitationPlacement, setDraftCitationPlacement] = useState(false);
   const [verifyMetadata, setVerifyMetadata] = useState(true);
   const [annotatedBibliography, setAnnotatedBibliography] = useState(Boolean(d.annotatedBibliography));
   const [headingOverrides, setHeadingOverrides] = useState<Record<string, number>>({});
@@ -71,6 +72,7 @@ export function ConfigureScreen(props: {
       preserveWording,
       fixCitationMechanics,
       suggestMissingCitations,
+      draftCitationPlacement,
       verifyMetadata,
       annotatedBibliography,
       headingOverrides,
@@ -227,6 +229,14 @@ export function ConfigureScreen(props: {
               onChange={(e) => setSuggestMissingCitations(e.target.checked)} />
             <label htmlFor="citation-suggestions">Suggest locations for uncited references
               <div className="desc">Review any suggested passage and approve the citation before it is added. Uncertain matches stay as findings.</div>
+            </label>
+          </div>
+          <div className="switch-row">
+            <input type="checkbox" id="draft-citations" checked={draftCitationPlacement}
+              disabled={mode === "check"}
+              onChange={(e) => setDraftCitationPlacement(e.target.checked)} />
+            <label htmlFor="draft-citations">Draft citation placement — add missing citations automatically
+              <div className="desc">Proposed citations are highlighted yellow for you to check and rearrange. Placements are unverified; confirm each one in the results before the paper can be marked APA Validated. Check-only mode never inserts citations.</div>
             </label>
           </div>
           {mode === "format_verify" && (

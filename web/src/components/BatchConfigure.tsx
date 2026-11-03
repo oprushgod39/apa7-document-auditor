@@ -29,6 +29,7 @@ export function BatchConfigureScreen(props: {
   const [mode, setMode] = useState<"check" | "format" | "format_verify">("format_verify");
   const [preserveWording] = useState(true);
   const [fixCitationMechanics, setFixCitationMechanics] = useState(true);
+  const [draftCitationPlacement, setDraftCitationPlacement] = useState(false);
   const [verifyMetadata, setVerifyMetadata] = useState(true);
   const [showOptional, setShowOptional] = useState(false);
   const [meta, setMeta] = useState<Record<string, string>>({
@@ -53,6 +54,7 @@ export function BatchConfigureScreen(props: {
       mode,
       preserveWording,
       fixCitationMechanics,
+      draftCitationPlacement,
       verifyMetadata,
       metadata,
       instructorRequirements,
@@ -114,6 +116,13 @@ export function BatchConfigureScreen(props: {
 
       <div className="card">
         <h2>Mode</h2>
+        <div className="switch-row">
+          <input type="checkbox" id="batch-draft-citations" checked={draftCitationPlacement}
+            disabled={mode === "check"} onChange={(e) => setDraftCitationPlacement(e.target.checked)} />
+          <label htmlFor="batch-draft-citations">Draft citation placement — add missing citations automatically
+            <div className="desc">Highlights proposed citations yellow in every document. Review and confirm each placement in its results. Check-only mode never inserts citations.</div>
+          </label>
+        </div>
         <div className="radio-row" role="radiogroup" aria-label="Processing mode">
           {MODES.map((m) => (
             <label key={m.id} className={`radio-card${mode === m.id ? " selected" : ""}`}>
