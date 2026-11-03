@@ -21,6 +21,31 @@ async function formatDocument(buf: Buffer, settings = defaultSettings()) {
 }
 
 describe("golden document formatting", () => {
+  it("formats adjacent parent and child headings with a centered parent and left-aligned siblings", async () => {
+    const spec = malformedStudentPaper();
+    spec.paragraphs.splice(7, 0,
+      { text: "Managing Digital Transformation", bold: true, align: "center" },
+      { text: "Executive Stakeholder Interests and Priorities", bold: true, align: "center" },
+      { text: "The executive team works together on the responsibilities and priorities involved in delivering successful project outcomes across the organisation and supporting its people throughout the process." },
+      { text: "Individual Executive Priorities", bold: true, align: "center" },
+      { text: "The individual executives bring different perspectives to the project and work with their teams to ensure that the organisation can deliver the intended benefits to its people." },
+    );
+    const { out } = await formatDocument(await buildDocx(spec));
+    const model = await buildDocumentModel(await DocxPackage.load(out));
+    for (const [text, alignment] of [
+      ["Managing Digital Transformation", "center"],
+      ["Executive Stakeholder Interests and Priorities", "left"],
+      ["Individual Executive Priorities", "left"],
+    ]) {
+      const p = model.paragraphs.find((p) => p.text === text)!;
+      expect(p.props.alignment).toBe(alignment);
+      expect(p.props.firstLineIndent ?? 0).toBe(0);
+      expect(p.runProps.bold).toBe(true);
+    }
+    // The formatted output retains its hierarchy on a second analysis.
+    expect(analyzeDocument(model).headings.filter((h) => /Executive.*Priorities/.test(h.text))
+      .map((h) => h.level)).toEqual([2, 2]);
+  });
   it("fixes margins, spacing, fonts, indents, references — and passes audit", async () => {
     const original = await buildDocx(malformedStudentPaper());
     const { out, run } = await formatDocument(original);

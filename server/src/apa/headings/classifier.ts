@@ -140,6 +140,40 @@ export function normalizeStyleLevels(headings: ClassifiedHeading[]): void {
   }
 }
 
+/** Infer a subordinate tier from adjacent section headings, after body-title
+ * removal. Explicit markers and existing deeper Word levels retain priority.
+ * Matching source formatting carries the inferred tier to sibling headings.
+ */
+export function inferAdjacentHeadingLevels(model: DocumentModel, headings: ClassifiedHeading[]): void {
+  const signature = (h: ClassifiedHeading) => {
+    const p = model.paragraphs[h.paragraphIndex]!;
+    return JSON.stringify([p.styleId, p.props.alignment, p.runProps.bold, p.runProps.italic]);
+  };
+  let siblingSignature: string | null = null;
+  for (let i = 0; i < headings.length; i++) {
+    const h = headings[i]!;
+    if (h.marker || h.level !== 1) {
+      siblingSignature = null;
+      continue;
+    }
+    const previous = headings[i - 1];
+    const adjacent = previous?.level === 1 &&
+      model.paragraphs.slice(previous.paragraphIndex + 1, h.paragraphIndex)
+        .every((p) => p.isEmpty && !p.hasDrawing);
+    if (adjacent) siblingSignature = signature(h);
+    else if (SECTION_HEADING_WORDS.test(h.text) || signature(h) !== siblingSignature) {
+      siblingSignature = null;
+    }
+    if (siblingSignature !== null) {
+      h.level = 2;
+      h.confidence = "medium";
+      h.signals.push(adjacent
+        ? "inferred Level 2: immediately follows a main section heading"
+        : "inferred Level 2: matches the preceding subordinate heading's source formatting");
+    }
+  }
+}
+
 export function classifyParagraph(
   p: ParagraphModel,
   paras: ParagraphModel[],

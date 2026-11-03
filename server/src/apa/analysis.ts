@@ -14,6 +14,7 @@ import {
 import {
   classifyHeadings,
   normalizeStyleLevels,
+  inferAdjacentHeadingLevels,
   type ClassifiedHeading,
 } from "./headings/classifier.js";
 import type { TitlePageMetadata } from "./types.js";
@@ -327,6 +328,7 @@ export function analyzeDocument(model: DocumentModel, annotatedMode = false): Do
     return !isBodyTitle;
   });
   normalizeStyleLevels(headings);
+  inferAdjacentHeadingLevels(model, headings);
 
   // --- Citations (body only, excluding reference list) -----------------
   const citations: ParsedCitation[] = [];
