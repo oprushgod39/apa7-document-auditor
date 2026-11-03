@@ -267,7 +267,7 @@ describe("golden document formatting", () => {
     expect(method.props.leftIndent ?? 0).toBe(0);
   });
 
-  it("removes forced body pagination while retaining a heading with its following paragraph", async () => {
+  it("removes forced pagination and permits a heading at the foot of a page", async () => {
     const spec = malformedStudentPaper();
     spec.paragraphs[7]!.pageBreakBefore = true;
     spec.paragraphs[8]!.keepLines = true;
@@ -280,7 +280,7 @@ describe("golden document formatting", () => {
     const heading = model.paragraphs.find((p) => p.text.trim() === "Method")!;
     const body = model.paragraphs.find((p) => p.text.includes("Participants completed"))!;
     expect(heading.props.pageBreakBefore).toBe(false);
-    expect(heading.props.keepNext).toBe(true);
+    expect(heading.props.keepNext).toBe(false);
     expect(body.props.keepLines).toBe(false);
     expect(body.props.keepNext).toBe(false);
     expect(body.props.pageBreakBefore).toBe(false);

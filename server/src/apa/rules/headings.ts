@@ -90,7 +90,9 @@ function applyHeadingDirectFormatting(
   setParagraphAlignment(doc, p.el, spec.alignment);
   setParagraphIndent(doc, p.el, { firstLine: spec.firstLine, hanging: null, left: 0 });
   setPageBreakBefore(doc, p.el, false, true);
-  setParagraphKeepNext(doc, p.el, level < 4, true);
+  // Allow a standalone heading in the final available line, with its body
+  // continuing on the following page, as requested for this document flow.
+  setParagraphKeepNext(doc, p.el, false, true);
   setParagraphKeepLines(doc, p.el, true);
   setParagraphSpacing(doc, p.el, { before: 0, after: 0, line: 480, lineRule: "auto" });
   setParagraphContextualSpacing(doc, p.el);
@@ -167,10 +169,9 @@ export const headingRules: ApaRule[] = [
             firstLine: spec.firstLine,
             left: 0,
             contextualSpacing: true,
-            // Levels 4 and 5 are run-in headings. Keeping their hidden
-            // paragraph mark with the next paragraph defeats Word's style
-            // separator and leaves the body on a new physical line.
-            keepNext: level < 4,
+            // A source Heading style may inherit keep-with-next. Disable it
+            // at the style layer as well as directly on each paragraph.
+            keepNext: false,
           });
           markStylesDirty(ctx);
           fixedCount++;
