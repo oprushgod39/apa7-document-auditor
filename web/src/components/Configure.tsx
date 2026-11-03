@@ -235,8 +235,8 @@ export function ConfigureScreen(props: {
             <input type="checkbox" id="draft-citations" checked={draftCitationPlacement}
               disabled={mode === "check"}
               onChange={(e) => setDraftCitationPlacement(e.target.checked)} />
-            <label htmlFor="draft-citations">Draft citation placement — add missing citations automatically
-              <div className="desc">Proposed citations are highlighted yellow for you to check and rearrange. Placements are unverified; confirm each one in the results before the paper can be marked APA Validated. Check-only mode never inserts citations.</div>
+            <label htmlFor="draft-citations">Draft citation placement — at least 3 citations per body paragraph
+              <div className="desc">Adds proposed citations in normal text without color highlighting. Existing citations count toward the three. Review placements in the results; shortages of distinct references are flagged. Headings, title pages, tables, and reference lists are excluded. Check-only mode never inserts citations.</div>
             </label>
           </div>
           {mode === "format_verify" && (

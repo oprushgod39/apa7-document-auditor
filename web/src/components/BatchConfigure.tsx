@@ -119,8 +119,8 @@ export function BatchConfigureScreen(props: {
         <div className="switch-row">
           <input type="checkbox" id="batch-draft-citations" checked={draftCitationPlacement}
             disabled={mode === "check"} onChange={(e) => setDraftCitationPlacement(e.target.checked)} />
-          <label htmlFor="batch-draft-citations">Draft citation placement — add missing citations automatically
-            <div className="desc">Highlights proposed citations yellow in every document. Review and confirm each placement in its results. Check-only mode never inserts citations.</div>
+          <label htmlFor="batch-draft-citations">Draft citation placement — at least 3 citations per body paragraph
+            <div className="desc">Adds proposed citations in normal text without color highlighting. Existing citations count toward the three. Review placements in the results; shortages of distinct references are flagged. Headings, title pages, tables, and reference lists are excluded. Check-only mode never inserts citations.</div>
           </label>
         </div>
         <div className="radio-row" role="radiogroup" aria-label="Processing mode">

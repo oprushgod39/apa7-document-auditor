@@ -21,7 +21,7 @@ async function waitReady(id: string): Promise<void> {
 }
 
 describe("API workflow", () => {
-  it("inserts highlighted draft citations, requires review, and removes highlights after confirmation", async () => {
+  it("inserts three plain-text draft citations per body paragraph and requires review", async () => {
     const spec = malformedStudentPaper();
     const up = await request(app).post("/api/documents")
       .attach("file", await buildDocx(spec), { filename: "draft.docx" });
@@ -39,10 +39,10 @@ describe("API workflow", () => {
     const first = await getDocument();
     const model = await buildDocumentModel(first);
     expect(model.paragraphs.some((p) => p.text.includes("(Adams, 2021)"))).toBe(true);
-    expect((await first.getXml("word/document.xml"))!.toString()).toContain('w:val="yellow"');
+    expect((await first.getXml("word/document.xml"))!.toString()).not.toContain('w:val="yellow"');
     const report = (await request(app).get(`/api/documents/${id}/report`)).body.report;
     const drafts = report.issues.filter((i: { ruleId: string }) => i.ruleId === "APA-CITATION-DRAFT");
-    expect(drafts).toHaveLength(1);
+    expect(drafts).toHaveLength(6);
     expect(report.state).toBe("review_required");
     for (const issue of drafts) {
       const key = [issue.ruleId, issue.location.paragraphIndex, issue.originalValue].join("|");
@@ -53,7 +53,7 @@ describe("API workflow", () => {
     await waitReady(id);
     const second = await getDocument();
     expect((await second.getXml("word/document.xml"))!.toString()).not.toContain('w:val="yellow"');
-    expect((await buildDocumentModel(second)).paragraphs.map((p) => p.text).join(" ").match(/\(Adams, 2021\)/g)).toHaveLength(1);
+    expect((await buildDocumentModel(second)).paragraphs.map((p) => p.text).join(" ").match(/\(Adams, 2021\)/g)).toHaveLength(2);
     const updated = (await request(app).get(`/api/documents/${id}/report`)).body.report;
     expect(updated.issues.some((i: { ruleId: string }) => i.ruleId === "APA-CITATION-DRAFT")).toBe(false);
   }, 30_000);

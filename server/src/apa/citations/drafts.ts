@@ -7,13 +7,26 @@ import type { ApaRule, Change } from "../types.js";
 const PREFIX = "SWDraft_";
 const RULE = "APA-CITATION-DRAFT";
 const words = (s: string) => new Set(s.toLowerCase().match(/[\p{L}]{4,}/gu) ?? []);
+const TARGET = 3;
+
+function bodyParagraphs(model: DocumentModel, analysis: ReturnType<typeof analyzeDocument>) {
+  return model.paragraphs.filter((p) =>
+    p.index >= analysis.bodyStartIndex &&
+    (analysis.referencesHeadingIndex == null || p.index < analysis.referencesHeadingIndex) &&
+    !p.insideTable && !p.isEmpty &&
+    (p.text.trim().split(/\s+/).length >= 12 || /[.!?]$/.test(p.text.trim())) &&
+    p.text.trim() !== analysis.detectedMetadata.title?.trim() &&
+    !/^(?:table|figure)\s+\d+\b|^note\.\s/i.test(p.text.trim()) &&
+    !analysis.headings.some((h) => h.paragraphIndex === p.index));
+}
 
 export function clearConfirmedDrafts(model: DocumentModel, resolutions: Map<string, { optionId: string }>): void {
   for (const p of model.paragraphs) {
     for (const start of descendantsW(p.el, "bookmarkStart")) {
       const name = getAttrW(start, "name");
-      if (!name?.startsWith(PREFIX) || ![...resolutions].some(([key, value]) =>
-        key.endsWith(`|${name}`) && value.optionId === "confirmed")) continue;
+      if (!name?.startsWith(PREFIX)) continue;
+      const confirmed = [...resolutions].some(([key, value]) =>
+        key.endsWith(`|${name}`) && value.optionId === "confirmed");
       const id = getAttrW(start, "id");
       let node = start.nextSibling;
       while (node) {
@@ -21,14 +34,14 @@ export function clearConfirmedDrafts(model: DocumentModel, resolutions: Map<stri
         if (node.nodeType === 1) {
           const el = node as typeof start;
           if (el.localName === "bookmarkEnd" && getAttrW(el, "id") === id) {
-            el.parentNode!.removeChild(el);
+            if (confirmed) el.parentNode!.removeChild(el);
             break;
           }
           for (const h of descendantsW(el, "highlight")) h.parentNode!.removeChild(h);
         }
         node = next;
       }
-      start.parentNode!.removeChild(start);
+      if (confirmed) start.parentNode!.removeChild(start);
       model.pkg.markDirty("word/document.xml");
     }
   }
@@ -41,29 +54,28 @@ export function insertDraftCitations(
 ): Change[] {
   const analysis = analyzeDocument(model);
   if (analysis.annotatedBibliography) return [];
-  const bodies = model.paragraphs.filter((p) =>
-    p.index >= analysis.bodyStartIndex &&
-    (analysis.referencesHeadingIndex == null || p.index < analysis.referencesHeadingIndex) &&
-    !p.insideTable && !p.hasDrawing && p.text.trim().split(/\s+/).length >= 12 &&
-    !analysis.headings.some((h) => h.paragraphIndex === p.index));
+  const bodies = bodyParagraphs(model, analysis);
   if (!bodies.length) return [];
-  const counts = new Map<number, number>();
   let bookmarkId = Math.max(0, ...descendantsW(model.body, "bookmarkStart")
     .map((b) => Number(getAttrW(b, "id")) || 0)) + 1;
   const changes: Change[] = [];
-  for (const usage of analysis.matching.referenceUsage) {
-    if (usage.cited) continue;
-    const ref = analysis.references[usage.referenceIndex]!;
-    if (!ref.year || !ref.surnames.length) continue;
-    const name = PREFIX + createHash("sha256").update(ref.raw).digest("hex").slice(0, 24);
+  const placements = bodies.flatMap((target) => {
+    const citations = analysis.citations.filter((c) => c.paragraphIndex === target.index);
+    const existing = new Set(analysis.matching.citationMatches
+      .filter((match) => analysis.citations[match.citationIndex]?.paragraphIndex === target.index)
+      .flatMap((match) => match.referenceIndexes));
+    const targetWords = words(target.text);
+    return analysis.references.map((ref, index) => ({ ref, index,
+      score: [...words(`${ref.authorsRaw} ${ref.title ?? ""}`)].filter((w) => targetWords.has(w)).length,
+    })).filter(({ ref, index }) => ref.year && ref.surnames.length && !existing.has(index))
+      .sort((a, b) => b.score - a.score || a.index - b.index)
+      .slice(0, Math.max(0, TARGET - citations.length))
+      .map(({ ref }) => ({ ref, target }));
+  });
+  for (const { ref, target } of placements) {
+    const name = PREFIX + createHash("sha256").update(`${ref.raw}|${target.index}`).digest("hex").slice(0, 24);
     if (descendantsW(model.body, "bookmarkStart").some((b) => getAttrW(b, "name") === name)) continue;
     const confirmed = [...resolutions].some(([key, value]) => key.endsWith(`|${name}`) && value.optionId === "confirmed");
-    const sourceWords = words(`${ref.authorsRaw} ${ref.title ?? ""}`);
-    const ranked = bodies.map((p) => ({ p,
-      score: [...words(p.text)].filter((w) => sourceWords.has(w)).length,
-      used: counts.get(p.index) ?? 0,
-    })).sort((a, b) => b.score - a.score || a.used - b.used || a.p.index - b.p.index);
-    const target = ranked[0]!.p;
     const author = ref.isOrganizationAuthor ? ref.authorsRaw.trim().replace(/\.$/, "")
       : ref.surnames.map((s) => {
         // Recover the author's original spelling/capitalization from the reference.
@@ -88,11 +100,8 @@ export function insertDraftCitations(
     const properties = childW(lastRun, "rPr")?.cloneNode(true) ?? doc.createElementNS(NS.w, "w:rPr");
     run.appendChild(properties);
     for (const highlight of descendantsW(run, "highlight")) highlight.parentNode!.removeChild(highlight);
-    // A yellow highlight and named bookmark survive downloading/reuploading.
+    // An invisible bookmark tracks review status without coloring document text.
     if (!confirmed) {
-      const highlight = doc.createElementNS(NS.w, "w:highlight");
-      setAttrW(highlight, "val", "yellow");
-      properties.appendChild(highlight);
       const start = doc.createElementNS(NS.w, "w:bookmarkStart");
       setAttrW(start, "id", String(bookmarkId));
       setAttrW(start, "name", name);
@@ -108,7 +117,6 @@ export function insertDraftCitations(
       setAttrW(end, "id", String(bookmarkId++));
       target.el.appendChild(end);
     }
-    counts.set(target.index, (counts.get(target.index) ?? 0) + 1);
     model.pkg.markDirty("word/document.xml");
     changes.push({ id: randomUUID(), ruleId: RULE, category: "citations",
       location: { paragraphIndex: target.index }, before,
@@ -136,10 +144,23 @@ export const draftCitationRule: ApaRule = {
           : "";
         ctx.addIssue({ ruleId: RULE, category: "citations", severity: "warning", status: "user_review",
           message: `Unverified draft citation ${citation} — check its source and location.`,
-          explanation: `This paragraph contains a yellow-highlighted draft citation: “${p.text.slice(0, 160)}”. Confirm only after checking that the source supports the passage. Regenerate after confirming to remove the highlight.`,
+          explanation: `Proposed citation: ${citation}. Paragraph: “${p.text.slice(0, 160)}”. Confirm only after checking that the source supports the passage. Draft citations use normal text with no color highlighting.`,
           location: { paragraphIndex: p.index }, originalValue: name, confidence: 0,
           autoFixable: false, userResolutionRequired: true,
           resolutionOptions: [{ id: "confirmed", label: "I checked and confirm this placement" }] });
+      }
+    }
+    if (ctx.settings.draftCitationPlacement && ctx.settings.mode !== "check" && !ctx.analysis.annotatedBibliography) {
+      for (const p of bodyParagraphs(ctx.model, ctx.analysis)) {
+        const found = ctx.analysis.citations.filter((c) => c.paragraphIndex === p.index).length;
+        if (found >= TARGET) continue;
+        count++;
+        ctx.addIssue({ ruleId: RULE, category: "citations", severity: "warning", status: "user_review",
+          message: `Paragraph has ${found} of the requested ${TARGET} citations.`,
+          explanation: "There are not enough distinct references with usable authors and dates for this paragraph. Add suitable sources or review the requested citation count.",
+          location: { paragraphIndex: p.index }, originalValue: `shortfall:${p.index}`,
+          confidence: 1, autoFixable: false, userResolutionRequired: true,
+          resolutionOptions: [{ id: "reviewed", label: "I reviewed the citation count" }] });
       }
     }
     return { ruleId: RULE, checked: count, passed: 0, fixed: false,
