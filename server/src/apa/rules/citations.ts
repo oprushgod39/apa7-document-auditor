@@ -191,7 +191,10 @@ function deterministicFix(raw: string, code: string): string | null {
       return raw.replace(/\s*&\s*/g, " and ");
     case "ET_AL_MISSING_PERIOD":
       return raw.replace(/\bet al(?!\.)/g, "et al.");
+    case "MISSING_COMMA_BEFORE_YEAR":
+      // Only the immediately adjacent author/year boundary is changed.
+      return raw.replace(/\s+((?:1[6-9]|20)\d{2}[a-z]?|n\.d\.|in press)(?=\s*[,)]|$)/i, ", $1");
     default:
-      return null; // MISSING_COMMA_BEFORE_YEAR etc. can be ambiguous — advise only
+      return null; // Locator changes can be ambiguous — advise only.
   }
 }

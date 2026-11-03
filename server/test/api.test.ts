@@ -21,6 +21,39 @@ async function waitReady(id: string): Promise<void> {
 }
 
 describe("API workflow", () => {
+  it("suggests an uncited source and inserts it only after approval", async () => {
+    const spec = malformedStudentPaper();
+    spec.paragraphs.splice(9, 0, {
+      text: "Foundations of sleep science explains why sleep duration and sleep stages matter for learning and memory in students.",
+    });
+    const up = await request(app).post("/api/documents")
+      .attach("file", await buildDocx(spec), { filename: "citations.docx", contentType: "application/octet-stream" });
+    expect(up.status).toBe(201);
+    const id = up.body.id as string;
+    await request(app).post(`/api/documents/${id}/process`)
+      .send({ mode: "format", verifyMetadata: false, suggestMissingCitations: true });
+    await waitReady(id);
+    const report = (await request(app).get(`/api/documents/${id}/report`)).body.report;
+    const suggestion = report.issues.find((i: { ruleId: string; resolutionOptions?: { id: string }[] }) =>
+      i.ruleId === "APA-REFERENCE-005" && i.resolutionOptions?.some((o) => o.id.startsWith("insert:")));
+    expect(suggestion).toBeDefined();
+    const key = [suggestion.ruleId, suggestion.location.paragraphIndex, suggestion.originalValue].join("|");
+    const option = suggestion.resolutionOptions.find((o: { id: string }) => o.id.startsWith("insert:"));
+    expect((await request(app).post(`/api/documents/${id}/resolve`)
+      .send({ issueKey: key, optionId: option.id })).status).toBe(200);
+    expect((await request(app).post(`/api/documents/${id}/generate`)).status).toBe(202);
+    await waitReady(id);
+    const download = await request(app).get(`/api/documents/${id}/download`).buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk: Buffer) => chunks.push(chunk));
+        res.on("end", () => callback(null, Buffer.concat(chunks)));
+      });
+    expect(download.status).toBe(200);
+    const model = await buildDocumentModel(await DocxPackage.load(download.body as Buffer));
+    expect(model.paragraphs.find((p) => p.text.startsWith("Foundations of sleep science"))?.text)
+      .toContain("(Adams, 2021).");
+  }, 30_000);
   it("upload → process → report → resolve → download works end to end", async () => {
     const buf = await buildDocx(malformedStudentPaper());
 

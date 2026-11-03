@@ -38,6 +38,7 @@ export function ConfigureScreen(props: {
   const [mode, setMode] = useState<"check" | "format" | "format_verify">("format_verify");
   const [preserveWording] = useState(true);
   const [fixCitationMechanics, setFixCitationMechanics] = useState(true);
+  const [suggestMissingCitations, setSuggestMissingCitations] = useState(false);
   const [verifyMetadata, setVerifyMetadata] = useState(true);
   const [annotatedBibliography, setAnnotatedBibliography] = useState(Boolean(d.annotatedBibliography));
   const [headingOverrides, setHeadingOverrides] = useState<Record<string, number>>({});
@@ -69,6 +70,7 @@ export function ConfigureScreen(props: {
       mode,
       preserveWording,
       fixCitationMechanics,
+      suggestMissingCitations,
       verifyMetadata,
       annotatedBibliography,
       headingOverrides,
@@ -218,6 +220,13 @@ export function ConfigureScreen(props: {
                 Deterministic fixes such as “and” → “&amp;” in parentheses,
                 “et al” → “et al.”, and modern DOI URLs.
               </div>
+            </label>
+          </div>
+          <div className="switch-row">
+            <input type="checkbox" id="citation-suggestions" checked={suggestMissingCitations}
+              onChange={(e) => setSuggestMissingCitations(e.target.checked)} />
+            <label htmlFor="citation-suggestions">Suggest locations for uncited references
+              <div className="desc">Review any suggested passage and approve the citation before it is added. Uncertain matches stay as findings.</div>
             </label>
           </div>
           {mode === "format_verify" && (

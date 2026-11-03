@@ -113,6 +113,7 @@ export interface DocumentSettings {
   mode: ProcessingMode;
   preserveWording: boolean;
   fixCitationMechanics: boolean;
+  suggestMissingCitations?: boolean;
   verifyMetadata: boolean;
   annotatedBibliography?: boolean;
   metadata: TitlePageMetadata;

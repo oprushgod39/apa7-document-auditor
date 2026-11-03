@@ -493,6 +493,27 @@ export const referenceRules: ApaRule[] = [
         }
         const ref = analysis.references[usage.referenceIndex]!;
         const p = model.paragraphs[ref.paragraphIndex]!;
+        const titleWords = new Set((ref.title ?? "").toLowerCase().match(/[a-z]{5,}/g) ?? []);
+        const candidates = model.paragraphs.filter((body) =>
+          body.index >= analysis.bodyStartIndex &&
+          (analysis.referencesHeadingIndex == null || body.index < analysis.referencesHeadingIndex) &&
+          !body.insideTable && !body.isEmpty &&
+          body.text.trim().split(/\s+/).length >= 12 &&
+          !analysis.headings.some((heading) => heading.paragraphIndex === body.index) &&
+          !analysis.citations.some((citation) => citation.paragraphIndex === body.index)
+        ).map((body) => ({
+          index: body.index,
+          overlap: [...titleWords].filter((word) => new RegExp(`\\b${word}\\b`, "i").test(body.text)).length,
+          excerpt: excerptOf(body.text, 95),
+        })).filter((item) => item.overlap >= 2)
+          .sort((a, b) => b.overlap - a.overlap);
+        const uniqueCandidate = ctx.settings.suggestMissingCitations && candidates.length > 0 &&
+          (candidates.length === 1 || candidates[0]!.overlap > candidates[1]!.overlap)
+          ? candidates[0] : null;
+        const citedNames = ref.surnames.map((name) => name.replace(/^\p{L}/u, (letter) => letter.toLocaleUpperCase("en-US")));
+        const citationText = ref.year && ref.surnames[0]
+          ? `(${citedNames[0] ?? ref.surnames[0]}${ref.surnames.length > 2 ? " et al." : ref.surnames.length === 2 ? ` & ${citedNames[1] ?? ref.surnames[1]}` : ""}, ${ref.year})`
+          : null;
         worst = "user_review";
         ctx.addIssue({
           ruleId: "APA-REFERENCE-005",
@@ -501,12 +522,17 @@ export const referenceRules: ApaRule[] = [
           status: "user_review",
           message: `Reference "${excerptOf(ref.raw, 70)}" does not appear to be cited in the text.`,
           explanation:
-            "APA 7 requires every reference to be cited in the body (annotated bibliographies excepted). Cite it, remove it, or confirm it is intentional.",
+            uniqueCandidate && citationText
+              ? `Possible location: paragraph ${uniqueCandidate.index + 1}, “${uniqueCandidate.excerpt}”. Review the source and claim before approving this citation.`
+              : "APA 7 requires every reference to be cited in the body (annotated bibliographies excepted). Review the source and choose where it supports a claim.",
           location: loc(p),
+          originalValue: ref.raw,
+          suggestedValue: uniqueCandidate && citationText ? `${citationText} after paragraph ${uniqueCandidate.index + 1}` : undefined,
           confidence: 0.8,
           autoFixable: false,
           userResolutionRequired: true,
           resolutionOptions: [
+            ...(uniqueCandidate && citationText ? [{ id: `insert:${uniqueCandidate.index}`, label: "Approve suggested citation", description: `Insert ${citationText} after the suggested paragraph and regenerate.` }] : []),
             { id: "will_cite", label: "I will cite it", description: "I will add a citation in the body." },
             { id: "will_remove", label: "I will remove it", description: "I will delete this reference." },
             { id: "intentional", label: "Intentional", description: "This entry is intentionally uncited (e.g. general reference)." },

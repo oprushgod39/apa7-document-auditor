@@ -146,6 +146,7 @@ export interface ProcessSettings {
   mode: "check" | "format" | "format_verify";
   preserveWording: boolean;
   fixCitationMechanics: boolean;
+  suggestMissingCitations?: boolean;
   verifyMetadata: boolean;
   annotatedBibliography?: boolean;
   headingOverrides?: Record<string, number>;

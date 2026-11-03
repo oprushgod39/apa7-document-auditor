@@ -12,6 +12,7 @@ import {
   removeParagraphStyle,
 } from "./docx/edit.js";
 import { splitParagraphAtEmbeddedHeading } from "./docx/repair.js";
+import { replaceParagraphText } from "./docx/text.js";
 import { runEngine, allRules } from "./apa/engine.js";
 import { analyzeDocument, type DocumentAnalysis } from "./apa/analysis.js";
 import { HEADING_SPECS } from "./apa/rules/headings.js";
@@ -281,6 +282,42 @@ export async function processSession(session: Session): Promise<void> {
       disabledRules: session.disabledRules,
     });
     let changes: Change[] = [...preChanges, ...formatRun.changes];
+
+    // An approved suggestion from the previous audit is the only authority
+    // for adding a missing in-text citation. Revalidate its exact source and
+    // destination against the pristine document on every regeneration.
+    if (fix && session.report) {
+      for (const oldIssue of session.report.issues) {
+        if (oldIssue.ruleId !== "APA-REFERENCE-005" || !oldIssue.resolution?.optionId.startsWith("insert:")) continue;
+        const targetIndex = Number(oldIssue.resolution.optionId.slice(7));
+        const ref = analysis.references.find((r) => r.raw === oldIssue.originalValue);
+        const preview = /Possible location: paragraph \d+, “([^”]+)”/.exec(oldIssue.explanation ?? "")?.[1];
+        const target = model.paragraphs.find((p) =>
+          p.index === targetIndex && preview && excerptOf(p.text, 95) === preview
+        ) ?? model.paragraphs.find((p) => preview && excerptOf(p.text, 95) === preview);
+        if (!Number.isInteger(targetIndex) || !ref || !target || !ref.year || !ref.surnames[0] ||
+          target.index < analysis.bodyStartIndex ||
+          (analysis.referencesHeadingIndex != null && target.index >= analysis.referencesHeadingIndex) ||
+          analysis.citations.some((c) => c.paragraphIndex === target.index)) continue;
+        const citedNames = ref.surnames.map((name) => name.replace(/^\p{L}/u, (letter) => letter.toLocaleUpperCase("en-US")));
+        const citation = `(${citedNames[0] ?? ref.surnames[0]}${ref.surnames.length > 2 ? " et al." : ref.surnames.length === 2 ? ` & ${citedNames[1] ?? ref.surnames[1]}` : ""}, ${ref.year})`;
+        const original = target.text;
+        const trimmed = original.trimEnd();
+        const citedText = /[.!?]$/.test(trimmed)
+          ? `${trimmed.slice(0, -1)} ${citation}${trimmed.slice(-1)}`
+          : `${trimmed} ${citation}`;
+        if (replaceParagraphText(target.el, trimmed, citedText)) {
+          model.pkg.markDirty("word/document.xml");
+          changes.push({
+            id: randomUUID(), ruleId: "APA-REFERENCE-005", category: "citations",
+            location: { paragraphIndex: target.index, excerpt: excerptOf(original) },
+            before: original, after: citedText,
+            reason: "Citation location approved by the user.", confidence: 1,
+            stage: "resolution", timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    }
 
     // 3. Apply user-forced heading levels (from prior resolutions).
     if (fix && session.forcedHeadings.size > 0) {

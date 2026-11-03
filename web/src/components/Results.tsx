@@ -61,8 +61,8 @@ export function ResultsScreen(props: {
       const res = await resolveIssue(session.id, key, optionId);
       props.onReportUpdate({ ...data, report: { ...res.report } });
       if (
-        (issue.ruleId === "APA-HEAD-002" || issue.ruleId === "APA-HEAD-003") &&
-        optionId.startsWith("level")
+        ((issue.ruleId === "APA-HEAD-002" || issue.ruleId === "APA-HEAD-003") && optionId.startsWith("level")) ||
+        (issue.ruleId === "APA-REFERENCE-005" && optionId.startsWith("insert:"))
       ) {
         setHeadingResolved(true);
       }
@@ -199,9 +199,9 @@ export function ResultsScreen(props: {
         ))}
         {headingResolved && (
           <div className="section-note" style={{ marginTop: "0.6rem" }}>
-            You confirmed heading levels.{" "}
+            Your approved changes are ready.{" "}
             <button className="btn small primary" onClick={() => void regen()}>
-              Re-apply formatting with your confirmations
+              Apply approved changes to the document
             </button>
           </div>
         )}
