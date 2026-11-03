@@ -33,6 +33,8 @@ export interface ParaProps {
   leftIndent?: number;
   contextualSpacing?: boolean;
   pageBreakBefore?: boolean;
+  keepNext?: boolean;
+  keepLines?: boolean;
 }
 
 export interface StyleInfo {
@@ -194,7 +196,18 @@ function parseParaProps(pPr: XElement | null): ParaProps {
     if (left != null) out.leftIndent = Number.parseInt(left, 10);
   }
   if (childW(pPr, "contextualSpacing")) out.contextualSpacing = true;
-  if (childW(pPr, "pageBreakBefore")) out.pageBreakBefore = true;
+  const onOff = (name: string): boolean | undefined => {
+    const el = childW(pPr, name);
+    if (!el) return undefined;
+    const value = getAttrW(el, "val")?.toLowerCase();
+    return value == null || !["0", "false", "off", "no"].includes(value);
+  };
+  const pageBreakBefore = onOff("pageBreakBefore");
+  const keepNext = onOff("keepNext");
+  const keepLines = onOff("keepLines");
+  if (pageBreakBefore !== undefined) out.pageBreakBefore = pageBreakBefore;
+  if (keepNext !== undefined) out.keepNext = keepNext;
+  if (keepLines !== undefined) out.keepLines = keepLines;
   return out;
 }
 

@@ -18,6 +18,9 @@ export interface ParaSpec {
   spacing?: { before?: number; after?: number; line?: number; lineRule?: string };
   indent?: { firstLine?: number; hanging?: number; left?: number };
   pageBreakAfter?: boolean;
+  pageBreakBefore?: boolean;
+  keepNext?: boolean;
+  keepLines?: boolean;
   leadingTab?: boolean;
   hyperlink?: { text: string; url: string };
   image?: boolean;
@@ -67,6 +70,9 @@ function paraXml(p: ParaSpec): string {
     pPrParts.push(`<w:ind ${attrs}/>`);
   }
   if (p.align) pPrParts.push(`<w:jc w:val="${p.align}"/>`);
+  if (p.pageBreakBefore) pPrParts.push("<w:pageBreakBefore/>");
+  if (p.keepNext) pPrParts.push("<w:keepNext/>");
+  if (p.keepLines) pPrParts.push("<w:keepLines/>");
   const pPr = pPrParts.length ? `<w:pPr>${pPrParts.join("")}</w:pPr>` : "";
 
   const rPrParts: string[] = [];

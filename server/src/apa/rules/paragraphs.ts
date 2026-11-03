@@ -3,6 +3,9 @@ import { APA_FIRST_LINE_INDENT } from "../types.js";
 import {
   setParagraphIndent,
   setParagraphAlignment,
+  setPageBreakBefore,
+  setParagraphKeepNext,
+  setParagraphKeepLines,
 } from "../../docx/edit.js";
 import { stripLeadingWhitespace } from "../../docx/text.js";
 import {
@@ -321,6 +324,81 @@ export const paragraphRules: ApaRule[] = [
         });
       }
       return result("APA-PARA-004", checked, passed, fixedCount > 0, anyFail ? "fail" : null);
+    },
+  },
+  {
+    id: "APA-PARA-005",
+    category: "paragraph",
+    description: "Ordinary body paragraphs flow naturally across pages without forced pagination.",
+    severity: "warning",
+    applies: () => true,
+    run(ctx, fix) {
+      const { model, analysis } = ctx;
+      let checked = 0;
+      let passed = 0;
+      let fixedCount = 0;
+      let anyFail = false;
+      for (const p of model.paragraphs) {
+        if (
+          p.isEmpty ||
+          p.insideTable ||
+          p.index < analysis.bodyStartIndex ||
+          isHeadingParagraph(ctx, p.index) ||
+          isReferenceEntry(ctx, p.index) ||
+          p.index === analysis.referencesHeadingIndex ||
+          p.hasDrawing ||
+          isDisplayMaterialParagraph(p, model, analysis)
+        ) continue;
+
+        checked++;
+        // A pageBreakBefore on the first body paragraph can be the actual
+        // title-page boundary. Preserve that one structural break.
+        const preserveBodyBoundary = p.index === analysis.bodyStartIndex;
+        const forced =
+          p.props.keepLines === true ||
+          p.props.keepNext === true ||
+          (!preserveBodyBoundary && p.props.pageBreakBefore === true);
+        if (!forced) {
+          passed++;
+          continue;
+        }
+        if (fix) {
+          // Explicit false values override pagination inherited from source
+          // paragraph styles. Manual page-break runs are deliberately left
+          // untouched because they represent intentional section boundaries.
+          setParagraphKeepLines(model.documentXml, p.el, false, true);
+          setParagraphKeepNext(model.documentXml, p.el, false, true);
+          if (!preserveBodyBoundary) {
+            setPageBreakBefore(model.documentXml, p.el, false, true);
+          }
+          markDocDirty(ctx);
+          fixedCount++;
+          ctx.addChange({
+            ruleId: "APA-PARA-005",
+            category: "paragraph",
+            location: loc(p),
+            before: "Paragraph forced to stay together or begin on a new page",
+            after: "Natural page flow with normal widow/orphan control",
+            reason: "Ordinary APA body paragraphs may split across pages; forced pagination creates large blank gaps.",
+            confidence: 0.95,
+          });
+        } else {
+          anyFail = true;
+        }
+      }
+      if (!fix && anyFail) {
+        ctx.addIssue({
+          ruleId: "APA-PARA-005",
+          category: "paragraph",
+          severity: "warning",
+          status: "fail",
+          message: "Some body paragraphs contain forced pagination that can create large blank spaces.",
+          confidence: 0.95,
+          autoFixable: true,
+          userResolutionRequired: false,
+        });
+      }
+      return result("APA-PARA-005", checked, passed, fixedCount > 0, anyFail ? "fail" : null);
     },
   },
 ];

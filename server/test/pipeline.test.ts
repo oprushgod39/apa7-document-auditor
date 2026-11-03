@@ -228,6 +228,7 @@ describe("golden document formatting", () => {
     const headingPPr = childW(heading1, "pPr")!;
     expect(childW(headingPPr, "contextualSpacing")).not.toBeNull();
     expect(getAttrW(childW(headingPPr, "spacing")!, "after")).toBe("0");
+    expect(getAttrW(childW(headingPPr, "ind")!, "left")).toBe("0");
 
     const normal = findStyleEl(styles, "Normal")!;
     const normalPPr = childW(normal, "pPr")!;
@@ -241,6 +242,59 @@ describe("golden document formatting", () => {
       expect(getAttrW(runColor, "val")).toBe("000000");
       expect(getAttrW(runColor, "themeColor")).toBeNull();
     }
+  });
+
+  it("centers title-page lines from the full page width and removes inherited heading indents", async () => {
+    const spec = malformedStudentPaper();
+    for (let i = 0; i <= 5; i++) spec.paragraphs[i]!.indent = { firstLine: 720, left: 720 };
+    spec.paragraphs[7]!.indent = { firstLine: 720, left: 720 };
+    const original = await buildDocx(spec);
+    const { out } = await formatDocument(original);
+    const model = await buildDocumentModel(await DocxPackage.load(out));
+    const analysis = analyzeDocument(model);
+
+    for (let i = 0; i < analysis.titlePageEnd; i++) {
+      const p = model.paragraphs[i]!;
+      if (p.isEmpty) continue;
+      expect(p.props.alignment).toBe("center");
+      expect(p.props.firstLineIndent ?? 0).toBe(0);
+      expect(p.props.hangingIndent ?? 0).toBe(0);
+      expect(p.props.leftIndent ?? 0).toBe(0);
+    }
+    const method = model.paragraphs.find((p) => p.text.trim() === "Method")!;
+    expect(method.props.alignment).toBe("center");
+    expect(method.props.firstLineIndent ?? 0).toBe(0);
+    expect(method.props.leftIndent ?? 0).toBe(0);
+  });
+
+  it("removes forced body pagination while retaining a heading with its following paragraph", async () => {
+    const spec = malformedStudentPaper();
+    spec.paragraphs[7]!.pageBreakBefore = true;
+    spec.paragraphs[8]!.keepLines = true;
+    spec.paragraphs[8]!.keepNext = true;
+    spec.paragraphs[8]!.pageBreakBefore = true;
+    const original = await buildDocx(spec);
+    const { out } = await formatDocument(original);
+    const model = await buildDocumentModel(await DocxPackage.load(out));
+
+    const heading = model.paragraphs.find((p) => p.text.trim() === "Method")!;
+    const body = model.paragraphs.find((p) => p.text.includes("Participants completed"))!;
+    expect(heading.props.pageBreakBefore).toBe(false);
+    expect(heading.props.keepNext).toBe(true);
+    expect(body.props.keepLines).toBe(false);
+    expect(body.props.keepNext).toBe(false);
+    expect(body.props.pageBreakBefore).toBe(false);
+  });
+
+  it("preserves a page-break-before property when it is the title-page boundary", async () => {
+    const spec = malformedStudentPaper();
+    spec.paragraphs[5]!.pageBreakAfter = false;
+    spec.paragraphs[6]!.pageBreakBefore = true;
+    const original = await buildDocx(spec);
+    const { out } = await formatDocument(original);
+    const model = await buildDocumentModel(await DocxPackage.load(out));
+    const openingBody = model.paragraphs.find((p) => p.text.startsWith("Sleep is essential"))!;
+    expect(openingBody.props.pageBreakBefore).toBe(true);
   });
 
   it("honors explicit heading markers and defaults unlabelled headings to Level 1", async () => {

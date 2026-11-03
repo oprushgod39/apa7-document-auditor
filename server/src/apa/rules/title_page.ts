@@ -399,20 +399,29 @@ export const titlePageRules: ApaRule[] = [
         const p = model.paragraphs[i]!;
         if (p.isEmpty) continue;
         checked++;
-        if (p.props.alignment === "center") {
+        const unindented =
+          (p.props.firstLineIndent ?? 0) === 0 &&
+          (p.props.hangingIndent ?? 0) === 0 &&
+          (p.props.leftIndent ?? 0) === 0;
+        if (p.props.alignment === "center" && unindented) {
           passed++;
           continue;
         }
         if (fix) {
           setParagraphAlignment(model.documentXml, p.el, "center");
+          setParagraphIndent(model.documentXml, p.el, {
+            firstLine: null,
+            hanging: null,
+            left: 0,
+          });
           markDocDirty(ctx);
           fixedCount++;
           ctx.addChange({
             ruleId: "APA-TITLE-004",
             category: "title_page",
             location: loc(p),
-            before: p.props.alignment ?? "left",
-            after: "centered",
+            before: `${p.props.alignment ?? "left"}${unindented ? "" : ", indented"}`,
+            after: "centered from the full page width, with no paragraph indent",
             reason: "APA 7 title-page elements are centered.",
             confidence: 0.9,
           });
@@ -426,7 +435,7 @@ export const titlePageRules: ApaRule[] = [
           category: "title_page",
           severity: "warning",
           status: "fail",
-          message: "Some title-page lines are not centered.",
+          message: "Some title-page lines are not centered from the full page width.",
           confidence: 0.9,
           autoFixable: true,
           userResolutionRequired: false,

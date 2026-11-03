@@ -166,30 +166,52 @@ export function removeParagraphStyle(p: XElement): void {
   if (pPr) removeChildW(pPr, "pStyle");
 }
 
-export function setPageBreakBefore(doc: XDocument, p: XElement, on: boolean): void {
+export function setPageBreakBefore(
+  doc: XDocument,
+  p: XElement,
+  on: boolean,
+  explicitOff = false
+): void {
   const pPr = ensurePPr(doc, p);
   if (on) {
-    ensureOrdered(doc, pPr, "pageBreakBefore", PPR_ORDER);
+    const pageBreakBefore = ensureOrdered(doc, pPr, "pageBreakBefore", PPR_ORDER);
+    removeAttrW(pageBreakBefore, "val");
+  } else if (explicitOff) {
+    setAttrW(ensureOrdered(doc, pPr, "pageBreakBefore", PPR_ORDER), "val", "0");
   } else {
     removeChildW(pPr, "pageBreakBefore");
   }
 }
 
-export function setParagraphKeepNext(doc: XDocument, p: XElement, on: boolean): void {
+export function setParagraphKeepNext(
+  doc: XDocument,
+  p: XElement,
+  on: boolean,
+  explicitOff = false
+): void {
   const pPr = ensurePPr(doc, p);
   if (on) {
     const keepNext = ensureOrdered(doc, pPr, "keepNext", PPR_ORDER);
     removeAttrW(keepNext, "val");
+  } else if (explicitOff) {
+    setAttrW(ensureOrdered(doc, pPr, "keepNext", PPR_ORDER), "val", "0");
   } else {
     removeChildW(pPr, "keepNext");
   }
 }
 
-export function setParagraphKeepLines(doc: XDocument, p: XElement, on: boolean): void {
+export function setParagraphKeepLines(
+  doc: XDocument,
+  p: XElement,
+  on: boolean,
+  explicitOff = false
+): void {
   const pPr = ensurePPr(doc, p);
   if (on) {
     const keepLines = ensureOrdered(doc, pPr, "keepLines", PPR_ORDER);
     removeAttrW(keepLines, "val");
+  } else if (explicitOff) {
+    setAttrW(ensureOrdered(doc, pPr, "keepLines", PPR_ORDER), "val", "0");
   } else {
     removeChildW(pPr, "keepLines");
   }
@@ -480,6 +502,7 @@ export function setStyleParaFormatting(
   spec: SpacingSpec & {
     alignment?: string;
     firstLine?: number | null;
+    left?: number | null;
     contextualSpacing?: boolean;
     keepNext?: boolean;
   }
@@ -509,14 +532,22 @@ export function setStyleParaFormatting(
   if (spec.alignment !== undefined) {
     setAttrW(ensureOrdered(stylesDoc, pPr, "jc", PPR_ORDER), "val", spec.alignment);
   }
-  if (spec.firstLine !== undefined) {
+  if (spec.firstLine !== undefined || spec.left !== undefined) {
     const ind = ensureOrdered(stylesDoc, pPr, "ind", PPR_ORDER);
-    if (spec.firstLine === null) {
-      removeAttrW(ind, "firstLine");
-    } else {
-      setAttrW(ind, "firstLine", String(spec.firstLine));
-      removeAttrW(ind, "hanging");
+    if (spec.firstLine !== undefined) {
+      if (spec.firstLine === null) {
+        removeAttrW(ind, "firstLine");
+      } else {
+        setAttrW(ind, "firstLine", String(spec.firstLine));
+        removeAttrW(ind, "hanging");
+      }
     }
+    if (spec.left !== undefined) {
+      if (spec.left === null) removeAttrW(ind, "left");
+      else setAttrW(ind, "left", String(spec.left));
+      removeAttrW(ind, "start");
+    }
+    if (!ind.attributes || ind.attributes.length === 0) ind.parentNode?.removeChild(ind);
   }
   if (spec.contextualSpacing !== undefined) {
     if (spec.contextualSpacing) {

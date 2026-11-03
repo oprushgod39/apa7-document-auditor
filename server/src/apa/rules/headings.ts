@@ -9,6 +9,9 @@ import {
   setParagraphRunColorBlack,
   setParagraphRunFonts,
   setParagraphIndent,
+  setPageBreakBefore,
+  setParagraphKeepNext,
+  setParagraphKeepLines,
   setParagraphSpacing,
   setParagraphContextualSpacing,
   setParagraphStyleSeparator,
@@ -85,7 +88,10 @@ function applyHeadingDirectFormatting(
   const doc = ctx.model.documentXml;
   setParagraphStyle(doc, p.el, spec.styleId);
   setParagraphAlignment(doc, p.el, spec.alignment);
-  setParagraphIndent(doc, p.el, { firstLine: spec.firstLine, hanging: null });
+  setParagraphIndent(doc, p.el, { firstLine: spec.firstLine, hanging: null, left: 0 });
+  setPageBreakBefore(doc, p.el, false, true);
+  setParagraphKeepNext(doc, p.el, level < 4, true);
+  setParagraphKeepLines(doc, p.el, true);
   setParagraphSpacing(doc, p.el, { before: 0, after: 0, line: 480, lineRule: "auto" });
   setParagraphContextualSpacing(doc, p.el);
   setParagraphRunFonts(doc, p.el, ctx.req.font, ctx.req.fontSizePt * 2);
@@ -159,6 +165,7 @@ export const headingRules: ApaRule[] = [
             before: 0,
             after: 0,
             firstLine: spec.firstLine,
+            left: 0,
             contextualSpacing: true,
             // Levels 4 and 5 are run-in headings. Keeping their hidden
             // paragraph mark with the next paragraph defeats Word's style

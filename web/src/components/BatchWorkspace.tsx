@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ApiError,
-  downloadUrl,
+  downloadFormattedDocument,
+  downloadHtmlReport,
   getStatus,
-  reportDownloadUrl,
   startProcessing,
   uploadDocument,
   type ProcessSettings,
@@ -263,6 +263,32 @@ export function BatchWorkspace(props: { onSwitchToSingle: () => void }) {
 
 function BatchTableRow(props: { row: BatchRow; canDownloadDocx: boolean }) {
   const { row } = props;
+  const [downloading, setDownloading] = useState<"document" | "report" | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const save = async (kind: "document" | "report") => {
+    if (!row.sessionId || downloading) return;
+    setDownloading(kind);
+    setDownloadError(null);
+    try {
+      const result = kind === "document"
+        ? await downloadFormattedDocument(row.sessionId)
+        : await downloadHtmlReport(row.sessionId);
+      const url = URL.createObjectURL(result.blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = result.filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (cause) {
+      setDownloadError(cause instanceof Error ? cause.message : "The download could not be completed.");
+    } finally {
+      setDownloading(null);
+    }
+  };
+
   return (
     <tr>
       <td>
@@ -290,15 +316,16 @@ function BatchTableRow(props: { row: BatchRow; canDownloadDocx: boolean }) {
         {row.status === "ready" && row.sessionId && (
           <div className="batch-row-actions">
             {props.canDownloadDocx && (
-              <a className="btn small primary" href={downloadUrl(row.sessionId)}>
-                Download
-              </a>
+              <button className="btn small primary" disabled={downloading != null} onClick={() => void save("document")}>
+                {downloading === "document" ? "Downloading…" : "Download"}
+              </button>
             )}
-            <a className="btn small" href={reportDownloadUrl(row.sessionId)}>
-              Report
-            </a>
+            <button className="btn small" disabled={downloading != null} onClick={() => void save("report")}>
+              {downloading === "report" ? "Downloading…" : "Report"}
+            </button>
           </div>
         )}
+        {downloadError && <div className="batch-row-error">{downloadError}</div>}
       </td>
     </tr>
   );

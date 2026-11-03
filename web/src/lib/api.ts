@@ -233,6 +233,42 @@ export function issueKeyOf(issue: Issue): string {
 export const downloadUrl = (id: string) => `/api/documents/${id}/download`;
 export const reportDownloadUrl = (id: string) => `/api/documents/${id}/report.html`;
 
+function filenameFromDisposition(value: string | null, fallback: string): string {
+  if (!value) return fallback;
+  const utf8 = /filename\*=UTF-8''([^;]+)/i.exec(value);
+  if (utf8?.[1]) {
+    try { return decodeURIComponent(utf8[1]); } catch { /* use plain filename */ }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(value);
+  return plain?.[1]?.trim() || fallback;
+}
+
+async function fetchDownload(url: string, fallback: string): Promise<{ blob: Blob; filename: string }> {
+  const res = await fetch(url);
+  if (!res.ok) {
+    let code = "DOWNLOAD_FAILED";
+    let message = "The download could not be prepared. Please try again.";
+    try {
+      const body = await res.json();
+      code = body?.error?.code ?? code;
+      message = body?.error?.message ?? message;
+    } catch { /* non-JSON error */ }
+    throw new ApiError(code, message);
+  }
+  return {
+    blob: await res.blob(),
+    filename: filenameFromDisposition(res.headers.get("Content-Disposition"), fallback),
+  };
+}
+
+export async function downloadFormattedDocument(id: string): Promise<{ blob: Blob; filename: string }> {
+  return fetchDownload(downloadUrl(id), "APA7_formatted.docx");
+}
+
+export async function downloadHtmlReport(id: string): Promise<{ blob: Blob; filename: string }> {
+  return fetchDownload(reportDownloadUrl(id), "APA7_report.html");
+}
+
 const MERGE_DIRECT_LIMIT = 3 * 1024 * 1024;
 const MERGE_WORD_PATTERN = /[\p{L}\p{N}]+(?:['’.-][\p{L}\p{N}]+)*/gu;
 const MERGE_REFERENCE_HEADING = /^(references|bibliography|works\s+cited)\s*:?\s*[.]*$/i;
