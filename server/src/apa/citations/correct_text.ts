@@ -7,6 +7,8 @@ export interface TextCitationResult {
   citationsFound: number;
   changes: { before: string; after: string; reason: string }[];
   warnings: string[];
+  uncitedParagraphs: { paragraph: number; excerpt: string }[];
+  referencesFound: number;
 }
 
 const surname = /^(?:(?:van|von|de|del|der|di|la|le|al|bin|ter)\s+)?[A-ZÀ-Þ][\p{L}'’–-]+$/iu;
@@ -138,8 +140,11 @@ export function correctCitationText(input: string, suppliedReferences?: ParsedRe
     return record(line, line.replace(trimmed, fixed), "Enclose a standalone author–year citation in parentheses.");
   });
   const citationsFound = parseCitations(text, 0).length;
+  const uncitedParagraphs = text.split(/\n\s*\n|\n/).map((paragraph, index) => ({ paragraph: index + 1, value: paragraph.trim() }))
+    .filter(({ value }) => value.split(/\s+/).length >= 12 && parseCitations(value, 0).length === 0)
+    .map(({ paragraph, value }) => ({ paragraph, excerpt: value.slice(0, 180) }));
   if (!citationsFound) warnings.add("No recognizable author–year citations were found. Include the author and year, for example (Smith, 2024).");
   if (references) warnings.add("The reference list was kept unchanged. This tool corrects in-text citations.");
   if ((text.match(/\(/g)?.length ?? 0) !== (text.match(/\)/g)?.length ?? 0)) warnings.add("Check unmatched parentheses; their intended positions could not be determined.");
-  return { text: text + references, citationsFound, changes, warnings: [...warnings] };
+  return { text: text + references, citationsFound, changes, warnings: [...warnings], uncitedParagraphs, referencesFound: referenceEntries.length };
 }

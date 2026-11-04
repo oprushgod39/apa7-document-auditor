@@ -7,6 +7,8 @@ interface Result {
   citationsFound: number;
   changes: { before: string; after: string; reason: string }[];
   warnings: string[];
+  uncitedParagraphs: { paragraph: number; excerpt: string }[];
+  referencesFound: number;
 }
 const EXAMPLE = "Research supports this finding (Smith and Patel 2024).\nKumar et al (2023) reported similar results.\nSmith & Patel (2024) explained the implications.";
 
@@ -157,6 +159,9 @@ export function CitationCorrectionScreen() {
     {error && <div className="error-box" role="alert">{error}</div>}
     {result && result.warnings.length > 0 && <section className="card"><h2>Check these items</h2>
       <ul>{result.warnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul></section>}
+    {result && result.uncitedParagraphs?.length > 0 && <section className="card"><h2>Possible missing citations ({result.uncitedParagraphs.length})</h2>
+      <p className="section-note">These paragraphs have no recognizable author–year citation. Check each claim against your {result.referencesFound || "source"} reference{result.referencesFound === 1 ? "" : "s"} before adding one.</p>
+      <ol className="citation-changes">{result.uncitedParagraphs.map((item) => <li key={item.paragraph}>Paragraph {item.paragraph}: {item.excerpt}{item.excerpt.length === 180 ? "…" : ""}</li>)}</ol></section>}
     {result && result.changes.length > 0 && <details className="card"><summary>View corrections ({result.changes.length})</summary>
       <ul className="citation-changes">{result.changes.map((change, i) => <li key={i}>
         <del>{change.before}</del><span aria-hidden="true"> → </span><strong>{change.after}</strong><p>{change.reason}</p>
@@ -175,6 +180,7 @@ interface DocumentResult {
   changes: { paragraph: number; before: string; after: string; reason: string }[];
   warnings: string[];
   uncitedReferences: string[];
+  uncitedParagraphs: { paragraph: number; excerpt: string }[];
 }
 
 function CitationDocument() {
@@ -236,6 +242,7 @@ function CitationDocument() {
       <p className="section-note">Download now; files are automatically removed under the site's retention policy.</p>
       {result.warnings.length > 0 && <details open><summary>Items to review ({result.warnings.length})</summary><ul>{result.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul></details>}
       {result.uncitedReferences.length > 0 && <details><summary>References without matching citations ({result.uncitedReferences.length})</summary><ul>{result.uncitedReferences.map((r, i) => <li key={i}>{r}</li>)}</ul></details>}
+      {result.uncitedParagraphs?.length > 0 && <details open><summary>Possible missing citations ({result.uncitedParagraphs.length})</summary><p className="section-note">These body paragraphs have no recognizable citation. Review the claims and choose a supporting reference before inserting one.</p><ol>{result.uncitedParagraphs.map((item) => <li key={item.paragraph}>Paragraph {item.paragraph}: {item.excerpt}{item.excerpt.length === 180 ? "…" : ""}</li>)}</ol></details>}
       {result.changes.length > 0 && <details><summary>View corrections ({result.changes.length} paragraphs)</summary>
         <ul className="citation-changes">{result.changes.map((change, i) => <li key={i}><strong>Paragraph {change.paragraph}</strong><p><del>{change.before}</del></p><p>{change.after}</p></li>)}</ul>
       </details>}

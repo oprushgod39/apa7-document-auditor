@@ -20,6 +20,7 @@ export async function correctCitationDocument(input: Buffer) {
   const warnings = new Set<string>();
   const expected = new Map<number, string>();
   let citationsFound = 0;
+  const uncitedParagraphs: { paragraph: number; excerpt: string }[] = [];
   const used = new Set<number>();
   const aliases = new Map<string, Set<string>>();
   const documentText = model.paragraphs.map((p) => p.text).join("\n");
@@ -73,6 +74,8 @@ export async function correctCitationDocument(input: Buffer) {
     }
     expected.set(p.index, result.text);
     const citations = parseCitations(result.text, p.index);
+    if (!citations.length && result.text.trim().split(/\s+/).length >= 12)
+      uncitedParagraphs.push({ paragraph: p.index + 1, excerpt: result.text.trim().slice(0, 180) });
     citationsFound += citations.length;
     const expanded = citations.map((citation) => {
       const names = citation.authors.length === 1 ? aliases.get(citation.authors[0]!) : undefined;
@@ -97,5 +100,5 @@ export async function correctCitationDocument(input: Buffer) {
   const uncitedReferences = analysis.references.filter((_r, i) => !used.has(i)).map((r) => r.raw);
   return { output, summary: { citationsFound, referencesFound: analysis.references.length,
     paragraphsCorrected: changes.length, changes: changes.map((c) => ({ paragraph: c.location.paragraphIndex! + 1, before: c.before, after: c.after, reason: c.reason })),
-    warnings: [...warnings], uncitedReferences } };
+    warnings: [...warnings], uncitedReferences, uncitedParagraphs } };
 }

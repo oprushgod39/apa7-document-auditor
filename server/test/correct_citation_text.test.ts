@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import request from "supertest";
 import { correctCitationText } from "../src/apa/citations/correct_text.js";
+
+it("flags uncited prose without treating reference entries as body paragraphs", () => {
+  const result = correctCitationText("A long paragraph makes a specific claim about organizational leadership and employee trust without naming a supporting study.\n\nAnother claim is supported (Smith, 2024).\n\nReferences\nSmith, A. (2024). Study title. Journal Name, 2, 1–3.");
+  expect(result.uncitedParagraphs).toHaveLength(1);
+  expect(result.uncitedParagraphs[0]?.paragraph).toBe(1);
+  expect(result.referencesFound).toBe(1);
+});
 import { createApp } from "../src/app.js";
 
 describe("plain text citation correction", () => {
