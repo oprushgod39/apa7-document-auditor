@@ -21,6 +21,7 @@ import { processSession, applyResolution, repairEmbeddedReferencesHeadingIfNeede
 import { runInBackground } from "../run_background.js";
 import { renderReportHtml } from "../audit/report_html.js";
 import { log } from "../logging.js";
+import { correctCitationText } from "../apa/citations/correct_text.js";
 import { mergeDocuments } from "../merge/merge.js";
 import { appendixSourceWordCount, countDocumentWords } from "../merge/word_count.js";
 import {
@@ -107,6 +108,12 @@ function sessionSummary(s: Session) {
 
 export function apiRouter(): Router {
   const router = Router();
+  router.post("/citations/correct", (req, res, next) => {
+    const parsed = z.object({ text: z.string().min(1).max(50_000).refine((value) => value.trim().length > 0) }).safeParse(req.body);
+    if (!parsed.success) { next(Errors.invalid("Paste text containing citations (up to 50,000 characters).")); return; }
+    res.setHeader("Cache-Control", "no-store");
+    res.json(correctCitationText(parsed.data.text));
+  });
 
   // Large merger inputs are uploaded browser-to-Blob so they never pass
   // through Vercel's small serverless request-body gateway. This route only

@@ -182,7 +182,7 @@ export const citationRules: ApaRule[] = [
   },
 ];
 
-function deterministicFix(raw: string, code: string): string | null {
+export function deterministicFix(raw: string, code: string): string | null {
   switch (code) {
     case "AND_IN_PARENTHETICAL":
       // (Smith and Patel, 2024) → (Smith & Patel, 2024): unambiguous.

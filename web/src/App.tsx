@@ -26,6 +26,7 @@ const BatchWorkspace = lazy(() =>
 );
 
 const PRODUCT_NAME = "APA 7 Document Auditor"; // configurable product name
+const CitationCorrectionScreen = lazy(() => import("./components/CitationCorrection").then((module) => ({ default: module.CitationCorrectionScreen })));
 
 type Screen =
   | { kind: "upload" }
@@ -33,7 +34,7 @@ type Screen =
   | { kind: "processing"; session: UploadResponse; status: SessionInfo | null }
   | { kind: "results"; session: UploadResponse; report: ReportResponse };
 
-type Tool = "formatter" | "similarity" | "merger" | "turnitin";
+type Tool = "formatter" | "similarity" | "merger" | "turnitin" | "citations";
 type Theme = "light" | "dark";
 
 function initialTheme(): Theme {
@@ -47,6 +48,7 @@ function toolFromPath(): Tool {
   if (path === "/turnitin") return "turnitin";
   if (path === "/similarity") return "similarity";
   if (path === "/merger") return "merger";
+  if (path === "/citations") return "citations";
   return "formatter";
 }
 
@@ -55,6 +57,7 @@ const TOOL_PATH: Record<Tool, string> = {
   similarity: "/similarity",
   merger: "/merger",
   turnitin: "/turnitin",
+  citations: "/citations",
 };
 
 export function App() {
@@ -170,6 +173,7 @@ export function App() {
             <button className={tool === "similarity" ? "active" : ""} onClick={() => selectTool("similarity")}>Similarity checker</button>
             <button className={tool === "merger" ? "active" : ""} onClick={() => selectTool("merger")}>Document merger</button>
             <button className={tool === "turnitin" ? "active" : ""} onClick={() => selectTool("turnitin")}>Turnitin checker</button>
+            <button className={tool === "citations" ? "active" : ""} onClick={() => selectTool("citations")}>Citation correction</button>
           </nav>
           <div className="topbar-actions">
             <button
@@ -187,7 +191,7 @@ export function App() {
           </div>
         </header>
 
-        {tool === "formatter" && formatterMode === "single" ? <nav className="journey" aria-label="Document workflow">
+        {tool === "citations" ? <div className="similarity-journey"><span>“</span><strong>Citation correction</strong><small>Paste text · correct APA 7 citations · copy your result</small></div> : tool === "formatter" && formatterMode === "single" ? <nav className="journey" aria-label="Document workflow">
           {["Upload", "Customize", "Review & download"].map((label, index) => {
             const n = index + 1;
             return (
@@ -207,6 +211,7 @@ export function App() {
         )}
 
         <main>
+          {tool === "citations" ? <Suspense fallback={<div className="tool-loader"><p>Preparing citation correction…</p></div>}><CitationCorrectionScreen /></Suspense> : <>
           {tool === "similarity" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the comparison workspace…</p></div>}><SimilarityScreen /></Suspense> : tool === "merger" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the merge workspace…</p></div>}><MergeScreen /></Suspense> : tool === "turnitin" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the checker…</p></div>}><TurnitinScreen /></Suspense> : tool === "formatter" && formatterMode === "batch" ? <Suspense fallback={<div className="tool-loader"><span>A7</span><p>Preparing the batch workspace…</p></div>}><BatchWorkspace onSwitchToSingle={() => setFormatterMode("single")} /></Suspense> : <>
           {screen.kind === "upload" && (
             <UploadScreen
@@ -235,6 +240,7 @@ export function App() {
               onReset={reset}
             />
           )}
+          </>}
           </>}
         </main>
 
