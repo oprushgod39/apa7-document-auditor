@@ -32,7 +32,6 @@ const SETTINGS = {
   passageThreshold: 0.58,
   contentWeight: 0.7,
   phraseWeight: 0.3,
-  boilerplateFraction: 0.8,
   maxPassagesPerDoc: 900,
   maxDisplayedMatches: 25,
 } as const;
@@ -176,12 +175,10 @@ function buildTfidf(texts: string[]): Map<string, number>[] {
   for (const frequency of termFrequencies) {
     for (const key of frequency.keys()) documentFrequency.set(key, (documentFrequency.get(key) ?? 0) + 1);
   }
-  const ubiquitousCutoff = texts.length >= 5 ? Math.ceil(texts.length * 0.9) : Number.POSITIVE_INFINITY;
   return termFrequencies.map((frequency) => {
     const vector = new Map<string, number>();
     for (const [key, count] of frequency) {
       const seen = documentFrequency.get(key) ?? 1;
-      if (seen >= ubiquitousCutoff) continue;
       vector.set(key, (1 + Math.log(count)) * (Math.log((texts.length + 1) / (seen + 1)) + 1));
     }
     return vector;
@@ -212,13 +209,6 @@ export async function compareFiles(
 
   const texts = documents.map((document) => document.analysis);
   const phraseSets = texts.map((text) => ngramSet(text, SETTINGS.phraseWords));
-  const phraseFrequency = new Map<string, number>();
-  for (const set of phraseSets) for (const phrase of set) phraseFrequency.set(phrase, (phraseFrequency.get(phrase) ?? 0) + 1);
-  const boilerplate = new Set<string>();
-  if (texts.length >= 5) {
-    const cutoff = Math.max(4, Math.ceil(texts.length * SETTINGS.boilerplateFraction));
-    for (const [phrase, frequency] of phraseFrequency) if (frequency >= cutoff) boilerplate.add(phrase);
-  }
   const vectors = buildTfidf(texts);
   const total = documents.length * (documents.length - 1) / 2;
   let completed = 0;
@@ -228,8 +218,8 @@ export async function compareFiles(
       progress(`Comparing ${++completed}/${total}: ${documents[i]!.name} ↔ ${documents[j]!.name}`);
       const a = phraseSets[i]!, b = phraseSets[j]!;
       let countA = 0, countB = 0, intersection = 0;
-      for (const phrase of a) if (!boilerplate.has(phrase)) { countA++; if (b.has(phrase)) intersection++; }
-      for (const phrase of b) if (!boilerplate.has(phrase)) countB++;
+      for (const phrase of a) { countA++; if (b.has(phrase)) intersection++; }
+      for (const phrase of b) countB++;
       const phrase = countA && countB ? 2 * intersection / (countA + countB) : 0;
       const content = cosine(vectors[i]!, vectors[j]!);
       const overall = Math.min(1, SETTINGS.contentWeight * content + SETTINGS.phraseWeight * phrase);
