@@ -1,7 +1,9 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ClipboardEvent } from "react";
+import { sanitizeCitationHtml, citationHtmlText, plainCitationHtml, correctedCitationHtml } from "../lib/rich_citations";
 
 interface Result {
   text: string;
+  html: string;
   citationsFound: number;
   changes: { before: string; after: string; reason: string }[];
   warnings: string[];
@@ -16,12 +18,39 @@ export function CitationCorrectionScreen() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const generation = useRef(0);
+  const inputRef = useRef<HTMLDivElement | null>(null);
+  const sourceHtml = useRef("");
   const update = (value: string) => {
+    sourceHtml.current = plainCitationHtml(value);
+    if (inputRef.current) inputRef.current.innerHTML = sourceHtml.current;
     generation.current++;
     setText(value); setResult(null); setError(""); setCopied(false);
   };
+  const captureInput = () => {
+    sourceHtml.current = sanitizeCitationHtml(inputRef.current?.innerHTML ?? "");
+    generation.current++;
+    setText(citationHtmlText(sourceHtml.current)); setResult(null); setError(""); setCopied(false);
+  };
+  const paste = (event: ClipboardEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const html = event.clipboardData.getData("text/html");
+    const safe = html ? sanitizeCitationHtml(html) : plainCitationHtml(event.clipboardData.getData("text/plain"));
+    const selection = window.getSelection();
+    const root = inputRef.current;
+    if (!root || !selection?.rangeCount) return;
+    const range = selection.getRangeAt(0);
+    if (!root.contains(range.commonAncestorContainer)) return;
+    range.deleteContents();
+    const template = document.createElement("template"); template.innerHTML = safe;
+    const last = template.content.lastChild;
+    range.insertNode(template.content);
+    if (last) { range.setStartAfter(last); range.collapse(true); selection.removeAllRanges(); selection.addRange(range); }
+    captureInput();
+  };
   const correct = async () => {
+    if (text.length > 50_000) { setError("Use up to 50,000 characters, or upload your Word document."); return; }
     const current = ++generation.current;
+    const originalHtml = sourceHtml.current;
     setBusy(true); setError(""); setCopied(false);
     try {
       const response = await fetch("/api/citations/correct", {
@@ -29,15 +58,22 @@ export function CitationCorrectionScreen() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error?.message ?? "Could not correct citations. Please try again.");
-      if (generation.current === current) setResult(data as Result);
+      if (generation.current === current) setResult({ ...data, html: correctedCitationHtml(originalHtml, data.text) } as Result);
     } catch (e) {
       if (generation.current === current) setError(e instanceof Error ? e.message : "Could not correct citations.");
     } finally { setBusy(false); }
   };
   const copy = async () => {
     if (!result) return;
-    try { await navigator.clipboard.writeText(result.text); setCopied(true); }
-    catch { setError("Could not copy automatically. Select the corrected text and copy it manually."); }
+    try {
+      if (!navigator.clipboard.write || typeof ClipboardItem === "undefined") throw new Error("Formatted clipboard unavailable");
+      await navigator.clipboard.write([new ClipboardItem({
+        "text/plain": new Blob([result.text], { type: "text/plain" }),
+        "text/html": new Blob([result.html], { type: "text/html" }),
+      })]);
+      setCopied(true);
+    }
+    catch { setError("Formatted copy is unavailable in this browser. Select the corrected text and copy it manually to retain italics, or use Word upload."); }
   };
   return <div className="citation-workspace">
     <div className="page-heading">
@@ -52,20 +88,23 @@ export function CitationCorrectionScreen() {
     <div className="citation-editors">
       <section className="card">
         <div className="citation-panel-title"><h2>Your text</h2><button className="btn small" disabled={busy} onClick={() => update(EXAMPLE)}>Try an example</button></div>
-        <label htmlFor="citation-input">Paste text with in-text citations</label>
-        <textarea id="citation-input" className="citation-textarea" value={text} maxLength={50_000}
-          placeholder="For example: Research supports this finding (Smith and Patel 2024)."
-          onChange={(e) => update(e.target.value)} aria-describedby="citation-input-help" />
+        <label id="citation-input-label" htmlFor="citation-input">Paste text with in-text citations and references</label>
+        <div id="citation-input" className="citation-textarea citation-rich" contentEditable suppressContentEditableWarning
+          role="textbox" aria-multiline="true" aria-labelledby="citation-input-label" aria-describedby="citation-input-help"
+          data-placeholder="Paste from Word here. Italics and bold will be retained."
+          ref={(node) => { inputRef.current = node; if (node && !node.innerHTML) node.innerHTML = sourceHtml.current; }}
+          onInput={captureInput} onPaste={paste} onDrop={(event) => event.preventDefault()} />
         <div className="citation-panel-title"><small id="citation-input-help">{text.length.toLocaleString()} / 50,000 characters</small>
           <button className="btn small" disabled={busy || !text} onClick={() => update("")}>Clear</button></div>
-        <button className="btn primary" disabled={busy || !text.trim()} onClick={correct}>{busy ? "Correcting…" : "Correct citations"}</button>
+        <p className="section-note">Basic formatting, including italics, is preserved when present in your clipboard. Paste normally (Ctrl+V); paste-as-plain-text removes formatting.</p>
+        <button className="btn primary" disabled={busy || !text.trim() || text.length > 50_000} onClick={correct}>{busy ? "Correcting…" : "Correct citations"}</button>
       </section>
       <section className="card" aria-busy={busy}>
         <div className="citation-panel-title"><h2>Corrected text</h2>
-          <button className="btn small" disabled={!result || busy} onClick={copy}>{copied ? "Copied!" : "Copy text"}</button></div>
-        <label htmlFor="citation-output">APA 7 citation formatting</label>
-        <textarea id="citation-output" className="citation-textarea" readOnly value={result?.text ?? ""}
-          placeholder="Your corrected text will appear here." />
+          <button className="btn small" disabled={!result || busy} onClick={copy}>{copied ? "Copied with formatting!" : "Copy with formatting"}</button></div>
+        <div id="citation-output" className="citation-textarea citation-rich" role="region" aria-label="Corrected text with formatting" tabIndex={0}
+          data-placeholder="Your corrected text will appear here."
+          dangerouslySetInnerHTML={{ __html: result?.html ?? "" }} />
         <p className="section-note" role="status">{result
           ? `${result.citationsFound} citation${result.citationsFound === 1 ? "" : "s"} detected · ${result.changes.length} correction${result.changes.length === 1 ? "" : "s"} applied`
           : "Author names, dates, and the surrounding wording are preserved."}</p>
