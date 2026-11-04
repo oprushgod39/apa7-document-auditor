@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Caslon+Display&display=swap');
 
+.citation-format-toolbar{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:.6rem 0}.citation-format-toolbar small{color:var(--ink-soft);font-size:.73rem}.citation-format-toolbar .btn[aria-pressed="true"]{background:var(--accent);color:white;border-color:var(--accent)}.citation-format-toolbar em,.citation-rich i,.citation-rich em{font-style:italic!important}
+
 .citation-rich{white-space:pre-wrap;overflow-wrap:anywhere;max-height:650px;overflow:auto}.citation-rich:empty::before{content:attr(data-placeholder);color:var(--ink-soft);pointer-events:none}.citation-rich em{font-style:italic}.citation-rich strong{font-weight:700}
 
 .citation-mode{width:fit-content;margin:0 0 1.25rem}.citation-file{display:block;width:100%;padding:1rem;margin:.8rem 0 1.2rem;border:1px dashed var(--line-strong);border-radius:12px;background:var(--canvas);color:var(--ink)}.citation-workspace details{margin-top:1.25rem;overflow-wrap:anywhere}

@@ -20,6 +20,15 @@ export function CitationCorrectionScreen() {
   const generation = useRef(0);
   const inputRef = useRef<HTMLDivElement | null>(null);
   const sourceHtml = useRef("");
+  const [formatting, setFormatting] = useState({ italic: false, bold: false, underline: false });
+  const syncFormatting = () => setFormatting({
+    italic: document.queryCommandState("italic"), bold: document.queryCommandState("bold"), underline: document.queryCommandState("underline"),
+  });
+  const format = (command: "italic" | "bold" | "underline") => {
+    inputRef.current?.focus();
+    document.execCommand(command, false);
+    captureInput(); syncFormatting();
+  };
   const update = (value: string) => {
     sourceHtml.current = plainCitationHtml(value);
     if (inputRef.current) inputRef.current.innerHTML = sourceHtml.current;
@@ -89,11 +98,17 @@ export function CitationCorrectionScreen() {
       <section className="card">
         <div className="citation-panel-title"><h2>Your text</h2><button className="btn small" disabled={busy} onClick={() => update(EXAMPLE)}>Try an example</button></div>
         <label id="citation-input-label" htmlFor="citation-input">Paste text with in-text citations and references</label>
+        <div className="citation-format-toolbar" role="group" aria-label="Text formatting">
+          <button type="button" className="btn small" aria-label="Bold" aria-pressed={formatting.bold} title="Bold (Ctrl+B)" onMouseDown={(e) => e.preventDefault()} onClick={() => format("bold")}><strong>B</strong></button>
+          <button type="button" className="btn small" aria-label="Italic" aria-pressed={formatting.italic} title="Italic (Ctrl+I)" onMouseDown={(e) => e.preventDefault()} onClick={() => format("italic")}><em>I</em><span>Italic</span></button>
+          <button type="button" className="btn small" aria-label="Underline" aria-pressed={formatting.underline} title="Underline (Ctrl+U)" onMouseDown={(e) => e.preventDefault()} onClick={() => format("underline")}><u>U</u></button>
+          <small>Select text to format it, or turn Italic on before typing.</small>
+        </div>
         <div id="citation-input" className="citation-textarea citation-rich" contentEditable suppressContentEditableWarning
           role="textbox" aria-multiline="true" aria-labelledby="citation-input-label" aria-describedby="citation-input-help"
           data-placeholder="Paste from Word here. Italics and bold will be retained."
-          ref={(node) => { inputRef.current = node; if (node && !node.innerHTML) node.innerHTML = sourceHtml.current; }}
-          onInput={captureInput} onPaste={paste} onDrop={(event) => event.preventDefault()} />
+          ref={(node) => { inputRef.current = node; if (node && !node.innerHTML && sourceHtml.current) node.innerHTML = sourceHtml.current; }}
+          onInput={() => { captureInput(); syncFormatting(); }} onKeyUp={syncFormatting} onMouseUp={syncFormatting} onFocus={syncFormatting} onPaste={paste} onDrop={(event) => event.preventDefault()} />
         <div className="citation-panel-title"><small id="citation-input-help">{text.length.toLocaleString()} / 50,000 characters</small>
           <button className="btn small" disabled={busy || !text} onClick={() => update("")}>Clear</button></div>
         <p className="section-note">Basic formatting, including italics, is preserved when present in your clipboard. Paste normally (Ctrl+V); paste-as-plain-text removes formatting.</p>

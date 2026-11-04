@@ -12,6 +12,17 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("formatted citation paste and copy", () => {
+  it("recognizes Word class-based and oblique emphasis without retaining the stylesheet", () => {
+    const pasted = '<html><head><style>span.BookTitle {font-style:italic; color:red} .Journal, .Volume {font:italic 12pt serif; background:url(https://example.com)}</style></head><body><p>References</p><p>Author (2024). <span class="BookTitle">Book title</span>.</p><p><span class="Journal">Journal title</span>, <span class="Volume">12</span>.</p><p><span style="font-style:oblique">Another title</span>.</p></body></html>';
+    const html = sanitizeCitationHtml(pasted);
+    expect(html).toContain("<em>Book title</em>");
+    expect(html).toContain("<em>Journal title</em>");
+    expect(html).toContain("<em>12</em>");
+    expect(html).toContain("<em>Another title</em>");
+    expect(html).not.toContain("<style");
+    expect(html).not.toContain("example.com");
+    expect(correctedCitationHtml(html, citationHtmlText(html))).toBe(html);
+  });
   it("retains italic reference titles while correcting citations in the body", () => {
     const pasted = '<p><b>Research</b> agrees (Smith and Patel 2024).</p><p>References</p><p>Smith, J., &amp; Patel, R. (2024). <span style="font-style:italic">An important book</span>. Publisher.</p>';
     const text = citationHtmlText(pasted);

@@ -7,19 +7,37 @@ const excluded = new Set(["script", "style", "meta", "link", "img", "svg", "math
 export function sanitizeCitationHtml(html: string): string {
   const parsed = new DOMParser().parseFromString(html, "text/html");
   const output = document.createElement("div");
+  // Word and browsers may put emphasis in clipboard CSS classes instead of
+  // inline spans. Read only emphasis properties; never mount pasted CSS.
+  const emphasisRules: { selector: string; italic: boolean; bold: boolean; underline: boolean }[] = [];
+  for (const style of parsed.querySelectorAll("style")) {
+    for (const match of (style.textContent ?? "").matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const declaration = document.createElement("span").style;
+      declaration.cssText = match[2]!;
+      const italic = /^(italic|oblique)/i.test(declaration.fontStyle) || /\b(?:italic|oblique)\b/i.test(declaration.font);
+      const bold = /^(bold|[6-9]00)$/.test(declaration.fontWeight);
+      const underline = declaration.textDecoration.includes("underline") || declaration.textDecorationLine.includes("underline");
+      if (!italic && !bold && !underline) continue;
+      for (const selector of match[1]!.split(",")) {
+        if (selector.trim().startsWith("@")) continue;
+        emphasisRules.push({ selector: selector.trim(), italic, bold, underline });
+      }
+    }
+  }
   const copy = (node: Node, parent: HTMLElement) => {
     if (node.nodeType === Node.TEXT_NODE) { parent.appendChild(document.createTextNode(node.textContent ?? "")); return; }
     if (node.nodeType !== Node.ELEMENT_NODE) return;
     const el = node as HTMLElement;
     const tag = el.localName.toLowerCase();
     if (excluded.has(tag)) return;
+    const rules = emphasisRules.filter((rule) => { try { return el.matches(rule.selector); } catch { return false; } });
     let target = parent;
     if (tag === "br") { parent.appendChild(document.createElement("br")); return; }
     if (blocks.has(tag)) { target = document.createElement("div"); parent.appendChild(target); }
     const format = (name: string) => { const next = document.createElement(name); target.appendChild(next); target = next; };
-    if (["b", "strong"].includes(tag) || /^(bold|[6-9]00)$/.test(el.style.fontWeight)) format("strong");
-    if (["i", "em"].includes(tag) || el.style.fontStyle === "italic") format("em");
-    if (tag === "u" || el.style.textDecoration.includes("underline")) format("u");
+    if (["b", "strong"].includes(tag) || /^(bold|[6-9]00)$/.test(el.style.fontWeight) || rules.some((r) => r.bold)) format("strong");
+    if (["i", "em"].includes(tag) || /^(italic|oblique)/i.test(el.style.fontStyle) || /\b(?:italic|oblique)\b/i.test(el.style.font) || rules.some((r) => r.italic)) format("em");
+    if (tag === "u" || el.style.textDecoration.includes("underline") || rules.some((r) => r.underline)) format("u");
     if (["sup", "sub"].includes(tag)) format(tag);
     for (const child of el.childNodes) copy(child, target);
   };
