@@ -57,10 +57,25 @@ export function replaceParagraphText(
   before: string,
   after: string
 ): boolean {
-  const { nodes, full } = collectTextNodes(p);
+  const { full } = collectTextNodes(p);
   const idx = full.indexOf(before);
   if (idx < 0) return false;
-  const endIdx = idx + before.length;
+  return replaceParagraphTextAt(p, idx, before.length, after);
+}
+
+/** Edit a precise text range, preserving all surrounding runs and objects. */
+export function replaceParagraphTextAt(p: XElement, idx: number, length: number, after: string): boolean {
+  const { nodes, full } = collectTextNodes(p);
+  if (idx < 0 || length < 0 || idx + length > full.length) return false;
+  if (length === 0) {
+    const node = nodes.find((n) => n.start <= idx && n.end >= idx);
+    if (!node) return false;
+    const value = node.el.textContent ?? "";
+    const offset = idx - node.start;
+    setTText(node.el, value.slice(0, offset) + after + value.slice(offset));
+    return true;
+  }
+  const endIdx = idx + length;
 
   let replaced = false;
   for (const node of nodes) {

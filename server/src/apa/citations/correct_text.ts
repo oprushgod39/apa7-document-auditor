@@ -1,5 +1,6 @@
 import { parseCitations } from "./parser.js";
 import { deterministicFix } from "../rules/citations.js";
+import { parseReference, type ParsedReference } from "../references/parser.js";
 
 export interface TextCitationResult {
   text: string;
@@ -12,7 +13,7 @@ const surname = /^(?:(?:van|von|de|del|der|di|la|le|al|bin|ter)\s+)?[A-ZÀ-Þ][\
 const personalNames = (names: string[]) => names.length > 0 && names.every((name) => surname.test(name));
 
 /** Plain-text mechanics only. Never adds sources, years, or citation locations. */
-export function correctCitationText(input: string): TextCitationResult {
+export function correctCitationText(input: string, suppliedReferences?: ParsedReference[], options: { wrapStandalone?: boolean } = {}): TextCitationResult {
   const changes: TextCitationResult["changes"] = [];
   const warnings = new Set<string>();
   const record = (before: string, after: string, reason: string) => {
@@ -23,6 +24,8 @@ export function correctCitationText(input: string): TextCitationResult {
   const referenceStart = /^(?:references|bibliography|works cited)\s*:?\s*$/im.exec(input)?.index ?? input.length;
   let text = input.slice(0, referenceStart);
   const references = input.slice(referenceStart);
+  const referenceEntries = suppliedReferences ?? references.split(/\r?\n/).slice(1)
+    .filter((line) => line.trim()).map((line, index) => parseReference(line.trim(), index));
   // Recognize year:page notation before using the APA parser. Validate the
   // normalized group with author context so bare times/ratios stay intact.
   text = text.replace(/\([^()\r\n]+\)/g, (group: string, offset: number) => {
@@ -40,18 +43,34 @@ export function correctCitationText(input: string): TextCitationResult {
   // An abbreviation definition is not an author–year citation. Surface likely
   // group-author attributions without filling in an unknown publication date.
   const groupAuthor = /([A-Z][\p{L}’'.-]*(?:\s+(?:[A-Z][\p{L}’'.-]*|of|for|and|the|in|on|&)){1,12})\s*\(([A-Z][A-Z0-9&]{1,11})\)/gu;
-  for (const match of text.matchAll(groupAuthor)) {
+  for (const match of [...text.matchAll(groupAuthor)].reverse()) {
     if (!/\b(?:Institute|University|Agency|Department|Association|Organization|Organisation|Council|Bureau|Commission|Administration|Center|Centre|Fund|Foundation)\b/i.test(match[1]!)) continue;
     const following = text.slice(match.index! + match[0].length);
     if (/^\s*\(\s*(?:(?:1[6-9]|20)\d{2}|n\.d\.|in press)/i.test(following)) continue;
+    const normalized = (value: string) => value.toLowerCase().replace(/&/g, "and").replace(/[^\p{L}\p{N}]/gu, "");
+    const fullName = normalized(match[1]!);
+    const candidates = referenceEntries.filter((ref) => ref.isOrganizationAuthor && ref.year &&
+      normalized(ref.authorsRaw).length > 10 && fullName.endsWith(normalized(ref.authorsRaw)));
+    if (candidates.length === 1) {
+      const updated = match[0].replace(`(${match[2]})`, `(${match[2]}, ${candidates[0]!.year})`);
+      text = text.slice(0, match.index!) + record(match[0], updated, "Complete a group-author citation using its uniquely matching reference entry.") + text.slice(match.index! + match[0].length);
+      continue;
+    }
     warnings.add(`Possible missing citation year: ${match[0]}. If this is a source attribution, supply its publication year; the abbreviation alone is not a dated citation.`);
   }
   const authorGroups = new Map<string, Set<string>>();
+  for (const ref of referenceEntries) {
+    if (!ref.year || ref.surnames.length < 3 || ref.isOrganizationAuthor) continue;
+    const key = `${ref.surnames[0]!.toLowerCase()}|${ref.year}`;
+    const groups = authorGroups.get(key) ?? new Set<string>();
+    groups.add(ref.surnames.join("|").toLowerCase());
+    authorGroups.set(key, groups);
+  }
   for (const citation of parseCitations(text, 0)) {
     if (citation.authors.length < 3 || !personalNames(citation.authors)) continue;
-    const key = `${citation.authors[0]}|${citation.year}`;
+    const key = `${citation.authors[0]!.toLowerCase()}|${citation.year}`;
     const groups = authorGroups.get(key) ?? new Set<string>();
-    groups.add(citation.authors.join("|"));
+    groups.add(citation.authors.join("|").toLowerCase());
     authorGroups.set(key, groups);
   }
   const correct = (raw: string, kind: "parenthetical" | "narrative") => {
@@ -71,7 +90,7 @@ export function correctCitationText(input: string): TextCitationResult {
     // Three personal authors can be abbreviated mechanically. Ambiguous
     // author lists must retain enough names to distinguish their sources.
     if (!citation.etAl && citation.authors.length >= 3 && personalNames(citation.authors)) {
-      if ((authorGroups.get(`${citation.authors[0]}|${citation.year}`)?.size ?? 0) > 1) {
+      if ((authorGroups.get(`${citation.authors[0]!.toLowerCase()}|${citation.year}`)?.size ?? 0) > 1) {
         warnings.add(`Check ${raw}: multiple author lists would shorten to the same author and year, so the names were retained for disambiguation.`);
       } else if (kind === "parenthetical") {
         const yearIndex = value.indexOf(citation.year);
@@ -108,7 +127,7 @@ export function correctCitationText(input: string): TextCitationResult {
   }
   // Accept a standalone citation typed without parentheses, but do not wrap
   // author/year text embedded in prose or full reference-list entries.
-  text = text.replace(/^[^\r\n]+$/gm, (line) => {
+  if (options.wrapStandalone !== false) text = text.replace(/^[^\r\n]+$/gm, (line) => {
     const trimmed = line.trim();
     const normalized = trimmed.replace(/,(?=(?:1[6-9]|20)\d{2})/, ", ");
     if (trimmed.includes("(") || /^(?:In|During|Since|Until|Year|From)\b/i.test(trimmed) ||

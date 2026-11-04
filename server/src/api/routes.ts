@@ -15,6 +15,7 @@ import {
   deleteSession,
   readOriginal,
   readOutput,
+  writeOutput,
   type Session,
 } from "../store/sessions.js";
 import { processSession, applyResolution, repairEmbeddedReferencesHeadingIfNeeded } from "../pipeline.js";
@@ -22,6 +23,7 @@ import { runInBackground } from "../run_background.js";
 import { renderReportHtml } from "../audit/report_html.js";
 import { log } from "../logging.js";
 import { correctCitationText } from "../apa/citations/correct_text.js";
+import { correctCitationDocument } from "../apa/citations/correct_document.js";
 import { mergeDocuments } from "../merge/merge.js";
 import { appendixSourceWordCount, countDocumentWords } from "../merge/word_count.js";
 import {
@@ -108,6 +110,36 @@ function sessionSummary(s: Session) {
 
 export function apiRouter(): Router {
   const router = Router();
+  const citationUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 4 * 1024 * 1024, files: 1 } });
+  router.post("/citations/documents", (req, res, next) => {
+    citationUpload.single("file")(req, res, (error) => {
+      if (error) { next(error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE"
+        ? Errors.tooLarge(4 * 1024 * 1024) : Errors.invalid("Upload one Word DOCX document.")); return; }
+      void (async () => {
+        if (!req.file) throw Errors.invalid("Choose a Word document first.");
+        if (path.extname(req.file.originalname).toLowerCase() !== ".docx") throw Errors.unsupportedType();
+        const corrected = await correctCitationDocument(req.file.buffer);
+        const settings = { ...defaultSettings(), mode: "format" as const, verifyMetadata: false };
+        const session = await createSession(req.file.originalname, req.file.buffer, settings);
+        try {
+          await writeOutput(session, corrected.output);
+          session.status = "ready";
+          await saveSession(session);
+        } catch (err) { await deleteSession(session.id); throw err; }
+        res.setHeader("Cache-Control", "no-store");
+        res.json({ ...corrected.summary, id: session.id, downloadUrl: `/api/citations/documents/${session.id}/download` });
+      })().catch(next);
+    });
+  });
+  router.get("/citations/documents/:id/download", asyncHandler(async (req, res) => {
+    const session = await getSession(req.params.id!);
+    if (session.status !== "ready" || !session.outputPath) throw Errors.notReady("Citation correction is not ready yet.");
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    const name = session.originalName.replace(/\.docx$/i, "") + "_citations_corrected.docx";
+    res.setHeader("Content-Disposition", `attachment; filename="citations_corrected.docx"; filename*=UTF-8''${encodeURIComponent(name)}`);
+    res.send(await readOutput(session));
+  }));
   router.post("/citations/correct", (req, res, next) => {
     const parsed = z.object({ text: z.string().min(1).max(50_000).refine((value) => value.trim().length > 0) }).safeParse(req.body);
     if (!parsed.success) { next(Errors.invalid("Paste text containing citations (up to 50,000 characters).")); return; }
