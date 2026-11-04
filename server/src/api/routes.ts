@@ -24,6 +24,7 @@ import { renderReportHtml } from "../audit/report_html.js";
 import { log } from "../logging.js";
 import { correctCitationText } from "../apa/citations/correct_text.js";
 import { correctCitationDocument } from "../apa/citations/correct_document.js";
+import { referenceItalicSpans } from "../apa/references/italic_spans.js";
 import { mergeDocuments } from "../merge/merge.js";
 import { appendixSourceWordCount, countDocumentWords } from "../merge/word_count.js";
 import {
@@ -110,6 +111,12 @@ function sessionSummary(s: Session) {
 
 export function apiRouter(): Router {
   const router = Router();
+  router.post("/citations/reference-italics", (req, res, next) => {
+    const parsed = z.object({ text: z.string().min(1).max(50_000) }).safeParse(req.body);
+    if (!parsed.success) { next(Errors.invalid("Paste references (up to 50,000 characters).")); return; }
+    res.setHeader("Cache-Control", "no-store");
+    res.json(referenceItalicSpans(parsed.data.text));
+  });
   const citationUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 4 * 1024 * 1024, files: 1 } });
   router.post("/citations/documents", (req, res, next) => {
     citationUpload.single("file")(req, res, (error) => {

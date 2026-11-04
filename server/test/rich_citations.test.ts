@@ -1,6 +1,7 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { Window } from "happy-dom";
-import { citationHtmlText, sanitizeCitationHtml, correctedCitationHtml, plainCitationHtml } from "../../web/src/lib/rich_citations.js";
+import { citationHtmlText, sanitizeCitationHtml, correctedCitationHtml, plainCitationHtml, applyReferenceItalics } from "../../web/src/lib/rich_citations.js";
+import { referenceItalicSpans } from "../src/apa/references/italic_spans.js";
 import { correctCitationText } from "../src/apa/citations/correct_text.js";
 
 beforeEach(() => {
@@ -12,6 +13,19 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("formatted citation paste and copy", () => {
+  it("recovers APA italics in a plain-text copy without changing any characters", () => {
+    const text = "References\nHillebrand, L., Raisch, S., & Schad, J. (2025). Managing with artificial intelligence: An integrative framework. Academy of Management Annals. https://doi.org/10.5465/annals.2022.0072\nNational Institute of Standards and Technology. (2023). Artificial intelligence risk management framework (AI RMF 1.0). https://doi.org/10.6028/NIST.AI.100-1\nRaisch, S., & Krakowski, S. (2021). Artificial intelligence and management: The automation–augmentation paradox. Academy of Management Review, 46(1), 192–210. https://doi.org/10.5465/amr.2018.0072";
+    const spans = referenceItalicSpans(text).spans;
+    const html = applyReferenceItalics(plainCitationHtml(text), spans);
+    expect(html).toContain("<em>Academy of Management Annals</em>");
+    expect(html).toContain("<em>Artificial intelligence risk management framework (AI RMF 1.0)</em>");
+    expect(html).toContain("<em>Academy of Management Review</em>, <em>46</em>(1)");
+    expect(citationHtmlText(html)).toBe(text);
+    expect(applyReferenceItalics(html, spans)).toBe(html);
+  });
+  it("recognizes emphasis carried by a semantic italic class without a stylesheet", () => {
+    expect(sanitizeCitationHtml('<span class="italic">Journal title</span>')).toBe("<em>Journal title</em>");
+  });
   it("recognizes Word class-based and oblique emphasis without retaining the stylesheet", () => {
     const pasted = '<html><head><style>span.BookTitle {font-style:italic; color:red} .Journal, .Volume {font:italic 12pt serif; background:url(https://example.com)}</style></head><body><p>References</p><p>Author (2024). <span class="BookTitle">Book title</span>.</p><p><span class="Journal">Journal title</span>, <span class="Volume">12</span>.</p><p><span style="font-style:oblique">Another title</span>.</p></body></html>';
     const html = sanitizeCitationHtml(pasted);

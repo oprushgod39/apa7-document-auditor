@@ -1,5 +1,5 @@
 import { useRef, useState, type ClipboardEvent } from "react";
-import { sanitizeCitationHtml, citationHtmlText, plainCitationHtml, correctedCitationHtml } from "../lib/rich_citations";
+import { sanitizeCitationHtml, citationHtmlText, plainCitationHtml, correctedCitationHtml, applyReferenceItalics } from "../lib/rich_citations";
 
 interface Result {
   text: string;
@@ -17,6 +17,8 @@ export function CitationCorrectionScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [formatNotice, setFormatNotice] = useState("");
   const generation = useRef(0);
   const inputRef = useRef<HTMLDivElement | null>(null);
   const sourceHtml = useRef("");
@@ -30,15 +32,36 @@ export function CitationCorrectionScreen() {
     captureInput(); syncFormatting();
   };
   const update = (value: string) => {
+    setFormatNotice("");
     sourceHtml.current = plainCitationHtml(value);
     if (inputRef.current) inputRef.current.innerHTML = sourceHtml.current;
     generation.current++;
     setText(value); setResult(null); setError(""); setCopied(false);
   };
   const captureInput = () => {
+    setFormatNotice("");
     sourceHtml.current = sanitizeCitationHtml(inputRef.current?.innerHTML ?? "");
     generation.current++;
     setText(citationHtmlText(sourceHtml.current)); setResult(null); setError(""); setCopied(false);
+  };
+  const restoreItalics = async () => {
+    const original = sourceHtml.current;
+    const value = citationHtmlText(original);
+    if (!value.trim() || value.length > 50_000) return;
+    const current = ++generation.current;
+    setRestoring(true); setError("");
+    try {
+      const response = await fetch("/api/citations/reference-italics", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: value }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error?.message ?? "Could not restore reference italics.");
+      if (current !== generation.current) return;
+      const formatted = applyReferenceItalics(original, data.spans);
+      sourceHtml.current = formatted;
+      if (inputRef.current) inputRef.current.innerHTML = formatted;
+      setResult(null); setCopied(false);
+      setFormatNotice(data.spans.length ? "APA italics restored for recognized reference titles, journals, and volumes. Please review them." : data.warnings.join(" "));
+    } catch (e) { if (current === generation.current) setError(e instanceof Error ? e.message : "Could not restore italics."); }
+    finally { setRestoring(false); }
   };
   const paste = (event: ClipboardEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -55,6 +78,7 @@ export function CitationCorrectionScreen() {
     range.insertNode(template.content);
     if (last) { range.setStartAfter(last); range.collapse(true); selection.removeAllRanges(); selection.addRange(range); }
     captureInput();
+    if (!/<(?:em|i)\b/i.test(sourceHtml.current) && /^\s*References\s*$/im.test(citationHtmlText(sourceHtml.current))) void restoreItalics();
   };
   const correct = async () => {
     if (text.length > 50_000) { setError("Use up to 50,000 characters, or upload your Word document."); return; }
@@ -67,7 +91,10 @@ export function CitationCorrectionScreen() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error?.message ?? "Could not correct citations. Please try again.");
-      if (generation.current === current) setResult({ ...data, html: correctedCitationHtml(originalHtml, data.text) } as Result);
+      const formattingResponse = await fetch("/api/citations/reference-italics", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: data.text }) });
+      if (!formattingResponse.ok) throw new Error("Citation text was corrected, but reference formatting could not be checked. Please try again.");
+      const referenceFormatting = await formattingResponse.json();
+      if (generation.current === current) setResult({ ...data, html: applyReferenceItalics(correctedCitationHtml(originalHtml, data.text), referenceFormatting.spans) } as Result);
     } catch (e) {
       if (generation.current === current) setError(e instanceof Error ? e.message : "Could not correct citations.");
     } finally { setBusy(false); }
@@ -102,8 +129,10 @@ export function CitationCorrectionScreen() {
           <button type="button" className="btn small" aria-label="Bold" aria-pressed={formatting.bold} title="Bold (Ctrl+B)" onMouseDown={(e) => e.preventDefault()} onClick={() => format("bold")}><strong>B</strong></button>
           <button type="button" className="btn small" aria-label="Italic" aria-pressed={formatting.italic} title="Italic (Ctrl+I)" onMouseDown={(e) => e.preventDefault()} onClick={() => format("italic")}><em>I</em><span>Italic</span></button>
           <button type="button" className="btn small" aria-label="Underline" aria-pressed={formatting.underline} title="Underline (Ctrl+U)" onMouseDown={(e) => e.preventDefault()} onClick={() => format("underline")}><u>U</u></button>
+          <button type="button" className="btn small" disabled={!text.trim() || busy || restoring} onClick={() => void restoreItalics()}>{restoring ? "Restoring italics…" : "Restore APA reference italics"}</button>
           <small>Select text to format it, or turn Italic on before typing.</small>
         </div>
+        {formatNotice && <p className="section-note" role="status">{formatNotice}</p>}
         <div id="citation-input" className="citation-textarea citation-rich" contentEditable suppressContentEditableWarning
           role="textbox" aria-multiline="true" aria-labelledby="citation-input-label" aria-describedby="citation-input-help"
           data-placeholder="Paste from Word here. Italics and bold will be retained."
@@ -111,8 +140,8 @@ export function CitationCorrectionScreen() {
           onInput={() => { captureInput(); syncFormatting(); }} onKeyUp={syncFormatting} onMouseUp={syncFormatting} onFocus={syncFormatting} onPaste={paste} onDrop={(event) => event.preventDefault()} />
         <div className="citation-panel-title"><small id="citation-input-help">{text.length.toLocaleString()} / 50,000 characters</small>
           <button className="btn small" disabled={busy || !text} onClick={() => update("")}>Clear</button></div>
-        <p className="section-note">Basic formatting, including italics, is preserved when present in your clipboard. Paste normally (Ctrl+V); paste-as-plain-text removes formatting.</p>
-        <button className="btn primary" disabled={busy || !text.trim() || text.length > 50_000} onClick={correct}>{busy ? "Correcting…" : "Correct citations"}</button>
+        <p className="section-note">If the source copies as plain text, use “Restore APA reference italics.” Recognizable reference titles, journal names, and volumes are also formatted in the corrected output.</p>
+        <button className="btn primary" disabled={busy || restoring || !text.trim() || text.length > 50_000} onClick={correct}>{busy ? "Correcting…" : "Correct citations"}</button>
       </section>
       <section className="card" aria-busy={busy}>
         <div className="citation-panel-title"><h2>Corrected text</h2>

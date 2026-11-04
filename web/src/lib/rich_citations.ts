@@ -36,7 +36,7 @@ export function sanitizeCitationHtml(html: string): string {
     if (blocks.has(tag)) { target = document.createElement("div"); parent.appendChild(target); }
     const format = (name: string) => { const next = document.createElement(name); target.appendChild(next); target = next; };
     if (["b", "strong"].includes(tag) || /^(bold|[6-9]00)$/.test(el.style.fontWeight) || rules.some((r) => r.bold)) format("strong");
-    if (["i", "em"].includes(tag) || /^(italic|oblique)/i.test(el.style.fontStyle) || /\b(?:italic|oblique)\b/i.test(el.style.font) || rules.some((r) => r.italic)) format("em");
+    if (["i", "em"].includes(tag) || el.classList.contains("italic") || /^(italic|oblique)/i.test(el.style.fontStyle) || /\b(?:italic|oblique)\b/i.test(el.style.font) || rules.some((r) => r.italic)) format("em");
     if (tag === "u" || el.style.textDecoration.includes("underline") || rules.some((r) => r.underline)) format("u");
     if (["sup", "sub"].includes(tag)) format(tag);
     for (const child of el.childNodes) copy(child, target);
@@ -74,6 +74,27 @@ export function citationHtmlText(html: string): string {
 
 export function plainCitationHtml(text: string): string {
   const root = document.createElement("div"); root.textContent = text;
+  return root.innerHTML;
+}
+
+export function applyReferenceItalics(html: string, spans: { start: number; end: number }[]): string {
+  const root = document.createElement("div"); root.innerHTML = sanitizeCitationHtml(html);
+  const before = textMap(root).text;
+  for (const span of [...spans].sort((a, b) => b.start - a.start)) {
+    if (span.start < 0 || span.end <= span.start || span.end > before.length) continue;
+    // Split text nodes rather than moving whole ranges, so existing links of
+    // emphasis and paragraph boundaries stay intact.
+    for (const item of textMap(root).nodes.reverse()) {
+      const start = Math.max(item.start, span.start);
+      const end = Math.min(item.end, span.end);
+      if (start >= end || item.node.parentElement?.closest("em, i")) continue;
+      const middle = item.node.splitText(start - item.start);
+      middle.splitText(end - start);
+      const em = document.createElement("em");
+      middle.parentNode!.insertBefore(em, middle); em.appendChild(middle);
+    }
+  }
+  if (textMap(root).text !== before) throw new Error("Reference formatting changed the text unexpectedly.");
   return root.innerHTML;
 }
 
