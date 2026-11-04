@@ -23,6 +23,29 @@ export function correctCitationText(input: string): TextCitationResult {
   const referenceStart = /^(?:references|bibliography|works cited)\s*:?\s*$/im.exec(input)?.index ?? input.length;
   let text = input.slice(0, referenceStart);
   const references = input.slice(referenceStart);
+  // Recognize year:page notation before using the APA parser. Validate the
+  // normalized group with author context so bare times/ratios stay intact.
+  text = text.replace(/\([^()\r\n]+\)/g, (group: string, offset: number) => {
+    const normalized = group.replace(/\b((?:1[6-9]|20)\d{2}[a-z]?)\s*:\s*(\d+(?:\s*[–—-]\s*\d+)?)(?=\s*[;)])/g,
+      (_match, year: string, pages: string) => {
+        const range = /[–—-]/.test(pages);
+        return `${year}, ${range ? "pp." : "p."} ${pages.replace(/\s*[–—-]\s*/g, "–")}`;
+      });
+    if (normalized === group) return group;
+    const context = text.slice(Math.max(0, offset - 120), offset) + normalized;
+    const recognized = parseCitations(context, 0).some((c) =>
+      c.groupRaw === normalized || (c.kind === "narrative" && c.raw.endsWith(normalized)));
+    return recognized ? record(group, normalized, "Convert year:page notation to the APA year, p./pp. format.") : group;
+  });
+  // An abbreviation definition is not an author–year citation. Surface likely
+  // group-author attributions without filling in an unknown publication date.
+  const groupAuthor = /([A-Z][\p{L}’'.-]*(?:\s+(?:[A-Z][\p{L}’'.-]*|of|for|and|the|in|on|&)){1,12})\s*\(([A-Z][A-Z0-9&]{1,11})\)/gu;
+  for (const match of text.matchAll(groupAuthor)) {
+    if (!/\b(?:Institute|University|Agency|Department|Association|Organization|Organisation|Council|Bureau|Commission|Administration|Center|Centre|Fund|Foundation)\b/i.test(match[1]!)) continue;
+    const following = text.slice(match.index! + match[0].length);
+    if (/^\s*\(\s*(?:(?:1[6-9]|20)\d{2}|n\.d\.|in press)/i.test(following)) continue;
+    warnings.add(`Possible missing citation year: ${match[0]}. If this is a source attribution, supply its publication year; the abbreviation alone is not a dated citation.`);
+  }
   const authorGroups = new Map<string, Set<string>>();
   for (const citation of parseCitations(text, 0)) {
     if (citation.authors.length < 3 || !personalNames(citation.authors)) continue;

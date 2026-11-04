@@ -4,6 +4,22 @@ import { correctCitationText } from "../src/apa/citations/correct_text.js";
 import { createApp } from "../src/app.js";
 
 describe("plain text citation correction", () => {
+  it("corrects the reported Hillebrand locator and flags the undated NIST attribution", () => {
+    const input = "As Raisch and Krakowski (2021) noted, decisions need humans.\nAs the National Institute of Standards and Technology (NIST) advises, leaders should monitor risks.\nAs Hillebrand et al. (2025: 34) aptly put it, new forms of management are needed.";
+    const result = correctCitationText(input);
+    expect(result.text).toBe(input.replace("(2025: 34)", "(2025, p. 34)"));
+    expect(result.citationsFound).toBe(2);
+    expect(result.warnings.some((w) => w.includes("NIST") && w.includes("missing citation year"))).toBe(true);
+    expect(correctCitationText(result.text).changes).toHaveLength(0);
+  });
+  it("corrects colon page ranges and grouped citations without changing bare times", () => {
+    expect(correctCitationText("Evidence (Smith, 2024: 12-14; Jones, 2023: 7).").text)
+      .toBe("Evidence (Smith, 2024, pp. 12–14; Jones, 2023, p. 7).");
+    expect(correctCitationText("A time (20:34) and another (2025:34)." ).text)
+      .toBe("A time (20:34) and another (2025:34).");
+    expect(correctCitationText("National Institute of Standards and Technology (NIST) (2023) advises this.")
+      .warnings.some((w) => w.includes("missing citation year"))).toBe(false);
+  });
   it("applies combined punctuation fixes and preserves prose and line breaks", () => {
     const result = correctCitationText("Results agree (Smith and Patel 2024).\nKumar et al (2023) agrees.");
     expect(result.text).toBe("Results agree (Smith & Patel, 2024).\nKumar et al. (2023) agrees.");
