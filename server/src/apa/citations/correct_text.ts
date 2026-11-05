@@ -28,6 +28,21 @@ export function correctCitationText(input: string, suppliedReferences?: ParsedRe
   const references = input.slice(referenceStart);
   const referenceEntries = suppliedReferences ?? references.split(/\r?\n/).slice(1)
     .filter((line) => line.trim()).map((line, index) => parseReference(line.trim(), index));
+  // Recover author-only parenthetical citations only when the complete author
+  // label identifies one reference. Multiple works by an author are ambiguous.
+  const authorKey = (value: string) => value.toLowerCase().replace(/\band\b/g, "&").replace(/[.\s]/g, "");
+  text = text.replace(/\(([^()\r\n]+)\)/g, (group: string, label: string) => {
+    const matches = referenceEntries.filter((ref) => {
+      if (!ref.year || !ref.surnames.length) return false;
+      const names = ref.surnames;
+      const author = ref.isOrganizationAuthor ? ref.authorsRaw.replace(/\.$/, "") :
+        names.length === 1 ? names[0]! : names.length === 2 ? `${names[0]} & ${names[1]}` : `${names[0]} et al.`;
+      return authorKey(label) === authorKey(author);
+    });
+    if (matches.length === 1) return record(group, `(${label.trim()}, ${matches[0]!.year})`, "Restore a missing year from the uniquely matching reference.");
+    if (matches.length > 1) warnings.add(`Cannot complete ${group}: multiple references match this author. Select the intended source and year.`);
+    return group;
+  });
   // Recognize year:page notation before using the APA parser. Validate the
   // normalized group with author context so bare times/ratios stay intact.
   text = text.replace(/\([^()\r\n]+\)/g, (group: string, offset: number) => {

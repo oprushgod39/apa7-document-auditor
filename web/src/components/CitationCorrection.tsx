@@ -13,6 +13,14 @@ interface Result {
 const EXAMPLE = "Research supports this finding (Smith and Patel 2024).\nKumar et al (2023) reported similar results.\nSmith & Patel (2024) explained the implications.";
 
 export function CitationCorrectionScreen() {
+  return <div className="citation-workspace">
+    <div className="page-heading"><div><span className="eyebrow">Citation workspace</span><h1>Fix your document’s citations.</h1></div>
+      <p>Upload your Word document with its references. Download a corrected copy with APA citation formatting and uniquely matched missing citation years repaired.</p></div>
+    <CitationDocument />
+  </div>;
+}
+
+export function LegacyCitationTextScreen() {
   const [mode, setMode] = useState<"text" | "document">("text");
   const [text, setText] = useState("");
   const [result, setResult] = useState<Result | null>(null);

@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest";
 import request from "supertest";
 import { correctCitationText } from "../src/apa/citations/correct_text.js";
 
+it("restores uniquely referenced author-only citations and leaves ambiguous works for review", () => {
+  const refs = "\nReferences\nSmith, A. (2024). Leadership. Publisher.";
+  expect(correctCitationText("Results agree (Smith)." + refs).text).toBe("Results agree (Smith, 2024)." + refs);
+  const ambiguous = "Results agree (Smith)." + refs + "\nSmith, A. (2023). Management. Publisher.";
+  expect(correctCitationText(ambiguous).text).toBe(ambiguous);
+  expect(correctCitationText("Ordinary text (for example).").text).toBe("Ordinary text (for example).");
+});
+
 it("flags uncited prose without treating reference entries as body paragraphs", () => {
   const result = correctCitationText("A long paragraph makes a specific claim about organizational leadership and employee trust without naming a supporting study.\n\nAnother claim is supported (Smith, 2024).\n\nReferences\nSmith, A. (2024). Study title. Journal Name, 2, 1–3.");
   expect(result.uncitedParagraphs).toHaveLength(1);
