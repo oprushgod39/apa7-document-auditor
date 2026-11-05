@@ -25,6 +25,8 @@ import { log } from "../logging.js";
 import { correctCitationText } from "../apa/citations/correct_text.js";
 import { correctCitationDocument } from "../apa/citations/correct_document.js";
 import { referenceItalicSpans } from "../apa/references/italic_spans.js";
+import { startEvidenceJob, authorizedJob, stepEvidenceJob, jobStatus, evidenceReport } from "../apa/citations/evidence/jobs.js";
+import { evidenceConfigured } from "../apa/citations/evidence/openai.js";
 import { mergeDocuments } from "../merge/merge.js";
 import { appendixSourceWordCount, countDocumentWords } from "../merge/word_count.js";
 import {
@@ -118,6 +120,32 @@ export function apiRouter(): Router {
     res.json(referenceItalicSpans(parsed.data.text));
   });
   const citationUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 4 * 1024 * 1024, files: 1 } });
+  router.get("/citations/verification/availability", (_req, res) => { res.setHeader("Cache-Control", "no-store"); res.json({ available: evidenceConfigured() }); });
+  router.post("/citations/verification", citationUpload.single("file"), asyncHandler(async (req, res) => {
+    if (!req.file) throw Errors.invalid("Upload a Word DOCX document.");
+    if (path.extname(req.file.originalname).toLowerCase() !== ".docx") throw Errors.unsupportedType();
+    res.setHeader("Cache-Control", "no-store"); res.json(await startEvidenceJob(req.file.originalname, req.file.buffer));
+  }));
+  router.get("/citations/verification/:id", asyncHandler(async (req, res) => {
+    const session = await authorizedJob(req.params.id!, req.get("X-Citation-Token") ?? "");
+    res.setHeader("Cache-Control", "no-store"); res.json(jobStatus(session.citationJob!));
+  }));
+  router.post("/citations/verification/:id/step", asyncHandler(async (req, res) => {
+    const parsed = z.object({ version: z.number().int().nonnegative() }).parse(req.body);
+    res.setHeader("Cache-Control", "no-store"); res.json(await stepEvidenceJob(req.params.id!, req.get("X-Citation-Token") ?? "", parsed.version));
+  }));
+  router.get("/citations/verification/:id/:kind", asyncHandler(async (req, res) => {
+    const session = await authorizedJob(req.params.id!, req.get("X-Citation-Token") ?? "");
+    if (session.citationJob!.phase !== "complete") throw Errors.notReady("Verification is still processing.");
+    res.setHeader("Cache-Control", "no-store");
+    if (req.params.kind === "report") {
+      res.setHeader("Content-Type", "text/html; charset=utf-8"); res.setHeader("Content-Disposition", 'attachment; filename="Citation_Verification_Report.html"');
+      res.send(evidenceReport(session.citationJob!));
+    } else if (req.params.kind === "document") {
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+      res.setHeader("Content-Disposition", 'attachment; filename="citations_verified.docx"'); res.send(await readOutput(session));
+    } else throw Errors.notFound();
+  }));
   router.post("/citations/documents", (req, res, next) => {
     citationUpload.single("file")(req, res, (error) => {
       if (error) { next(error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE"

@@ -63,6 +63,7 @@ export const STAGE_LABELS: Record<ProcessingStageKey, string> = {
 };
 
 export interface Session {
+  citationJob?: import("../apa/citations/evidence/types.js").EvidenceJob;
   id: string;
   createdAt: number;
   /** Sanitized original filename (basename only, safe charset). */
@@ -236,7 +237,12 @@ export async function createSession(
   return session;
 }
 
-export async function getSession(id: string): Promise<Session> {
+export async function getSession(id: string, fresh = false): Promise<Session> {
+  if (fresh && KV_CONFIGURED) {
+    const current = await kvGet(id);
+    if (!current) throw Errors.notFound();
+    sessions.set(id, current); return current;
+  }
   const cached = sessions.get(id);
   if (cached) return cached;
   if (KV_CONFIGURED) {

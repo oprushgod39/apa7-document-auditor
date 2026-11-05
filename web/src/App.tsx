@@ -191,7 +191,7 @@ export function App() {
           </div>
         </header>
 
-        {tool === "citations" ? <div className="similarity-journey"><span>“</span><strong>Citation correction</strong><small>Paste text · correct APA 7 citations · copy your result</small></div> : tool === "formatter" && formatterMode === "single" ? <nav className="journey" aria-label="Document workflow">
+        {tool === "citations" ? <div className="similarity-journey"><span>“</span><strong>Citation correction</strong><small>Upload Word · verify claims against sources · download corrections and report</small></div> : tool === "formatter" && formatterMode === "single" ? <nav className="journey" aria-label="Document workflow">
           {["Upload", "Customize", "Review & download"].map((label, index) => {
             const n = index + 1;
             return (
